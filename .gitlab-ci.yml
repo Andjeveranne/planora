@@ -1,0 +1,131 @@
+# Pipeline GitLab CI/CD pour Plannora
+
+stages:
+  - build
+  - test
+  - quality
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+
+# Cache Maven dependencies
+cache:
+  paths:
+    - .m2/repository
+    - Frontend/plannora-frontend/node_modules/
+
+# Build Eureka Service
+build:eureka:
+  stage: build
+  image: maven:3.8-openjdk-17
+  script:
+    - cd EurekaService/eureka/eureka
+    - mvn $MAVEN_CLI_OPTS clean install -DskipTests
+  artifacts:
+    paths:
+      - EurekaService/eureka/eureka/target/*.jar
+    expire_in: 1 hour
+
+# Build Gateway Service
+build:gateway:
+  stage: build
+  image: maven:3.8-openjdk-17
+  script:
+    - cd GatewayService/gateway/gateway
+    - mvn $MAVEN_CLI_OPTS clean install -DskipTests
+  artifacts:
+    paths:
+      - GatewayService/gateway/gateway/target/*.jar
+    expire_in: 1 hour
+
+# Build Authentification Service
+build:auth:
+  stage: build
+  image: maven:3.8-openjdk-17
+  script:
+    - cd AuthentificationService/Authentification/authentification
+    - mvn $MAVEN_CLI_OPTS clean install -DskipTests
+  artifacts:
+    paths:
+      - AuthentificationService/Authentification/authentification/target/*.jar
+    expire_in: 1 hour
+
+# Build User Service
+build:user:
+  stage: build
+  image: maven:3.8-openjdk-17
+  script:
+    - cd UserService/user-service
+    - mvn $MAVEN_CLI_OPTS clean install -DskipTests
+  artifacts:
+    paths:
+      - UserService/user-service/target/*.jar
+    expire_in: 1 hour
+
+# Build Frontend
+build:frontend:
+  stage: build
+  image: node:18
+  script:
+    - cd Frontend/plannora-frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - Frontend/plannora-frontend/dist/
+    expire_in: 1 hour
+
+# Test Backend Services
+test:backend:
+  stage: test
+  image: maven:3.8-openjdk-17
+  script:
+    - cd UserService/user-service
+    - mvn $MAVEN_CLI_OPTS test
+  allow_failure: true
+
+# Test Frontend
+test:frontend:
+  stage: test
+  image: node:18
+  script:
+    - cd Frontend/plannora-frontend
+    - npm ci
+    - npm run test -- --watch=false --browsers=ChromeHeadless
+  allow_failure: true
+
+# Code Quality Analysis
+quality:sonarqube:
+  stage: quality
+  image: maven:3.8-openjdk-17
+  script:
+    - echo "SonarQube analysis would run here"
+    # - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+  only:
+    - main
+    - develop
+  allow_failure: true
+
+# Deploy to staging (exemple)
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying to staging environment"
+    # Ajouter vos commandes de déploiement ici
+  only:
+    - develop
+  when: manual
+
+# Deploy to production (exemple)
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying to production environment"
+    # Ajouter vos commandes de déploiement ici
+  only:
+    - main
+  when: manual

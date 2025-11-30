@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: plannora-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: PlannoraDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - plannora-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Eureka Service Discovery
+  eureka:
+    build:
+      context: ./EurekaService/eureka/eureka
+      dockerfile: Dockerfile
+    container_name: plannora-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - plannora-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Gateway Service
+  gateway:
+    build:
+      context: ./GatewayService/gateway/gateway
+      dockerfile: Dockerfile
+    container_name: plannora-gateway
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      eureka:
+        condition: service_healthy
+    networks:
+      - plannora-network
+
+  # Authentification Service
+  auth-service:
+    build:
+      context: ./AuthentificationService/Authentification/authentification
+      dockerfile: Dockerfile
+    container_name: plannora-auth
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/PlannoraDB?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - plannora-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./UserService/user-service
+      dockerfile: Dockerfile
+    container_name: plannora-user
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/PlannoraDB?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - plannora-network
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./Frontend/plannora-frontend
+      dockerfile: Dockerfile
+    container_name: plannora-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+      - auth-service
+      - user-service
+    networks:
+      - plannora-network
+
+networks:
+  plannora-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

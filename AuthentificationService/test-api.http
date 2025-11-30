@@ -1,0 +1,100 @@
+### Test du Service d'Authentification Plannora
+### Utilisez ce fichier avec REST Client (VS Code) ou Postman
+
+@baseUrl = http://localhost:8082/api/auth
+
+### 0. Debug - Vérifier le nombre d'utilisateurs
+GET {{baseUrl}}/debug/users
+
+### 1. Créer un utilisateur de test
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "test@plannora.com",
+  "password": "password123",
+  "nom": "Test",
+  "prenom": "User",
+  "role": "ADMIN"
+}
+
+### 2. Login avec l'utilisateur de test
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "test@plannora.com",
+  "password": "password123"
+}
+
+### 3. Login avec Admin
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "admin@plannora.com",
+  "password": "password123"
+}
+
+### 2. Login avec Enseignant
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "enseignant@plannora.com",
+  "password": "password123"
+}
+
+### 3. Login avec Étudiant
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "etudiant@plannora.com",
+  "password": "password123"
+}
+
+### 4. Login avec mauvais mot de passe (devrait échouer)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "admin@plannora.com",
+  "password": "wrongpassword"
+}
+
+### 5. Inscription d'un nouvel utilisateur
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "nouveau@plannora.com",
+  "password": "motdepasse123",
+  "nom": "Nouveau",
+  "prenom": "Utilisateur",
+  "role": "ETUDIANT"
+}
+
+### 6. Inscription avec email existant (devrait échouer)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "admin@plannora.com",
+  "password": "password123",
+  "nom": "Test",
+  "prenom": "Test",
+  "role": "ADMIN"
+}
+
+### 7. Inscription avec email invalide (devrait échouer)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "emailinvalide",
+  "password": "password123",
+  "nom": "Test",
+  "prenom": "Test",
+  "role": "ADMIN"
+}

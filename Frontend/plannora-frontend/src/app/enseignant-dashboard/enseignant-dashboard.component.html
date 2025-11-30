@@ -111,21 +111,117 @@
     <!-- Content Area -->
     <main class="content-area">
       <!-- Vue d'ensemble -->
-      <div *ngIf="activeSection === 'overview'" class="section">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">📚</div>
-            <div class="stat-info">
-              <h3>Cours cette semaine</h3>
-              <p class="stat-value">{{ plannings.length }}</p>
+      <div *ngIf="activeSection === 'overview'" class="section overview">
+        <!-- Filtres -->
+        <div class="filters">
+          <select class="filter-select">
+            <option>Période: Cette semaine</option>
+            <option>Ce mois</option>
+            <option>Tout</option>
+          </select>
+          <select class="filter-select">
+            <option>Cours : Tous</option>
+            <option>En cours</option>
+            <option>Terminés</option>
+          </select>
+        </div>
+
+        <!-- Statistiques principales -->
+        <div class="main-stats">
+          <div class="stat-box">
+            <div class="stat-label">Cours cette semaine</div>
+            <div class="stat-value">{{ plannings.length }}<span class="stat-total">/20</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Heures totales</div>
+            <div class="stat-value">{{ totalHeures }}<span class="stat-total">h</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Étudiants</div>
+            <div class="stat-value">156<span class="stat-total"></span></div>
+          </div>
+          <div class="stat-box chart-box">
+            <div class="chart-header">
+              <div class="stat-label">Présence</div>
+              <select class="period-select">
+                <option>Semaine</option>
+                <option>Mois</option>
+              </select>
+            </div>
+            <div class="chart-placeholder">
+              <div class="bar" style="height: 85%"></div>
+              <div class="bar" style="height: 90%"></div>
+              <div class="bar" style="height: 75%"></div>
+              <div class="bar" style="height: 95%"></div>
+              <div class="bar" style="height: 88%"></div>
             </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">⏰</div>
-            <div class="stat-info">
-              <h3>Heures totales</h3>
-              <p class="stat-value">{{ totalHeures }}h</p>
+        </div>
+
+        <!-- Métriques secondaires -->
+        <div class="secondary-stats">
+          <div class="metric-card">
+            <div class="metric-label">Taux de présence</div>
+            <div class="metric-value">89%</div>
+            <div class="metric-chart">
+              <svg width="100%" height="30" viewBox="0 0 100 30">
+                <polyline points="0,15 20,14 40,12 60,10 80,9 100,7" fill="none" stroke="#667eea" stroke-width="2"/>
+              </svg>
             </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Cours complétés</div>
+            <div class="metric-value">92%</div>
+            <div class="metric-chart">
+              <svg width="100%" height="30" viewBox="0 0 100 30">
+                <polyline points="0,18 20,16 40,14 60,11 80,9 100,6" fill="none" stroke="#667eea" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Satisfaction</div>
+            <div class="metric-value positive">4.8/5</div>
+            <div class="metric-chart">
+              <svg width="100%" height="30" viewBox="0 0 100 30">
+                <polyline points="0,12 20,11 40,10 60,9 80,8 100,7" fill="none" stroke="#667eea" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Listes -->
+        <div class="lists-container">
+          <div class="list-panel">
+            <h3>Prochains cours</h3>
+            <div class="course-list">
+              <div class="course-item" *ngFor="let planning of plannings.slice(0, 5)">
+                <div class="course-day">{{ planning.jour }}</div>
+                <div class="course-info">
+                  <div class="course-name">{{ planning.cours }}</div>
+                  <div class="course-meta">{{ planning.heureDebut }} - {{ planning.heureFin }} • Salle {{ planning.salle }}</div>
+                </div>
+              </div>
+            </div>
+            <a href="#" class="view-all">Voir tout le planning →</a>
+          </div>
+
+          <div class="list-panel">
+            <h3>Mes réservations</h3>
+            <div class="reservation-list">
+              <div class="reservation-item">
+                <div class="reservation-name">Salle 305 - Laboratoire</div>
+                <div class="reservation-meta">Lundi 14:00 - 16:00</div>
+              </div>
+              <div class="reservation-item">
+                <div class="reservation-name">Salle 201 - Amphithéâtre</div>
+                <div class="reservation-meta">Mercredi 10:00 - 12:00</div>
+              </div>
+              <div class="reservation-item">
+                <div class="reservation-name">Salle 102 - TP Informatique</div>
+                <div class="reservation-meta">Vendredi 08:00 - 10:00</div>
+              </div>
+            </div>
+            <a href="#" class="view-all">Voir toutes les réservations →</a>
           </div>
         </div>
       </div>

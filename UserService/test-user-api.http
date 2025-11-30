@@ -1,0 +1,84 @@
+### Variables
+@baseUrl = http://localhost:8083/api
+@authUrl = http://localhost:8082/api/auth
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Se connecter en tant qu'admin (via le service d'authentification)
+POST {{authUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "admin@plannora.com",
+  "password": "admin123"
+}
+
+### 2. Créer un enseignant (ADMIN uniquement)
+POST {{baseUrl}}/utilisateurs/enseignant
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "enseignant1@plannora.com",
+  "mdp": "password123",
+  "nomUser": "Dupont",
+  "prenomUser": "Jean",
+  "telephone": "0612345678",
+  "specialite": "Informatique",
+  "departement": "Génie Logiciel"
+}
+
+### 3. Créer un administrateur (ADMIN uniquement)
+POST {{baseUrl}}/utilisateurs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "admin2@plannora.com",
+  "mdp": "password123",
+  "nomUser": "Martin",
+  "prenomUser": "Sophie",
+  "telephone": "0623456789",
+  "role": "ADMIN"
+}
+
+### 4. Obtenir tous les utilisateurs (ADMIN uniquement)
+GET {{baseUrl}}/utilisateurs
+Authorization: Bearer {{token}}
+
+### 5. Obtenir tous les enseignants (ADMIN ou ENSEIGNANT)
+GET {{baseUrl}}/utilisateurs/enseignants
+Authorization: Bearer {{token}}
+
+### 6. Obtenir un utilisateur par ID (ADMIN uniquement)
+GET {{baseUrl}}/utilisateurs/admin001
+Authorization: Bearer {{token}}
+
+### 7. Mettre à jour un utilisateur (ADMIN uniquement)
+PUT {{baseUrl}}/utilisateurs/admin001
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nomUser": "Admin",
+  "prenomUser": "Principal",
+  "telephone": "0611111111"
+}
+
+### 8. Supprimer un utilisateur (ADMIN uniquement)
+DELETE {{baseUrl}}/utilisateurs/USER_ID_TO_DELETE
+Authorization: Bearer {{token}}
+
+### 9. Créer plusieurs enseignants pour tester
+POST {{baseUrl}}/utilisateurs/enseignant
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "enseignant2@plannora.com",
+  "mdp": "password123",
+  "nomUser": "Bernard",
+  "prenomUser": "Marie",
+  "telephone": "0634567890",
+  "specialite": "Mathématiques",
+  "departement": "Sciences"
+}
