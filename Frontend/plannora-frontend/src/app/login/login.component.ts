@@ -49,9 +49,9 @@ export class LoginComponent {
           this.isLoading = false;
           localStorage.setItem('currentUser', JSON.stringify(response));
           localStorage.setItem('token', response.token);
-          
+
           console.log('Connexion réussie!', response);
-          
+
           // Redirection selon le rôle
           if (response.role === 'ADMIN' || response.role === 'ADMINISTRATEUR') {
             this.router.navigate(['/admin-dashboard']);
@@ -68,6 +68,28 @@ export class LoginComponent {
         }
       });
     }
+  }
+
+  onForgotPassword(): void {
+    const emailControl = this.loginForm.get('email');
+    if (emailControl?.invalid || !emailControl?.value) {
+      this.errorMessage = 'Veuillez entrer une adresse email valide pour réinitialiser le mot de passe.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email: emailControl.value }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        alert(response.message); // Simple alert for now, can be improved
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Erreur lors de l\'envoi de l\'email';
+      }
+    });
   }
 
   togglePasswordVisibility(): void {

@@ -2,25 +2,20 @@
   <div class="login-left">
     <img src="FemmeManager.jpeg" alt="Plannora" class="login-image">
   </div>
-  
+
   <div class="login-right">
     <div class="login-content">
       <div class="logo-container">
         <img src="Planora.png" alt="Plannora Logo" class="logo">
       </div>
-      
+
       <h1 class="title">Commençons la journée !</h1>
       <p class="subtitle">Un logiciel pour la planification des emplois du temps</p>
-      
+
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
         <div class="form-group">
           <div class="input-wrapper">
-            <input 
-              type="email" 
-              id="email" 
-              formControlName="email"
-              placeholder="Email"
-              class="form-input"
+            <input type="email" id="email" formControlName="email" placeholder="Email" class="form-input"
               [class.error]="email?.invalid && email?.touched">
             <span class="input-icon">📧</span>
           </div>
@@ -32,13 +27,8 @@
 
         <div class="form-group">
           <div class="input-wrapper">
-            <input 
-              [type]="showPassword ? 'text' : 'password'" 
-              id="password" 
-              formControlName="password"
-              placeholder="Mot de passe"
-              class="form-input"
-              [class.error]="password?.invalid && password?.touched">
+            <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+              placeholder="Mot de passe" class="form-input" [class.error]="password?.invalid && password?.touched">
             <span class="input-icon password-toggle" (click)="togglePasswordVisibility()">
               {{ showPassword ? '👁️' : '🔒' }}
             </span>
@@ -50,17 +40,14 @@
         </div>
 
         <div class="forgot-password">
-          <a href="#" class="link">Mot de passe oublié ?</a>
+          <a href="javascript:void(0)" (click)="onForgotPassword()" class="link">Mot de passe oublié ?</a>
         </div>
 
         <div *ngIf="errorMessage" class="alert alert-error">
           {{ errorMessage }}
         </div>
 
-        <button 
-          type="submit" 
-          class="btn-submit"
-          [disabled]="loginForm.invalid || isLoading">
+        <button type="submit" class="btn-submit" [disabled]="loginForm.invalid || isLoading">
           <span *ngIf="!isLoading">Se Connecter</span>
           <span *ngIf="isLoading">Connexion en cours...</span>
         </button>
