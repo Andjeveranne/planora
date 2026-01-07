@@ -1,6 +1,6 @@
 package com.isi4.userservice.dto;
 
-import jakarta.validation.constraints.Email;
+import com.isi4.userservice.validation.ValidInstitutionalEmail;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,7 @@ public class UtilisateurDTO {
     @NotBlank(message = "Le mot de passe est obligatoire")
     private String mdp;
     
-    @Email(message = "Email invalide")
+    @ValidInstitutionalEmail
     @NotBlank(message = "L'email est obligatoire")
     private String email;
     
