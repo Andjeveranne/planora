@@ -1,5 +1,6 @@
 package com.isi4.authentification.entity;
 
+import com.isi4.authentification.validation.ValidInstitutionalEmail;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,12 @@ public class User {
     @Id
     @Column(name = "id_user")
     private String id;
+<<<<<<< HEAD
 
+=======
+    
+    @ValidInstitutionalEmail
+>>>>>>> main
     @Column(nullable = false, unique = true)
     private String email;
 

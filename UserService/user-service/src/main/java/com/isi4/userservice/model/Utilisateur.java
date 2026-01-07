@@ -1,7 +1,7 @@
 package com.isi4.userservice.model;
 
+import com.isi4.userservice.validation.ValidInstitutionalEmail;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class Utilisateur {
     @Column(nullable = false)
     private String mdp;
     
-    @Email(message = "Email invalide")
+    @ValidInstitutionalEmail
     @NotBlank(message = "L'email est obligatoire")
     @Column(nullable = false, unique = true)
     private String email;

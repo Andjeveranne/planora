@@ -1,6 +1,6 @@
 package com.isi4.authentification.dto;
 
-import jakarta.validation.constraints.Email;
+import com.isi4.authentification.validation.ValidInstitutionalEmail;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class RegisterRequest {
     
     @NotBlank(message = "L'email est obligatoire")
-    @Email(message = "Format d'email invalide")
+    @ValidInstitutionalEmail
     private String email;
     
     @NotBlank(message = "Le mot de passe est obligatoire")
