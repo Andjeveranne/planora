@@ -33,27 +33,32 @@ Write-Host "`n3. Demarrage des services..." -ForegroundColor Yellow
 Write-Host "[INFO] Cela peut prendre quelques minutes..." -ForegroundColor Gray
 
 # Demarrer Eureka
-Write-Host "`n   [1/5] Demarrage d'Eureka (port 8761)..." -ForegroundColor Cyan
+Write-Host "`n   [1/6] Demarrage d'Eureka (port 8761)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd EurekaService/eureka/eureka; Write-Host '=== EUREKA SERVER ===' -ForegroundColor Cyan; ./mvnw spring-boot:run"
 Start-Sleep -Seconds 5
 
 # Demarrer le Service d'Authentification
-Write-Host "   [2/5] Demarrage du Service d'Authentification (port 8085)..." -ForegroundColor Cyan
+Write-Host "   [2/6] Demarrage du Service d'Authentification (port 8085)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd AuthentificationService/Authentification/authentification; Write-Host '=== SERVICE AUTHENTIFICATION ===' -ForegroundColor Cyan; ./mvnw spring-boot:run"
 Start-Sleep -Seconds 5
 
 # Demarrer le Service Utilisateur
-Write-Host "   [3/5] Demarrage du Service Utilisateur (port 8086)..." -ForegroundColor Cyan
+Write-Host "   [3/6] Demarrage du Service Utilisateur (port 8086)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd UserService/user-service; Write-Host '=== SERVICE UTILISATEUR ===' -ForegroundColor Cyan; ./mvnw spring-boot:run"
 Start-Sleep -Seconds 5
 
 # Demarrer la Gateway
-Write-Host "   [4/5] Demarrage de la Gateway (port 8081)..." -ForegroundColor Cyan
+Write-Host "   [4/6] Demarrage de la Gateway (port 8081)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd GatewayService/gateway/gateway; Write-Host '=== GATEWAY ===' -ForegroundColor Cyan; ./mvnw spring-boot:run"
 Start-Sleep -Seconds 5
 
+# Demarrer le PlanningService
+Write-Host "   [5/6] Demarrage du PlanningService (port 8088)..." -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd PlanningService/planning-service; Write-Host '=== PLANNING SERVICE ===' -ForegroundColor Cyan; ./mvnw spring-boot:run"
+Start-Sleep -Seconds 5
+
 # Demarrer le Frontend
-Write-Host "   [5/5] Demarrage du Frontend Angular (port 4200)..." -ForegroundColor Cyan
+Write-Host "   [6/6] Demarrage du Frontend Angular (port 4200)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd Frontend/plannora-frontend; Write-Host '=== FRONTEND ANGULAR ===' -ForegroundColor Cyan; npm start"
 
 Write-Host "`n[OK] Tous les services sont en cours de demarrage!" -ForegroundColor Green
