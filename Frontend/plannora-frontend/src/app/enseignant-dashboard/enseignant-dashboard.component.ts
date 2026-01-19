@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
-import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
 import { PlanningService, EmploiDuTempsDTO } from '../services/planning.service';
 
 interface UserInfo {
@@ -32,6 +31,12 @@ interface Day {
   date: Date;
 }
 
+interface Disponibilite {
+  jour: string;
+  heureDebut: string;
+  heureFin: string;
+}
+
 interface EdtSlot {
   jour: string;
   heureDebut: string;
@@ -46,7 +51,7 @@ interface EdtSlot {
 @Component({
   selector: 'app-enseignant-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './enseignant-dashboard.component.html',
   styleUrls: ['./enseignant-dashboard.component.css']
 })
@@ -261,8 +266,7 @@ export class EnseignantDashboardComponent implements OnInit {
       'courses': 'Mes Cours',
       'reservations': 'Réservations de Salles',
       'students': 'Mes Étudiants',
-      'notifications': 'Notifications',
-      'disponibilites': 'Mes Disponibilités'
+      'notifications': 'Notifications'
     };
     return titles[this.activeSection] || 'Dashboard Enseignant';
   }
