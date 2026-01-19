@@ -414,6 +414,7 @@
                 <th>Téléphone</th>
                 <th>Spécialité</th>
                 <th>Département</th>
+                <th>Disponibilités</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -425,6 +426,11 @@
                 <td>{{ enseignant.telephone }}</td>
                 <td>{{ enseignant.specialite || '-' }}</td>
                 <td>{{ enseignant.departement || '-' }}</td>
+                <td>
+                  <button class="btn-check-dispo" (click)="voirDisponibilites(enseignant)">
+                    <span class="icon">📅</span> Voir
+                  </button>
+                </td>
                 <td>
                   <div class="action-buttons">
                     <button class="btn-icon btn-edit" title="Modifier">
@@ -515,5 +521,31 @@
 
 
     </main>
+  </div>
+
+  <!-- Modal Disponibilités -->
+  <div class="modal-overlay" *ngIf="showDisponibilitesModal" (click)="fermerModalDispo()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Disponibilités de {{ selectedEnseignant?.prenomUser }} {{ selectedEnseignant?.nomUser }}</h2>
+        <button class="close-btn" (click)="fermerModalDispo()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="dispo-list" *ngIf="disponibilitesEnseignant.length > 0; else noDispo">
+          <div class="dispo-item" *ngFor="let dispo of disponibilitesEnseignant">
+            <div class="dispo-day">{{ dispo.jourSemaine }}</div>
+            <div class="dispo-time">{{ dispo.heureDebut }} - {{ dispo.heureFin }}</div>
+          </div>
+        </div>
+        
+        <ng-template #noDispo>
+          <div class="empty-state">
+            <span class="empty-icon">📅</span>
+            <p>Aucune disponibilité renseignée pour cet enseignant.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
   </div>
 </div>

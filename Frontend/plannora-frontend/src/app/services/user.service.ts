@@ -24,12 +24,28 @@ export interface EnseignantRequest {
   departement: string;
 }
 
+export interface DisponibiliteRequest {
+  jourSemaine: string;
+  heureDebut: string;
+  heureFin: string;
+  enseignantId: string;
+}
+
+export interface Disponibilite {
+  id: number;
+  jourSemaine: string;
+  heureDebut: string;
+  heureFin: string;
+  enseignantId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   // Acces direct au UserService (port 8086)
   private apiUrl = 'http://localhost:8086/api/utilisateurs';
+  private apiDispoUrl = 'http://localhost:8086/api/disponibilites';
 
   constructor(private http: HttpClient) {}
 
@@ -61,6 +77,26 @@ export class UserService {
 
   deleteEnseignant(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Méthodes pour les disponibilités
+
+  getDisponibilitesEnseignant(enseignantId: string): Observable<Disponibilite[]> {
+    return this.http.get<Disponibilite[]>(`${this.apiDispoUrl}/enseignant/${enseignantId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  ajouterDisponibilite(dispo: DisponibiliteRequest): Observable<Disponibilite> {
+    return this.http.post<Disponibilite>(this.apiDispoUrl, dispo, {
+      headers: this.getHeaders()
+    });
+  }
+
+  supprimerDisponibilite(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiDispoUrl}/${id}`, {
       headers: this.getHeaders()
     });
   }

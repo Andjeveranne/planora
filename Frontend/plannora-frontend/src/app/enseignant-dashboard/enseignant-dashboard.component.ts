@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 
 interface UserInfo {
@@ -18,10 +19,16 @@ interface Planning {
   heureFin: string;
 }
 
+interface Disponibilite {
+  jour: string;
+  heureDebut: string;
+  heureFin: string;
+}
+
 @Component({
   selector: 'app-enseignant-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './enseignant-dashboard.component.html',
   styleUrls: ['./enseignant-dashboard.component.css']
 })
@@ -30,6 +37,15 @@ export class EnseignantDashboardComponent implements OnInit {
   plannings: Planning[] = [];
   totalHeures: number = 0;
   activeSection: string = 'overview';
+  
+  // Disponibilités
+  disponibilites: Disponibilite[] = [];
+  nouvelleDispo: Disponibilite = {
+    jour: 'Lundi',
+    heureDebut: '',
+    heureFin: ''
+  };
+  joursSemaine: string[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
   constructor(private authService: AuthService) {}
 
@@ -58,7 +74,8 @@ export class EnseignantDashboardComponent implements OnInit {
       'courses': 'Mes Cours',
       'reservations': 'Réservations de Salles',
       'students': 'Mes Étudiants',
-      'notifications': 'Notifications'
+      'notifications': 'Notifications',
+      'disponibilites': 'Mes Disponibilités'
     };
     return titles[this.activeSection] || 'Dashboard Enseignant';
   }
@@ -78,5 +95,30 @@ export class EnseignantDashboardComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  // Gestion des disponibilités
+  ajouterDisponibilite(): void {
+    if (this.nouvelleDispo.jour && this.nouvelleDispo.heureDebut && this.nouvelleDispo.heureFin) {
+      if (this.nouvelleDispo.heureDebut >= this.nouvelleDispo.heureFin) {
+        alert('L\'heure de début doit être avant l\'heure de fin');
+        return;
+      }
+      
+      this.disponibilites.push({ ...this.nouvelleDispo });
+      // Reset partiel pour faciliter la saisie suivante
+      this.nouvelleDispo.heureDebut = '';
+      this.nouvelleDispo.heureFin = '';
+    }
+  }
+
+  supprimerDisponibilite(index: number): void {
+    this.disponibilites.splice(index, 1);
+  }
+
+  envoyerDisponibilites(): void {
+    console.log('Envoi des disponibilités à l\'administrateur:', this.disponibilites);
+    alert('Vos disponibilités ont été envoyées à l\'administrateur avec succès !');
+    this.disponibilites = []; // Reset après envoi
   }
 }

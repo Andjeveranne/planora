@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
-import { UserService, Enseignant, EnseignantRequest } from '../services/user.service';
+import { UserService, Enseignant, EnseignantRequest, Disponibilite } from '../services/user.service';
 
 interface UserInfo {
   nom: string;
@@ -31,7 +31,10 @@ export class AdminDashboardComponent implements OnInit {
   recentUsers: any[] = [];
   recentRooms: any[] = [];
   enseignants: Enseignant[] = [];
+  selectedEnseignant: Enseignant | null = null;
+  disponibilitesEnseignant: Disponibilite[] = [];
   showAddEnseignantForm: boolean = false;
+  showDisponibilitesModal: boolean = false;
   isLoadingEnseignants: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
@@ -214,6 +217,29 @@ export class AdminDashboardComponent implements OnInit {
         this.errorMessage = 'Erreur lors de la suppression de l\'enseignant';
       }
     });
+  }
+
+  voirDisponibilites(enseignant: Enseignant): void {
+    if (!enseignant.idUser) return;
+    
+    this.selectedEnseignant = enseignant;
+    this.showDisponibilitesModal = true;
+    this.disponibilitesEnseignant = [];
+    
+    this.userService.getDisponibilitesEnseignant(enseignant.idUser).subscribe({
+      next: (data) => {
+        this.disponibilitesEnseignant = data;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des disponibilités:', error);
+        this.errorMessage = 'Impossible de charger les disponibilités';
+      }
+    });
+  }
+
+  fermerModalDispo(): void {
+    this.showDisponibilitesModal = false;
+    this.selectedEnseignant = null;
   }
 
   logout(): void {
