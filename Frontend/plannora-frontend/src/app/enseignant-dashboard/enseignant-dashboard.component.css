@@ -469,213 +469,434 @@
   margin: 0;
 }
 
-/* Disponibilités Section */
-.section-full-height {
-  height: 100%;
-}
 
-.dispo-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  height: 100%;
-}
+/* ========== EDT PLANNING STYLES ========== */
 
-.dispo-form-card, .dispo-list-card {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-}
-
-.dispo-form-card h3, .dispo-list-card h3 {
-  margin: 0;
-  color: #1a1a1a;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.subtitle {
-  color: #6c757d;
-  font-size: 0.9rem;
-  margin: 0.5rem 0 2rem 0;
-}
-
-.form-group {
+.planning-header-section {
   margin-bottom: 1.5rem;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #4a5568;
-  font-weight: 500;
+.section-description {
+  color: #666;
   font-size: 0.95rem;
+  margin: 0;
 }
 
-.form-control {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background-color: #f8fafc;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  background-color: white;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Navigation semaine */
+.week-navigation {
+  display: flex;
+  align-items: center;
   gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  background: #f8f9fc;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
 }
 
-.btn-add {
-  margin-top: auto;
-  width: 100%;
-  padding: 1rem;
-  background: white;
-  border: 2px dashed #cbd5e0;
-  border-radius: 8px;
-  color: #4a5568;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.btn-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-}
-
-.btn-add:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.05);
-}
-
-.btn-add:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.badge-count {
-  background: #ebf4ff;
-  color: #5a67d8;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.dispo-list {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.dispo-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background: #f8fafc;
+  padding: 0.6rem 1rem;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  border: 1px solid #edf2f7;
-  transition: transform 0.2s ease;
-}
-
-.dispo-item:hover {
-  transform: translateX(4px);
   background: white;
-  border-color: #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
 
-.dispo-info {
+.btn-nav:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.week-info {
+  flex: 1;
+  text-align: center;
+}
+
+.week-label {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1.1rem;
+}
+
+.btn-today {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-today:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+/* Stats EDT */
+.edt-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.edt-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-radius: 12px;
+}
+
+.edt-stat .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4338ca;
+}
+
+.edt-stat .stat-label {
+  font-size: 0.9rem;
+  color: #6366f1;
+  margin: 0;
+}
+
+/* Message pas d'EDT */
+.no-edt-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #718096;
+}
+
+.no-edt-message svg {
+  margin-bottom: 1.5rem;
+}
+
+.no-edt-message h3 {
+  margin: 0 0 0.5rem 0;
+  color: #4a5568;
+  font-size: 1.3rem;
+}
+
+.no-edt-message p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.no-edt-message .hint {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Grille EDT */
+.edt-grid-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.edt-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 800px;
+}
+
+.edt-table th,
+.edt-table td {
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  vertical-align: top;
+}
+
+.edt-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 0.5rem;
+}
+
+.edt-table th.today {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.time-col {
+  width: 100px;
+  background: #f7fafc !important;
+  font-weight: 600;
+  color: #4a5568 !important;
+  font-size: 0.85rem;
+  padding: 0.75rem 0.5rem;
+}
+
+.day-header {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.dispo-day {
-  color: #2d3748;
+.day-header .day-name {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-.dispo-time {
-  color: #718096;
-  font-size: 0.9rem;
+.day-header .day-date {
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
-.btn-delete {
-  background: none;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 6px;
+.edt-cell {
+  height: 80px;
+  padding: 0.25rem;
+  background: #fafafa;
   transition: all 0.2s;
 }
 
-.btn-delete:hover {
-  color: #ef4444;
-  background: #fef2f2;
+.edt-cell.has-course {
+  background: transparent;
+  padding: 0.25rem;
 }
 
-.empty-state {
-  flex: 1;
+/* Carte de cours */
+.course-card {
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  font-size: 0.8rem;
+  border-left: 4px solid #667eea;
+  transition: all 0.2s;
+}
+
+.course-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.course-card.type-cm {
+  border-left-color: #667eea;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
+
+.course-card.type-td {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.course-card.type-tp {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.course-card .course-ue {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-card .course-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.course-card .course-type {
+  background: #667eea;
+  color: white;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.course-card.type-td .course-type {
+  background: #f59e0b;
+}
+
+.course-card.type-tp .course-type {
+  background: #10b981;
+}
+
+.course-card .course-classe {
+  background: #e2e8f0;
+  color: #4a5568;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.course-card .course-salle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #718096;
+  font-size: 0.75rem;
+  margin-top: auto;
+}
+
+.course-card .course-salle svg {
+  flex-shrink: 0;
+}
+
+/* Légende */
+.edt-legend {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fc;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.legend-items {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.legend-color.type-cm {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-left: 3px solid #667eea;
+}
+
+.legend-color.type-td {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 3px solid #f59e0b;
+}
+
+.legend-color.type-tp {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-left: 3px solid #10b981;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .week-navigation {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .week-info {
+    order: -1;
+  }
+  
+  .edt-stats {
+    flex-direction: column;
+  }
+  
+  .edt-legend {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+/* Loading indicator */
+.loading-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #a0aec0;
-  gap: 1rem;
+  padding: 3rem;
+  color: #718096;
 }
 
-.empty-icon {
-  font-size: 3rem;
-  opacity: 0.5;
+.loading-indicator .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
 }
 
-.btn-submit {
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
-}
-
-@media (max-width: 1024px) {
-  .dispo-container {
-    grid-template-columns: 1fr;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
+}
+
+
+/* Styles pour les jours/créneaux passés */
+th.past-day {
+  background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e0 100%) !important;
+  color: #718096;
+}
+
+.past-label {
+  font-size: 0.7em;
+  color: #a0aec0;
+  font-style: italic;
+  display: block;
+}
+
+.edt-cell.past-slot {
+  background: repeating-linear-gradient(
+    45deg,
+    #f7fafc,
+    #f7fafc 5px,
+    #e2e8f0 5px,
+    #e2e8f0 10px
+  ) !important;
+  opacity: 0.6;
+}
+
+.edt-cell.past-slot.has-course {
+  opacity: 0.7;
+}
+
+.course-card.past-course {
+  opacity: 0.7;
+  filter: grayscale(30%);
+}
+
+.course-card.past-course::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
 }

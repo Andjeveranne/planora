@@ -1,0 +1,90 @@
+<div class="container">
+    <div class="header">
+        <h2>Gestion des Disponibilités</h2>
+        <div class="week-navigation">
+            <button (click)="changeWeek(-1)">← Semaine précédente</button>
+            <span class="week-label">Semaine du {{ currentWeekStart | date:'dd/MM/yyyy' }}</span>
+            <button (click)="changeWeek(1)">Semaine suivante →</button>
+            <button (click)="setWeekToCurrent()" class="today-btn">Aujourd'hui</button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">
+        ✅ {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-error">
+        ❌ {{ errorMessage }}
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+        <p>📌 Cliquez sur les cases pour sélectionner vos créneaux disponibles, puis <strong>confirmez</strong> vos
+            changements.</p>
+    </div>
+
+    <div class="calendar-container">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th class="time-header">Heure</th>
+                    <th *ngFor="let day of weekDays" [class.past-day]="isPastDay(day)">
+                        <div class="day-name">{{ day.name }}</div>
+                        <div class="day-date">{{ day.date | date:'dd/MM' }}</div>
+                        <div *ngIf="isPastDay(day)" class="past-label">Passé</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let slot of timeSlots">
+                    <td class="time-slot">{{ slot.time }}</td>
+                    <td *ngFor="let day of weekDays" class="calendar-cell" [class.available]="isAvailable(day, slot)"
+                        [class.pending]="isPending(day, slot)" [class.past-slot]="isPastSlot(day, slot)"
+                        [class.disabled]="isPastSlot(day, slot)" (click)="toggleAvailability(day, slot)">
+                        <div class="cell-content">
+                            <span *ngIf="isAvailable(day, slot)" class="check-mark">✓</span>
+                            <span *ngIf="isPending(day, slot)" class="pending-indicator">●</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <div class="pending-info" *ngIf="hasPendingChanges()">
+            <span class="pending-badge">{{ getPendingChangesCount() }}</span>
+            modification(s) en attente
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-cancel" (click)="clearPendingChanges()" [disabled]="!hasPendingChanges() || saving">
+                Annuler
+            </button>
+            <button class="btn-confirm" (click)="confirmChanges()" [disabled]="!hasPendingChanges() || saving">
+                <span *ngIf="saving">Enregistrement...</span>
+                <span *ngIf="!saving">✓ Confirmer les disponibilités</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="box available"></div>
+            <span>Disponible</span>
+        </div>
+        <div class="legend-item">
+            <div class="box unavailable"></div>
+            <span>Indisponible</span>
+        </div>
+        <div class="legend-item">
+            <div class="box pending"></div>
+            <span>En attente de confirmation</span>
+        </div>
+        <div class="legend-item">
+            <div class="box past"></div>
+            <span>Jour passé (non modifiable)</span>
+        </div>
+    </div>
+</div>

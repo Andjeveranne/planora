@@ -1,0 +1,31 @@
+package com.isi4.planningservice.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "disponibilites")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Disponibilite {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String enseignantId; // ID venant du UserService
+
+    @Column(nullable = false)
+    private LocalDateTime dateHeureDebut;
+
+    @Column(nullable = false)
+    private LocalDateTime dateHeureFin;
+
+    private String commentaire;
+}
