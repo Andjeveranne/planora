@@ -1,0 +1,53 @@
+# =====================================================
+# TEACHER DATA VERIFICATION SCRIPT
+# =====================================================
+# Use this to verify Pascal Bougong has all necessary data
+# for timetable generation
+# =====================================================
+
+### 1. Check if teacher exists
+GET http://localhost:8086/api/enseignants/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 2. Check teacher's availabilities
+GET http://localhost:8088/api/disponibilites/enseignant/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 3. Check teacher's assigned courses (THIS IS KEY!)
+GET http://localhost:8086/api/courses/enseignant/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 4. Check available UEs
+GET http://localhost:8086/api/ues
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 5. Check available Classes
+GET http://localhost:8086/api/classes
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 6. Test timetable generation (should work after setup)
+POST http://localhost:8086/api/emplois-du-temps/generer-intelligent/8924dc7b-8a43-402c-9756-066925fd6746?nombreSemaines=1
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 7. Check generated timetable
+GET http://localhost:8086/api/emplois-du-temps/enseignant/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### Expected Results:
+# 1. Teacher exists: ✅ Pascal Bougong data
+# 2. Availabilities: ✅ 3 availability entries
+# 3. Assigned courses: ❌ Empty array (BEFORE setup) → ✅ 5 courses (AFTER setup)
+# 4. UEs: ✅ 5 UE entries
+# 5. Classes: ✅ 5 class entries
+# 6. Generation: ✅ Success message with created entries count
+# 7. Generated timetable: ✅ Multiple course entries in time slots
+
+### If step 3 returns empty array:
+# - Teacher has no assigned courses
+# - Run setup-test-data.bat
+# - Re-test step 3
+
+### If step 6 fails:
+# - Check UserService logs
+# - Verify teacher ID is correct
+# - Ensure all services are running

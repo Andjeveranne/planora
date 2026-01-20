@@ -100,4 +100,28 @@ export class UserService {
       headers: this.getHeaders()
     });
   }
+
+  // Méthode pour récupérer l'utilisateur connecté
+  getCurrentUser(): any {
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'utilisateur connecté:', error);
+      return null;
+    }
+  }
+
+  // Méthode pour vérifier si l'utilisateur est connecté
+  isLoggedIn(): boolean {
+    const token = localStorage.getItem('token');
+    const user = this.getCurrentUser();
+    return !!(token && user);
+  }
+
+  // Méthode pour vérifier le rôle de l'utilisateur
+  hasRole(role: string): boolean {
+    const user = this.getCurrentUser();
+    return user && user.role === role;
+  }
 }

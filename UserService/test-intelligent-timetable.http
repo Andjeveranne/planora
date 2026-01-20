@@ -1,0 +1,95 @@
+# Test de la Génération Intelligente d'Emploi du Temps
+# À utiliser avec REST Client ou Postman
+
+### Variables
+@userServiceUrl = http://localhost:8086/api
+@token = YOUR_JWT_TOKEN_HERE
+@enseignantId = YOUR_ENSEIGNANT_ID_HERE
+
+### 1. Vérifier la santé du service
+GET {{userServiceUrl}}/emplois-du-temps/health
+Authorization: Bearer {{token}}
+
+### 2. Vérifier les disponibilités de l'enseignant
+GET {{userServiceUrl}}/disponibilites/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 3. Vérifier les cours assignés à l'enseignant
+GET {{userServiceUrl}}/courses/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 4. Générer un emploi du temps intelligent (4 semaines)
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=4
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 5. Générer un emploi du temps intelligent (2 semaines)
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 6. Récupérer l'emploi du temps généré
+GET {{userServiceUrl}}/emplois-du-temps/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 7. Récupérer l'emploi du temps pour une période spécifique
+GET {{userServiceUrl}}/emplois-du-temps/enseignant/{{enseignantId}}/periode?dateDebut=2024-01-22&dateFin=2024-01-28
+Authorization: Bearer {{token}}
+
+### 8. Supprimer tous les emplois du temps de l'enseignant
+DELETE {{userServiceUrl}}/emplois-du-temps/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 9. Test avec un enseignant inexistant (doit échouer gracieusement)
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/INEXISTANT?nombreSemaines=2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 10. Vérifier les UEs assignées à l'enseignant
+GET {{userServiceUrl}}/ues/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 11. Vérifier les statistiques des UEs
+GET {{userServiceUrl}}/ues/statistics
+Authorization: Bearer {{token}}
+
+### 12. Test de génération avec différents nombres de semaines
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=8
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 13. Créer un emploi du temps manuel pour comparaison
+POST {{userServiceUrl}}/emplois-du-temps
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "enseignantId": "{{enseignantId}}",
+  "dateJour": "2024-01-22",
+  "jour": "Lundi",
+  "heureDebut": 14,
+  "heureFin": 16,
+  "ue": "Test UE",
+  "classe": "Test Classe",
+  "salle": "Test Salle",
+  "typeCours": "CM"
+}
+
+### 14. Vérifier les conflits potentiels
+GET {{userServiceUrl}}/emplois-du-temps/enseignant/{{enseignantId}}/periode?dateDebut=2024-01-22&dateFin=2024-01-22
+Authorization: Bearer {{token}}
+
+### 15. Test de performance - génération multiple
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=4
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+POST {{userServiceUrl}}/emplois-du-temps/generer-intelligent/{{enseignantId}}?nombreSemaines=4
+Authorization: Bearer {{token}}
+Content-Type: application/json

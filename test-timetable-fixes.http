@@ -1,0 +1,50 @@
+# Test script to verify timetable generation fixes
+# Run this after starting all services
+
+### 1. Test Teacher Availability Submission (should preserve exact times)
+POST http://localhost:8088/api/disponibilites
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "enseignantId": "TEACHER_ID",
+  "dateHeureDebut": "2024-01-22T08:00:00",
+  "dateHeureFin": "2024-01-22T12:00:00",
+  "commentaire": "Test availability 8AM-12PM"
+}
+
+### 2. Get Teacher Availabilities (should show 8AM-12PM, not 7AM-11AM)
+GET http://localhost:8088/api/disponibilites/enseignant/TEACHER_ID
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 3. Generate Intelligent Timetable (should create 4 slots: 8h, 9h, 10h, 11h)
+POST http://localhost:8086/api/emplois-du-temps/generer-intelligent/TEACHER_ID?nombreSemaines=1
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 4. Get Generated Timetable (should show all 4 time slots filled)
+GET http://localhost:8086/api/emplois-du-temps/enseignant/TEACHER_ID
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### 5. Test with 30-minute precision
+POST http://localhost:8088/api/disponibilites
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "enseignantId": "TEACHER_ID",
+  "dateHeureDebut": "2024-01-23T08:30:00",
+  "dateHeureFin": "2024-01-23T10:30:00",
+  "commentaire": "Test availability 8:30AM-10:30AM"
+}
+
+### Expected Results:
+# 1. Times should be preserved exactly (8:00 AM stays 8:00 AM)
+# 2. 8AM-12PM availability should generate 4 separate 1-hour slots
+# 3. Admin dashboard should show all 4 slots as available
+# 4. Generated timetable should fill all available slots, not just the first one
+
+### Verification Steps:
+# 1. Check teacher dashboard - entered times should match displayed times
+# 2. Check admin dashboard - availability grid should show all hours filled
+# 3. Check generated timetable - should have entries for each hour in the range
+# 4. Verify no timezone shift (8:00 AM input = 8:00 AM display)

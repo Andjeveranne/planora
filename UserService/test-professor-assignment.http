@@ -1,0 +1,50 @@
+# Test des endpoints d'assignation des professeurs aux UEs
+# À utiliser avec REST Client ou Postman
+
+### Variables
+@baseUrl = http://localhost:8086/api/ues
+@token = YOUR_JWT_TOKEN_HERE
+@ueId = 1
+@enseignantId = YOUR_ENSEIGNANT_ID_HERE
+
+### 1. Test d'assignation normale (avec création automatique des cours)
+POST {{baseUrl}}/{{ueId}}/enseignants/{{enseignantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 2. Test d'assignation simplifiée (sans création automatique des cours)
+POST {{baseUrl}}/{{ueId}}/enseignants/{{enseignantId}}/simple
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 3. Vérifier l'UE après assignation
+GET {{baseUrl}}/{{ueId}}
+Authorization: Bearer {{token}}
+
+### 4. Lister toutes les UEs pour voir les enseignants assignés
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### 5. Retirer un enseignant d'une UE
+DELETE {{baseUrl}}/{{ueId}}/enseignants/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 6. Obtenir les statistiques des UEs
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### 7. Rechercher des UEs
+GET {{baseUrl}}/search?q=INFO
+Authorization: Bearer {{token}}
+
+### 8. Obtenir les UEs d'un enseignant
+GET {{baseUrl}}/enseignant/{{enseignantId}}
+Authorization: Bearer {{token}}
+
+### 9. Test de santé du service
+GET {{baseUrl}}/health
+Authorization: Bearer {{token}}
+
+### 10. Obtenir les options disponibles
+GET {{baseUrl}}/options
+Authorization: Bearer {{token}}

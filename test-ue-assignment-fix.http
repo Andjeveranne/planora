@@ -1,0 +1,39 @@
+### Test UE Assignment Fix
+### This file tests if the UE assignment transaction errors are fixed
+
+### 1. Login as Admin
+POST http://localhost:8086/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@saintjeaningenieur.org",
+  "password": "admin123"
+}
+
+### 2. Get UE Statistics (should work without 500 error)
+GET http://localhost:8086/api/ues/statistics
+Authorization: Bearer {{auth_token}}
+
+### 3. Get all UEs
+GET http://localhost:8086/api/ues
+Authorization: Bearer {{auth_token}}
+
+### 4. Assign Pascal Abega to UE ID 3 (should work without transaction error)
+POST http://localhost:8086/api/ues/3/enseignants/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer {{auth_token}}
+
+### 5. Try simple assignment (fallback method)
+POST http://localhost:8086/api/ues/3/enseignants/8924dc7b-8a43-402c-9756-066925fd6746/simple
+Authorization: Bearer {{auth_token}}
+
+### 6. Verify assignment worked - get UE details
+GET http://localhost:8086/api/ues/3
+Authorization: Bearer {{auth_token}}
+
+### 7. Test with another UE (ID 1)
+POST http://localhost:8086/api/ues/1/enseignants/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer {{auth_token}}
+
+### 8. Check Pascal's UE assignments
+GET http://localhost:8086/api/ues/enseignant/8924dc7b-8a43-402c-9756-066925fd6746
+Authorization: Bearer {{auth_token}}

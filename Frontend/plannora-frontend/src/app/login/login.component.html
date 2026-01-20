@@ -15,13 +15,22 @@
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
         <div class="form-group">
           <div class="input-wrapper">
-            <input type="email" id="email" formControlName="email" placeholder="Email" class="form-input"
-              [class.error]="email?.invalid && email?.touched">
+            <input type="email" id="email" formControlName="email" placeholder="Email institutionnel" class="form-input"
+              [class.error]="hasEmailError()">
             <span class="input-icon">📧</span>
           </div>
-          <div *ngIf="email?.invalid && email?.touched" class="error-message">
-            <span *ngIf="email?.errors?.['required']">L'email est obligatoire</span>
-            <span *ngIf="email?.errors?.['email']">Format d'email invalide</span>
+          <div *ngIf="hasEmailError()" class="error-message">
+            {{ getEmailErrorMessage() }}
+          </div>
+          <div *ngIf="domainInfo && !hasEmailError() && email?.value" class="help-message">
+            <small class="help-text">
+              ✅ Format correct: {{ domainInfo.exampleFormat }}
+            </small>
+          </div>
+          <div *ngIf="!email?.value" class="help-message">
+            <small class="help-text">
+              💡 Utilisez votre email institutionnel @saintjeaningenieur.org
+            </small>
           </div>
         </div>
 

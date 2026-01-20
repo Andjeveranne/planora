@@ -28,6 +28,15 @@
         </span>
         <span>Enseignants</span>
       </button>
+      <button class="nav-item" [class.active]="activeSection === 'ues'" (click)="setActiveSection('ues')">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </span>
+        <span>Unités d'Enseignement</span>
+      </button>
       <button class="nav-item" [class.active]="activeSection === 'rooms'" (click)="setActiveSection('rooms')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -217,7 +226,7 @@
           <div class="list-panel">
             <h3>Liste des utilisateurs</h3>
             <div class="user-list">
-              <div class="user-item" *ngFor="let user of recentUsers">
+              <div class="user-item" *ngFor="let user of recentUsers; trackBy: trackByUserName">
                 <div class="user-avatar" [style.background-color]="user.color">
                   {{ user.initials }}
                 </div>
@@ -233,7 +242,7 @@
           <div class="list-panel">
             <h3>Liste des salles</h3>
             <div class="room-list">
-              <div class="room-item" *ngFor="let room of recentRooms">
+              <div class="room-item" *ngFor="let room of recentRooms; trackBy: trackByRoomName">
                 <div class="room-name">{{ room.name }}</div>
                 <div class="room-meta">{{ room.capacity }} Places Disponibles - {{ room.type }}</div>
               </div>
@@ -375,11 +384,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let enseignant of filteredEnseignants">
+              <tr *ngFor="let enseignant of filteredEnseignants; trackBy: trackByEnseignantId">
                 <td>
                   <div class="enseignant-info">
                     <div class="avatar" [style.background]="'linear-gradient(135deg, #667eea, #764ba2)'">
-                      {{ enseignant.prenomUser?.charAt(0) }}{{ enseignant.nomUser?.charAt(0) }}
+                      {{ enseignant.prenomUser.charAt(0) }}{{ enseignant.nomUser.charAt(0) }}
                     </div>
                     <div class="info">
                       <div class="name">{{ enseignant.prenomUser }} {{ enseignant.nomUser }}</div>
@@ -392,6 +401,17 @@
                 <td><span class="badge badge-dept">{{ enseignant.departement || 'Non défini' }}</span></td>
                 <td>
                   <div class="action-buttons">
+                    <button class="btn-action btn-disponibilites" (click)="openDisponibilitesModal(enseignant)"
+                      title="Voir les disponibilités">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M9 16l2 2 4-4"></path>
+                      </svg>
+                      <span>Disponibilités</span>
+                    </button>
                     <button class="btn-action btn-edt" (click)="openEdtModal(enseignant, 'generate')"
                       title="Générer l'EDT">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -447,6 +467,35 @@
           </div>
 
           <div class="modal-body">
+            <!-- Summary Section -->
+            <div class="availability-summary" *ngIf="!isLoadingDisponibilites">
+              <div class="summary-card" *ngIf="getTotalDisponibilites() > 0">
+                <h4>📊 Résumé des disponibilités</h4>
+                <div class="summary-grid">
+                  <div class="summary-item">
+                    <span class="label">Total créneaux:</span>
+                    <span class="value">{{ getTotalDisponibilites() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Heures par semaine:</span>
+                    <span class="value">{{ getAvailableHoursThisWeek() }}h</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Jour préféré:</span>
+                    <span class="value">{{ getMostAvailableDay() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Statut:</span>
+                    <span class="value status" [class.good]="getTotalDisponibilites() >= 10" 
+                          [class.medium]="getTotalDisponibilites() >= 5 && getTotalDisponibilites() < 10"
+                          [class.low]="getTotalDisponibilites() < 5">
+                      {{ getTotalDisponibilites() >= 10 ? 'Excellent' : getTotalDisponibilites() >= 5 ? 'Correct' : 'Insuffisant' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Navigation semaine -->
             <div class="week-nav">
               <button class="btn-nav" (click)="changeWeek(-1)">← Semaine précédente</button>
@@ -461,6 +510,14 @@
                 <span class="stat-number">{{ getTotalDisponibilites() }}</span>
                 <span class="stat-label">Créneaux disponibles</span>
               </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ getAvailableHoursThisWeek() }}</span>
+                <span class="stat-label">Heures cette semaine</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ getMostAvailableDay() }}</span>
+                <span class="stat-label">Jour le plus libre</span>
+              </div>
             </div>
 
             <!-- Loading -->
@@ -469,13 +526,22 @@
               Chargement des disponibilités...
             </div>
 
+            <!-- No data message -->
+            <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() === 0" class="no-data-message">
+              <div class="no-data-icon">📅</div>
+              <h3>Aucune disponibilité renseignée</h3>
+              <p>Cet enseignant n'a pas encore renseigné ses disponibilités.</p>
+              <p class="hint">Demandez-lui de se connecter à son interface pour ajouter ses créneaux libres.</p>
+            </div>
+
             <!-- Grille -->
-            <div *ngIf="!isLoadingDisponibilites" class="calendar-grid">
+            <!-- Grille -->
+            <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() > 0" class="calendar-grid">
               <table class="dispo-table">
                 <thead>
                   <tr>
                     <th class="time-col">Heure</th>
-                    <th *ngFor="let day of weekDays">
+                    <th *ngFor="let day of weekDays; trackBy: trackByDayName">
                       <div class="day-header">
                         <span class="day-name">{{ day.name }}</span>
                         <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
@@ -484,10 +550,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let slot of timeSlots">
+                  <tr *ngFor="let slot of timeSlots; let slotIndex = index; trackBy: trackBySlotTime">
                     <td class="time-col">{{ slot.time }}</td>
-                    <td *ngFor="let day of weekDays" class="dispo-cell" [class.available]="isAvailable(day, slot)">
-                      <span *ngIf="isAvailable(day, slot)" class="check">✓</span>
+                    <td *ngFor="let day of weekDays; let dayIndex = index; trackBy: trackByDayName" 
+                        class="dispo-cell" 
+                        [class.available]="isAvailableByIndex(dayIndex, slotIndex)"
+                        [title]="getAvailabilityTooltip(day, slot)">
+                      <div *ngIf="isAvailableByIndex(dayIndex, slotIndex)" class="availability-indicator">
+                        <span class="check">✓</span>
+                        <div class="time-range">
+                          {{ getAvailabilityDetails(day, slot)?.dateHeureDebut | date:'HH:mm' }} - 
+                          {{ getAvailabilityDetails(day, slot)?.dateHeureFin | date:'HH:mm' }}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -516,7 +591,8 @@
               </svg>
               Exporter CSV
             </button>
-            <button class="btn-primary btn-generate" (click)="generateSchedule()">
+            <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()" 
+                    [disabled]="getTotalDisponibilites() === 0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -576,7 +652,7 @@
                   <thead>
                     <tr>
                       <th class="time-col">Heure</th>
-                      <th *ngFor="let day of weekDays">
+                      <th *ngFor="let day of weekDays; trackBy: trackByDayName">
                         <div class="day-header">
                           <span class="day-name">{{ day.name }}</span>
                         </div>
@@ -584,9 +660,9 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let slot of timeSlots">
+                    <tr *ngFor="let slot of timeSlots; trackBy: trackBySlotTime">
                       <td class="time-col">{{ slot.time }}</td>
-                      <td *ngFor="let day of weekDays" class="dispo-cell" [class.available]="isAvailable(day, slot)">
+                      <td *ngFor="let day of weekDays; trackBy: trackByDayName" class="dispo-cell" [class.available]="isAvailable(day, slot)">
                         <span *ngIf="isAvailable(day, slot)" class="check">✓</span>
                       </td>
                     </tr>
@@ -615,7 +691,7 @@
                   <thead>
                     <tr>
                       <th class="time-col">Heure</th>
-                      <th *ngFor="let day of weekDays" [class.past-day]="isPastDay(day)">
+                      <th *ngFor="let day of weekDays; trackBy: trackByDayName" [class.past-day]="isPastDay(day)">
                         <div class="day-header">
                           <span class="day-name">{{ day.name }}</span>
                           <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
@@ -625,9 +701,9 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let slot of timeSlots">
+                    <tr *ngFor="let slot of timeSlots; trackBy: trackBySlotTime">
                       <td class="time-col">{{ slot.time }}</td>
-                      <td *ngFor="let day of weekDays" 
+                      <td *ngFor="let day of weekDays; trackBy: trackByDayName" 
                           class="edt-cell" 
                           [class.has-course]="hasEdtSlot(day, slot)"
                           [class.past-slot]="isPastSlot(day, slot)">
@@ -690,6 +766,11 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Unités d'Enseignement -->
+      <div *ngIf="activeSection === 'ues'" class="section">
+        <app-ue-management></app-ue-management>
       </div>
 
       <!-- Equipements -->
@@ -760,31 +841,5 @@
 
 
     </main>
-  </div>
-
-  <!-- Modal Disponibilités -->
-  <div class="modal-overlay" *ngIf="showDisponibilitesModal" (click)="fermerModalDispo()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Disponibilités de {{ selectedEnseignant?.prenomUser }} {{ selectedEnseignant?.nomUser }}</h2>
-        <button class="close-btn" (click)="fermerModalDispo()">&times;</button>
-      </div>
-      
-      <div class="modal-body">
-        <div class="dispo-list" *ngIf="disponibilitesEnseignant.length > 0; else noDispo">
-          <div class="dispo-item" *ngFor="let dispo of disponibilitesEnseignant">
-            <div class="dispo-day">{{ dispo.jourSemaine }}</div>
-            <div class="dispo-time">{{ dispo.heureDebut }} - {{ dispo.heureFin }}</div>
-          </div>
-        </div>
-        
-        <ng-template #noDispo>
-          <div class="empty-state">
-            <span class="empty-icon">📅</span>
-            <p>Aucune disponibilité renseignée pour cet enseignant.</p>
-          </div>
-        </ng-template>
-      </div>
-    </div>
   </div>
 </div>
