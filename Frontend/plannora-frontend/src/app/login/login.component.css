@@ -185,3 +185,164 @@
     display: none;
   }
 }
+/* ===== EMAIL DOMAIN VALIDATION STYLES ===== */
+
+/* Help message for email guidance */
+.help-message {
+  margin-top: 0.5rem;
+}
+
+.help-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  line-height: 1.4;
+}
+
+.help-text.success {
+  color: #16a34a;
+}
+
+/* Enhanced error message styling */
+.error-message {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Input field with domain validation */
+.form-input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-input:focus:not(.error) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Enhanced placeholder for institutional email */
+.form-input[placeholder*="institutionnel"]::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Domain validation alert styling */
+.alert.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alert.alert-error::before {
+  content: "⚠️";
+  flex-shrink: 0;
+}
+
+/* Success state for valid institutional email */
+.form-input.valid-institutional {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* Enhanced form group spacing */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group:has(.help-message) {
+  margin-bottom: 1.75rem;
+}
+
+/* Responsive adjustments for validation messages */
+@media (max-width: 768px) {
+  .help-text {
+    font-size: 0.8125rem;
+  }
+  
+  .error-message {
+    font-size: 0.8125rem;
+  }
+  
+  .alert.alert-error {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Animation for validation state changes */
+.help-message, .error-message {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced input focus states */
+.input-wrapper:has(.form-input:focus) {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+/* Domain validation info box */
+.domain-info-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.domain-info-title {
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.domain-info-text {
+  color: #0369a1;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Loading state for domain validation */
+.domain-loading {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Enhanced button state for invalid institutional email */
+.btn-submit:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-submit:disabled:hover {
+  background: #e5e7eb;
+  transform: none;
+}

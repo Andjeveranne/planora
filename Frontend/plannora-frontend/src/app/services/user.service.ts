@@ -24,12 +24,28 @@ export interface EnseignantRequest {
   departement: string;
 }
 
+export interface DisponibiliteRequest {
+  jourSemaine: string;
+  heureDebut: string;
+  heureFin: string;
+  enseignantId: string;
+}
+
+export interface Disponibilite {
+  id: number;
+  jourSemaine: string;
+  heureDebut: string;
+  heureFin: string;
+  enseignantId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   // Acces direct au UserService (port 8086)
   private apiUrl = 'http://localhost:8086/api/utilisateurs';
+  private apiDispoUrl = 'http://localhost:8086/api/disponibilites';
 
   constructor(private http: HttpClient) {}
 
@@ -63,5 +79,49 @@ export class UserService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, {
       headers: this.getHeaders()
     });
+  }
+
+  // Méthodes pour les disponibilités
+
+  getDisponibilitesEnseignant(enseignantId: string): Observable<Disponibilite[]> {
+    return this.http.get<Disponibilite[]>(`${this.apiDispoUrl}/enseignant/${enseignantId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  ajouterDisponibilite(dispo: DisponibiliteRequest): Observable<Disponibilite> {
+    return this.http.post<Disponibilite>(this.apiDispoUrl, dispo, {
+      headers: this.getHeaders()
+    });
+  }
+
+  supprimerDisponibilite(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiDispoUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Méthode pour récupérer l'utilisateur connecté
+  getCurrentUser(): any {
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'utilisateur connecté:', error);
+      return null;
+    }
+  }
+
+  // Méthode pour vérifier si l'utilisateur est connecté
+  isLoggedIn(): boolean {
+    const token = localStorage.getItem('token');
+    const user = this.getCurrentUser();
+    return !!(token && user);
+  }
+
+  // Méthode pour vérifier le rôle de l'utilisateur
+  hasRole(role: string): boolean {
+    const user = this.getCurrentUser();
+    return user && user.role === role;
   }
 }

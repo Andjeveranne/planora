@@ -102,4 +102,20 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+    
+    @GetMapping("/domain-validation")
+    public ResponseEntity<?> getDomainValidation() {
+        try {
+            AuthService.DomainValidationInfo info = authService.getDomainValidationInfo();
+            Map<String, Object> response = new HashMap<>();
+            response.put("allowedDomain", info.allowedDomain);
+            response.put("exampleFormat", info.exampleFormat);
+            response.put("message", info.message);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }

@@ -1,0 +1,294 @@
+<!-- Header avec statistiques -->
+<div class="teacher-courses-header">
+  <div class="header-content">
+    <div class="title-section">
+      <h1><i class="fas fa-chalkboard-teacher"></i> Mes Cours par Classe</h1>
+      <p class="subtitle">Visualisez tous vos cours organisés par classe et semestre</p>
+    </div>
+    
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalClasses }}</div>
+          <div class="stat-label">Classes</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalCourses }}</div>
+          <div class="stat-label">Cours</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalUEs }}</div>
+          <div class="stat-label">UEs</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalHeures }}h</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtres et recherche -->
+<div class="filters-section">
+  <div class="filters-content">
+    <!-- Mode selector -->
+    <div class="view-mode-selector">
+      <button 
+        [class]="'mode-btn ' + (viewMode === 'courses' ? 'active' : '')"
+        (click)="setViewMode('courses')">
+        <i class="fas fa-book"></i> Cours par Classe
+      </button>
+      <button 
+        [class]="'mode-btn ' + (viewMode === 'ues' ? 'active' : '')"
+        (click)="setViewMode('ues')">
+        <i class="fas fa-graduation-cap"></i> Mes UEs
+      </button>
+    </div>
+
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        [placeholder]="viewMode === 'courses' ? 'Rechercher une classe ou un cours...' : 'Rechercher une UE...'"
+        class="search-input">
+    </div>
+    
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedNiveau" class="filter-select">
+        <option value="">Tous les niveaux</option>
+        <option *ngFor="let niveau of niveaux" [value]="niveau">{{ niveau }}</option>
+      </select>
+      
+      <select [(ngModel)]="selectedSemestre" class="filter-select">
+        <option value="">Tous les semestres</option>
+        <option *ngFor="let semestre of semestres" [value]="semestre">{{ semestre }}</option>
+      </select>
+      
+      <button (click)="clearFilters()" class="btn-clear-filters">
+        <i class="fas fa-times"></i> Effacer
+      </button>
+      
+      <button (click)="refresh()" class="btn-refresh">
+        <i class="fas fa-sync-alt"></i> Actualiser
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-container">
+  <div class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Chargement de vos cours...</p>
+  </div>
+</div>
+
+<!-- Erreur -->
+<div *ngIf="error" class="error-container">
+  <div class="error-message">
+    <i class="fas fa-exclamation-triangle"></i>
+    <p>{{ error }}</p>
+    <button (click)="refresh()" class="btn-retry">Réessayer</button>
+  </div>
+</div>
+
+<!-- Contenu principal -->
+<div *ngIf="!loading && !error" class="courses-content">
+  
+  <!-- Message si aucun cours -->
+  <div *ngIf="viewMode === 'courses' && filteredClassesCourses.length === 0" class="no-courses">
+    <div class="no-courses-icon">
+      <i class="fas fa-book-open"></i>
+    </div>
+    <h3>Aucun cours trouvé</h3>
+    <p *ngIf="searchTerm || selectedNiveau || selectedSemestre">
+      Aucun cours ne correspond aux critères de recherche sélectionnés.
+    </p>
+    <p *ngIf="!searchTerm && !selectedNiveau && !selectedSemestre">
+      Vous n'avez pas encore de cours assignés. Vos UEs assignées apparaîtront dans l'onglet "Mes UEs".
+    </p>
+    <button *ngIf="searchTerm || selectedNiveau || selectedSemestre" 
+            (click)="clearFilters()" 
+            class="btn-clear-search">
+      Effacer les filtres
+    </button>
+  </div>
+
+  <!-- Message si aucune UE -->
+  <div *ngIf="viewMode === 'ues' && filteredUEs.length === 0" class="no-courses">
+    <div class="no-courses-icon">
+      <i class="fas fa-graduation-cap"></i>
+    </div>
+    <h3>Aucune UE trouvée</h3>
+    <p *ngIf="searchTerm || selectedNiveau || selectedSemestre">
+      Aucune UE ne correspond aux critères de recherche sélectionnés.
+    </p>
+    <p *ngIf="!searchTerm && !selectedNiveau && !selectedSemestre">
+      Vous n'avez pas encore d'UE assignées. Contactez l'administrateur pour vous assigner des UEs.
+    </p>
+    <button *ngIf="searchTerm || selectedNiveau || selectedSemestre" 
+            (click)="clearFilters()" 
+            class="btn-clear-search">
+      Effacer les filtres
+    </button>
+  </div>
+
+  <!-- Vue Cours par Classes -->
+  <div *ngIf="viewMode === 'courses' && filteredClassesCourses.length > 0" class="classes-list">
+    <div *ngFor="let classeCoursesItem of filteredClassesCourses; trackBy: trackByClasseId" 
+         class="classe-card">
+      
+      <!-- En-tête de la classe -->
+      <div class="classe-header">
+        <div class="classe-info">
+          <h2 class="classe-name">
+            <span [class]="getNiveauClass(classeCoursesItem.classe.niveau)">
+              {{ classeCoursesItem.classe.niveau }}
+            </span>
+            {{ classeCoursesItem.classe.nomClasse }}
+          </h2>
+          <p class="classe-details">
+            {{ classeCoursesItem.classe.filiere }} • 
+            {{ classeCoursesItem.classe.nombreEtudiants }} étudiants • 
+            {{ classeCoursesItem.classe.anneeAcademique }}
+          </p>
+          <p *ngIf="classeCoursesItem.classe.description" class="classe-description">
+            {{ classeCoursesItem.classe.description }}
+          </p>
+        </div>
+        
+        <div class="classe-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ classeCoursesItem.courses.length }}</span>
+            <span class="stat-label">cours</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ classeCoursesItem.totalHeures }}h</span>
+            <span class="stat-label">total</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cours groupés par semestre -->
+      <div class="courses-by-semestre">
+        <div *ngFor="let semestre of getUniqueSemestres(classeCoursesItem.courses)" 
+             class="semestre-group">
+          
+          <h3 class="semestre-title">
+            <i class="fas fa-calendar-alt"></i>
+            Semestre {{ semestre }}
+          </h3>
+          
+          <div class="courses-grid">
+            <div *ngFor="let course of getCoursesBySemestre(classeCoursesItem.courses)[semestre]; trackBy: trackByCourseId" 
+                 class="course-card">
+              
+              <div class="course-header">
+                <div class="course-type" [class]="getCourseTypeClass(course.typeCours)">
+                  {{ course.typeCours }}
+                </div>
+                <div class="course-hours">
+                  {{ course.nombreHeures }}h
+                </div>
+              </div>
+              
+              <div class="course-content">
+                <h4 class="course-title">{{ getCourseNomComplet(course) }}</h4>
+                <p class="course-code">{{ course.codeCourse }}</p>
+                <p *ngIf="course.description" class="course-description">
+                  {{ course.description }}
+                </p>
+              </div>
+              
+              <div class="course-footer">
+                <div class="course-progress" *ngIf="course.completementProgramme !== undefined">
+                  <span class="progress-label">Programmation:</span>
+                  <span [class]="course.completementProgramme ? 'status-complete' : 'status-incomplete'">
+                    <i [class]="course.completementProgramme ? 'fas fa-check-circle' : 'fas fa-clock'"></i>
+                    {{ course.completementProgramme ? 'Complète' : 'En cours' }}
+                  </span>
+                </div>
+                
+                <div class="course-schedule" *ngIf="course.nombreCreneaux">
+                  <span class="schedule-info">
+                    {{ course.nombreCreneaux }} créneaux • 
+                    {{ course.heuresProgrammees || 0 }}h programmées
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue UEs -->
+  <div *ngIf="viewMode === 'ues' && filteredUEs.length > 0" class="ues-list">
+    <div class="ues-grid">
+      <div *ngFor="let ue of filteredUEs; trackBy: trackByUEId" class="ue-card">
+        
+        <div class="ue-header">
+          <div class="ue-level" [class]="getNiveauClass(ue.niveau)">
+            {{ ue.niveau }}
+          </div>
+          <div class="ue-credits">
+            {{ ue.creditsECTS }} ECTS
+          </div>
+        </div>
+        
+        <div class="ue-content">
+          <h3 class="ue-title">{{ ue.nomUE }}</h3>
+          <p class="ue-code">{{ ue.codeUE }} • {{ ue.semestre }}</p>
+          <p *ngIf="ue.description" class="ue-description">
+            {{ ue.description }}
+          </p>
+        </div>
+        
+        <div class="ue-details">
+          <div class="hours-breakdown">
+            <div *ngIf="ue.heuresCM > 0" class="hour-item">
+              <span class="hour-type cm">CM</span>
+              <span class="hour-value">{{ ue.heuresCM }}h</span>
+            </div>
+            <div *ngIf="ue.heuresTD > 0" class="hour-item">
+              <span class="hour-type td">TD</span>
+              <span class="hour-value">{{ ue.heuresTD }}h</span>
+            </div>
+            <div *ngIf="ue.heuresTP > 0" class="hour-item">
+              <span class="hour-type tp">TP</span>
+              <span class="hour-value">{{ ue.heuresTP }}h</span>
+            </div>
+          </div>
+          
+          <div class="ue-total">
+            <strong>Total: {{ getTotalHeuresUE(ue) }}h</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

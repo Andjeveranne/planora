@@ -5,10 +5,7 @@
       <h2>PLANORA</h2>
     </div>
     <nav class="sidebar-nav">
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'overview'"
-        (click)="setActiveSection('overview')">
+      <button class="nav-item" [class.active]="activeSection === 'overview'" (click)="setActiveSection('overview')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"></rect>
@@ -19,9 +16,7 @@
         </span>
         <span>Dashboard</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'enseignants'"
+      <button class="nav-item" [class.active]="activeSection === 'enseignants'"
         (click)="setActiveSection('enseignants')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,10 +28,16 @@
         </span>
         <span>Enseignants</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'rooms'"
-        (click)="setActiveSection('rooms')">
+      <button class="nav-item" [class.active]="activeSection === 'ues'" (click)="setActiveSection('ues')">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </span>
+        <span>Unités d'Enseignement</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'rooms'" (click)="setActiveSection('rooms')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -45,20 +46,17 @@
         </span>
         <span>Salles</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'equipment'"
-        (click)="setActiveSection('equipment')">
+      <button class="nav-item" [class.active]="activeSection === 'equipment'" (click)="setActiveSection('equipment')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+            </path>
           </svg>
         </span>
         <span>Equipements</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'reservations'"
+      <button class="nav-item" [class.active]="activeSection === 'reservations'"
         (click)="setActiveSection('reservations')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -70,10 +68,7 @@
         </span>
         <span>Réservations</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'reporting'"
-        (click)="setActiveSection('reporting')">
+      <button class="nav-item" [class.active]="activeSection === 'reporting'" (click)="setActiveSection('reporting')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -83,10 +78,7 @@
         </span>
         <span>Reporting</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'calendar'"
-        (click)="setActiveSection('calendar')">
+      <button class="nav-item" [class.active]="activeSection === 'calendar'" (click)="setActiveSection('calendar')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -97,10 +89,7 @@
         </span>
         <span>Calendrier</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'classes'"
-        (click)="setActiveSection('classes')">
+      <button class="nav-item" [class.active]="activeSection === 'classes'" (click)="setActiveSection('classes')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -208,7 +197,7 @@
             <div class="metric-value">64%</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,20 20,18 40,15 60,12 80,10 100,8" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,20 20,18 40,15 60,12 80,10 100,8" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -217,7 +206,7 @@
             <div class="metric-value">86%</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,15 20,14 40,12 60,10 80,9 100,7" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,15 20,14 40,12 60,10 80,9 100,7" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -226,7 +215,7 @@
             <div class="metric-value positive">+34%</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,25 20,22 40,18 60,15 80,12 100,8" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,25 20,22 40,18 60,15 80,12 100,8" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -237,7 +226,7 @@
           <div class="list-panel">
             <h3>Liste des utilisateurs</h3>
             <div class="user-list">
-              <div class="user-item" *ngFor="let user of recentUsers">
+              <div class="user-item" *ngFor="let user of recentUsers; trackBy: trackByUserName">
                 <div class="user-avatar" [style.background-color]="user.color">
                   {{ user.initials }}
                 </div>
@@ -253,7 +242,7 @@
           <div class="list-panel">
             <h3>Liste des salles</h3>
             <div class="room-list">
-              <div class="room-item" *ngFor="let room of recentRooms">
+              <div class="room-item" *ngFor="let room of recentRooms; trackBy: trackByRoomName">
                 <div class="room-name">{{ room.name }}</div>
                 <div class="room-meta">{{ room.capacity }} Places Disponibles - {{ room.type }}</div>
               </div>
@@ -283,7 +272,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <path d="m21 21-4.35-4.35"></path>
             </svg>
-            <input type="text" placeholder="Rechercher un enseignant" />
+            <input type="text" placeholder="Rechercher un enseignant..." [(ngModel)]="searchTerm" />
           </div>
           <div class="header-buttons">
             <button class="btn-secondary">
@@ -307,22 +296,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="nom">Nom *</label>
-                <input 
-                  type="text" 
-                  id="nom" 
-                  [(ngModel)]="newEnseignant.nomUser" 
-                  name="nomUser"
-                  required 
+                <input type="text" id="nom" [(ngModel)]="newEnseignant.nomUser" name="nomUser" required
                   placeholder="Nom de l'enseignant" />
               </div>
               <div class="form-group">
                 <label for="prenom">Prénom *</label>
-                <input 
-                  type="text" 
-                  id="prenom" 
-                  [(ngModel)]="newEnseignant.prenomUser" 
-                  name="prenomUser"
-                  required 
+                <input type="text" id="prenom" [(ngModel)]="newEnseignant.prenomUser" name="prenomUser" required
                   placeholder="Prénom de l'enseignant" />
               </div>
             </div>
@@ -330,22 +309,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="email">Email *</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  [(ngModel)]="newEnseignant.email" 
-                  name="email"
-                  required 
+                <input type="email" id="email" [(ngModel)]="newEnseignant.email" name="email" required
                   placeholder="email@example.com" />
               </div>
               <div class="form-group">
                 <label for="telephone">Téléphone *</label>
-                <input 
-                  type="tel" 
-                  id="telephone" 
-                  [(ngModel)]="newEnseignant.telephone" 
-                  name="telephone"
-                  required 
+                <input type="tel" id="telephone" [(ngModel)]="newEnseignant.telephone" name="telephone" required
                   placeholder="+221 XX XXX XX XX" />
               </div>
             </div>
@@ -353,20 +322,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="specialite">Spécialité</label>
-                <input 
-                  type="text" 
-                  id="specialite" 
-                  [(ngModel)]="newEnseignant.specialite" 
-                  name="specialite"
+                <input type="text" id="specialite" [(ngModel)]="newEnseignant.specialite" name="specialite"
                   placeholder="Ex: Informatique, Mathématiques..." />
               </div>
               <div class="form-group">
                 <label for="departement">Département</label>
-                <input 
-                  type="text" 
-                  id="departement" 
-                  [(ngModel)]="newEnseignant.departement" 
-                  name="departement"
+                <input type="text" id="departement" [(ngModel)]="newEnseignant.departement" name="departement"
                   placeholder="Ex: Sciences, Lettres..." />
               </div>
             </div>
@@ -374,12 +335,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="mdp">Mot de passe *</label>
-                <input 
-                  type="password" 
-                  id="mdp" 
-                  [(ngModel)]="newEnseignant.mdp" 
-                  name="mdp"
-                  required 
+                <input type="password" id="mdp" [(ngModel)]="newEnseignant.mdp" name="mdp" required
                   placeholder="Minimum 6 caractères" />
               </div>
             </div>
@@ -398,43 +354,94 @@
         <!-- Liste des enseignants -->
         <div class="enseignants-list">
           <div *ngIf="isLoadingEnseignants" class="loading">
+            <div class="loading-spinner"></div>
             <p>Chargement des enseignants...</p>
           </div>
 
           <div *ngIf="!isLoadingEnseignants && enseignants.length === 0" class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" stroke-width="1">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
             <p>Aucun enseignant trouvé. Ajoutez-en un pour commencer.</p>
           </div>
 
-          <table *ngIf="!isLoadingEnseignants && enseignants.length > 0" class="enseignants-table">
+          <div *ngIf="!isLoadingEnseignants && filteredEnseignants.length > 0" class="table-info">
+            <span>{{ filteredEnseignants.length }} enseignant(s) trouvé(s)</span>
+          </div>
+
+          <table *ngIf="!isLoadingEnseignants && filteredEnseignants.length > 0" class="enseignants-table">
             <thead>
               <tr>
-                <th>Nom</th>
-                <th>Prénom</th>
-                <th>Email</th>
-                <th>Téléphone</th>
+                <th>Enseignant</th>
+                <th>Contact</th>
                 <th>Spécialité</th>
                 <th>Département</th>
+                <th>Disponibilités</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let enseignant of enseignants">
-                <td>{{ enseignant.nomUser }}</td>
-                <td>{{ enseignant.prenomUser }}</td>
-                <td>{{ enseignant.email }}</td>
-                <td>{{ enseignant.telephone }}</td>
-                <td>{{ enseignant.specialite || '-' }}</td>
-                <td>{{ enseignant.departement || '-' }}</td>
+              <tr *ngFor="let enseignant of filteredEnseignants; trackBy: trackByEnseignantId">
+                <td>
+                  <div class="enseignant-info">
+                    <div class="avatar" [style.background]="'linear-gradient(135deg, #667eea, #764ba2)'">
+                      {{ enseignant.prenomUser.charAt(0) }}{{ enseignant.nomUser.charAt(0) }}
+                    </div>
+                    <div class="info">
+                      <div class="name">{{ enseignant.prenomUser }} {{ enseignant.nomUser }}</div>
+                      <div class="email">{{ enseignant.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ enseignant.telephone || '-' }}</td>
+                <td><span class="badge badge-specialty">{{ enseignant.specialite || 'Non défini' }}</span></td>
+                <td><span class="badge badge-dept">{{ enseignant.departement || 'Non défini' }}</span></td>
                 <td>
                   <div class="action-buttons">
-                    <button class="btn-icon btn-edit" title="Modifier">
+                    <button class="btn-action btn-disponibilites" (click)="openDisponibilitesModal(enseignant)"
+                      title="Voir les disponibilités">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M9 16l2 2 4-4"></path>
+                      </svg>
+                      <span>Disponibilités</span>
+                    </button>
+                    <button class="btn-action btn-edt" (click)="openEdtModal(enseignant, 'generate')"
+                      title="Générer l'EDT">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M12 14l2 2 4-4"></path>
+                      </svg>
+                      <span>Générer EDT</span>
+                    </button>
+                    <button class="btn-action btn-view-edt" (click)="openEdtModal(enseignant, 'view')"
+                      title="Consulter l'EDT" [class.has-edt]="hasExistingEdt(enseignant)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      <span>Consulter EDT</span>
+                    </button>
+                    <button class="btn-icon btn-edit" title="Modifier">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                       </svg>
                     </button>
-                    <button class="btn-icon btn-delete" (click)="deleteEnseignant(enseignant.idUser!)" title="Supprimer">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="btn-icon btn-delete" (click)="deleteEnseignant(enseignant.idUser!)"
+                      title="Supprimer">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                       </svg>
@@ -445,6 +452,325 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Modal Disponibilités -->
+      <div *ngIf="showDisponibilitesModal" class="modal-overlay" (click)="closeDisponibilitesModal()">
+        <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="modal-title-section">
+              <h2>📅 Disponibilités de {{ selectedEnseignant?.prenomUser }} {{ selectedEnseignant?.nomUser }}</h2>
+              <p class="modal-subtitle">{{ selectedEnseignant?.specialite || 'Spécialité non définie' }} - {{
+                selectedEnseignant?.departement || 'Département non défini' }}</p>
+            </div>
+            <button class="btn-close" (click)="closeDisponibilitesModal()">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Summary Section -->
+            <div class="availability-summary" *ngIf="!isLoadingDisponibilites">
+              <div class="summary-card" *ngIf="getTotalDisponibilites() > 0">
+                <h4>📊 Résumé des disponibilités</h4>
+                <div class="summary-grid">
+                  <div class="summary-item">
+                    <span class="label">Total créneaux:</span>
+                    <span class="value">{{ getTotalDisponibilites() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Heures par semaine:</span>
+                    <span class="value">{{ getAvailableHoursThisWeek() }}h</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Jour préféré:</span>
+                    <span class="value">{{ getMostAvailableDay() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Statut:</span>
+                    <span class="value status" [class.good]="getTotalDisponibilites() >= 10" 
+                          [class.medium]="getTotalDisponibilites() >= 5 && getTotalDisponibilites() < 10"
+                          [class.low]="getTotalDisponibilites() < 5">
+                      {{ getTotalDisponibilites() >= 10 ? 'Excellent' : getTotalDisponibilites() >= 5 ? 'Correct' : 'Insuffisant' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation semaine -->
+            <div class="week-nav">
+              <button class="btn-nav" (click)="changeWeek(-1)">← Semaine précédente</button>
+              <span class="week-label">Semaine du {{ currentWeekStart | date:'dd/MM/yyyy' }}</span>
+              <button class="btn-nav" (click)="changeWeek(1)">Semaine suivante →</button>
+              <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="dispo-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ getTotalDisponibilites() }}</span>
+                <span class="stat-label">Créneaux disponibles</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ getAvailableHoursThisWeek() }}</span>
+                <span class="stat-label">Heures cette semaine</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ getMostAvailableDay() }}</span>
+                <span class="stat-label">Jour le plus libre</span>
+              </div>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="isLoadingDisponibilites" class="loading-inline">
+              <div class="loading-spinner"></div>
+              Chargement des disponibilités...
+            </div>
+
+            <!-- No data message -->
+            <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() === 0" class="no-data-message">
+              <div class="no-data-icon">📅</div>
+              <h3>Aucune disponibilité renseignée</h3>
+              <p>Cet enseignant n'a pas encore renseigné ses disponibilités.</p>
+              <p class="hint">Demandez-lui de se connecter à son interface pour ajouter ses créneaux libres.</p>
+            </div>
+
+            <!-- Grille -->
+            <!-- Grille -->
+            <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() > 0" class="calendar-grid">
+              <table class="dispo-table">
+                <thead>
+                  <tr>
+                    <th class="time-col">Heure</th>
+                    <th *ngFor="let day of weekDays; trackBy: trackByDayName">
+                      <div class="day-header">
+                        <span class="day-name">{{ day.name }}</span>
+                        <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let slot of timeSlots; let slotIndex = index; trackBy: trackBySlotTime">
+                    <td class="time-col">{{ slot.time }}</td>
+                    <td *ngFor="let day of weekDays; let dayIndex = index; trackBy: trackByDayName" 
+                        class="dispo-cell" 
+                        [class.available]="isAvailableByIndex(dayIndex, slotIndex)"
+                        [title]="getAvailabilityTooltip(day, slot)">
+                      <div *ngIf="isAvailableByIndex(dayIndex, slotIndex)" class="availability-indicator">
+                        <span class="check">✓</span>
+                        <div class="time-range">
+                          {{ getAvailabilityDetails(day, slot)?.dateHeureDebut | date:'HH:mm' }} - 
+                          {{ getAvailabilityDetails(day, slot)?.dateHeureFin | date:'HH:mm' }}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Légende -->
+            <div class="legend-row">
+              <div class="legend-item">
+                <div class="legend-box available"></div>
+                <span>Disponible</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-box"></div>
+                <span>Non disponible</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="exportDisponibilites()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Exporter CSV
+            </button>
+            <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()" 
+                    [disabled]="getTotalDisponibilites() === 0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <polyline points="9 16 12 13 15 16"></polyline>
+              </svg>
+              Générer l'EDT
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal EDT -->
+      <div *ngIf="showEdtModal" class="modal-overlay" (click)="closeEdtModal()">
+        <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+          <div class="modal-header" [class.generate-mode]="edtMode === 'generate'">
+            <div class="modal-title-section">
+              <h2>{{ edtMode === 'generate' ? '⚙️ Générer EDT' : '📋 Emploi du Temps' }} - {{ selectedEnseignant?.prenomUser }} {{ selectedEnseignant?.nomUser }}</h2>
+              <p class="modal-subtitle">{{ selectedEnseignant?.specialite || 'Spécialité non définie' }} - {{ selectedEnseignant?.departement || 'Département non défini' }}</p>
+            </div>
+            <button class="btn-close" (click)="closeEdtModal()">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Mode Génération -->
+            <div *ngIf="edtMode === 'generate'" class="generate-section">
+              <div class="info-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 16v-4M12 8h.01"></path>
+                </svg>
+                <div>
+                  <strong>Génération automatique de l'EDT</strong>
+                  <p>L'emploi du temps sera généré automatiquement en fonction des disponibilités renseignées par l'enseignant.</p>
+                </div>
+              </div>
+
+              <!-- Stats disponibilités -->
+              <div class="dispo-stats">
+                <div class="stat-item">
+                  <span class="stat-number">{{ getTotalDisponibilites() }}</span>
+                  <span class="stat-label">Créneaux disponibles</span>
+                </div>
+              </div>
+
+              <!-- Loading -->
+              <div *ngIf="isLoadingDisponibilites" class="loading-inline">
+                <div class="loading-spinner"></div>
+                Chargement des disponibilités...
+              </div>
+
+              <!-- Aperçu des disponibilités -->
+              <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() > 0" class="calendar-grid">
+                <h4>Aperçu des disponibilités</h4>
+                <table class="dispo-table">
+                  <thead>
+                    <tr>
+                      <th class="time-col">Heure</th>
+                      <th *ngFor="let day of weekDays; trackBy: trackByDayName">
+                        <div class="day-header">
+                          <span class="day-name">{{ day.name }}</span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let slot of timeSlots; trackBy: trackBySlotTime">
+                      <td class="time-col">{{ slot.time }}</td>
+                      <td *ngFor="let day of weekDays; trackBy: trackByDayName" class="dispo-cell" [class.available]="isAvailable(day, slot)">
+                        <span *ngIf="isAvailable(day, slot)" class="check">✓</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div *ngIf="!isLoadingDisponibilites && getTotalDisponibilites() === 0" class="empty-state">
+                <p>⚠️ Aucune disponibilité renseignée. L'enseignant doit d'abord renseigner ses disponibilités.</p>
+              </div>
+            </div>
+
+            <!-- Mode Consultation EDT -->
+            <div *ngIf="edtMode === 'view'" class="view-section">
+              <!-- Navigation semaine -->
+              <div class="week-nav">
+                <button class="btn-nav" (click)="changeWeek(-1)">← Semaine précédente</button>
+                <span class="week-label">Semaine du {{ currentWeekStart | date:'dd/MM/yyyy' }}</span>
+                <button class="btn-nav" (click)="changeWeek(1)">Semaine suivante →</button>
+                <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+              </div>
+
+              <!-- Grille EDT -->
+              <div class="calendar-grid">
+                <table class="edt-table">
+                  <thead>
+                    <tr>
+                      <th class="time-col">Heure</th>
+                      <th *ngFor="let day of weekDays; trackBy: trackByDayName" [class.past-day]="isPastDay(day)">
+                        <div class="day-header">
+                          <span class="day-name">{{ day.name }}</span>
+                          <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
+                          <span *ngIf="isPastDay(day)" class="past-label">(passé)</span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let slot of timeSlots; trackBy: trackBySlotTime">
+                      <td class="time-col">{{ slot.time }}</td>
+                      <td *ngFor="let day of weekDays; trackBy: trackByDayName" 
+                          class="edt-cell" 
+                          [class.has-course]="hasEdtSlot(day, slot)"
+                          [class.past-slot]="isPastSlot(day, slot)">
+                        <div *ngIf="getEdtSlot(day, slot) as edtSlot" 
+                             class="course-card"
+                             [class.past-course]="isPastSlot(day, slot)">
+                          <div class="course-ue">{{ edtSlot.ue }}</div>
+                          <div class="course-details">
+                            <span class="course-type">{{ edtSlot.type }}</span>
+                            <span class="course-classe">{{ edtSlot.classe }}</span>
+                          </div>
+                          <div class="course-salle">📍 {{ edtSlot.salle }}</div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Légende -->
+              <div class="legend-row">
+                <div class="legend-item">
+                  <div class="legend-box course"></div>
+                  <span>Cours programmé</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-box"></div>
+                  <span>Libre</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-box past"></div>
+                  <span>Jour passé (non modifiable)</span>
+                </div>
+              </div>
+
+              <div *ngIf="edtMap.size === 0" class="empty-state">
+                <p>📭 Aucun emploi du temps généré pour cet enseignant. Cliquez sur "Générer EDT" pour en créer un.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeEdtModal()">Fermer</button>
+            <button *ngIf="edtMode === 'generate'" class="btn-primary btn-generate" 
+                    (click)="generateEdtFromDisponibilites()" 
+                    [disabled]="isGeneratingEdt || getTotalDisponibilites() === 0">
+              <span *ngIf="isGeneratingEdt">
+                <div class="loading-spinner-small"></div>
+                Génération en cours...
+              </span>
+              <span *ngIf="!isGeneratingEdt">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+                Générer l'EDT
+              </span>
+            </button>
+            <button *ngIf="edtMode === 'view'" class="btn-primary" (click)="edtMode = 'generate'; loadEnseignantDisponibilites(selectedEnseignant!)">
+              ⚙️ Régénérer l'EDT
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unités d'Enseignement -->
+      <div *ngIf="activeSection === 'ues'" class="section">
+        <app-ue-management></app-ue-management>
       </div>
 
       <!-- Equipements -->

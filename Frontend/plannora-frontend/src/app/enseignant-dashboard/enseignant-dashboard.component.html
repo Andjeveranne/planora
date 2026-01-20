@@ -5,10 +5,7 @@
       <h2>PLANORA</h2>
     </div>
     <nav class="sidebar-nav">
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'overview'"
-        (click)="setActiveSection('overview')">
+      <button class="nav-item" [class.active]="activeSection === 'overview'" (click)="setActiveSection('overview')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"></rect>
@@ -19,10 +16,7 @@
         </span>
         <span>Dashboard</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'planning'"
-        (click)="setActiveSection('planning')">
+      <button class="nav-item" [class.active]="activeSection === 'planning'" (click)="setActiveSection('planning')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -33,10 +27,20 @@
         </span>
         <span>Mon Planning</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'courses'"
-        (click)="setActiveSection('courses')">
+      <button class="nav-item" [class.active]="activeSection === 'disponibilites'"
+        (click)="setActiveSection('disponibilites')">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M9 16l2 2 4-4"></path> <!-- Checkmark icon -->
+          </svg>
+        </span>
+        <span>Mes Disponibilités</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'courses'" (click)="setActiveSection('courses')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -45,9 +49,7 @@
         </span>
         <span>Mes Cours</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'reservations'"
+      <button class="nav-item" [class.active]="activeSection === 'reservations'"
         (click)="setActiveSection('reservations')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -57,10 +59,7 @@
         </span>
         <span>Réservations</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'students'"
-        (click)="setActiveSection('students')">
+      <button class="nav-item" [class.active]="activeSection === 'students'" (click)="setActiveSection('students')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -71,9 +70,7 @@
         </span>
         <span>Étudiants</span>
       </button>
-      <button 
-        class="nav-item" 
-        [class.active]="activeSection === 'notifications'"
+      <button class="nav-item" [class.active]="activeSection === 'notifications'"
         (click)="setActiveSection('notifications')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,7 +162,7 @@
             <div class="metric-value">89%</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,15 20,14 40,12 60,10 80,9 100,7" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,15 20,14 40,12 60,10 80,9 100,7" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -174,7 +171,7 @@
             <div class="metric-value">92%</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,18 20,16 40,14 60,11 80,9 100,6" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,18 20,16 40,14 60,11 80,9 100,6" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -183,7 +180,7 @@
             <div class="metric-value positive">4.8/5</div>
             <div class="metric-chart">
               <svg width="100%" height="30" viewBox="0 0 100 30">
-                <polyline points="0,12 20,11 40,10 60,9 80,8 100,7" fill="none" stroke="#667eea" stroke-width="2"/>
+                <polyline points="0,12 20,11 40,10 60,9 80,8 100,7" fill="none" stroke="#667eea" stroke-width="2" />
               </svg>
             </div>
           </div>
@@ -198,7 +195,8 @@
                 <div class="course-day">{{ planning.jour }}</div>
                 <div class="course-info">
                   <div class="course-name">{{ planning.cours }}</div>
-                  <div class="course-meta">{{ planning.heureDebut }} - {{ planning.heureFin }} • Salle {{ planning.salle }}</div>
+                  <div class="course-meta">{{ planning.heureDebut }} - {{ planning.heureFin }} • Salle {{ planning.salle
+                    }}</div>
                 </div>
               </div>
             </div>
@@ -228,21 +226,123 @@
 
       <!-- Planning -->
       <div *ngIf="activeSection === 'planning'" class="section">
-        <div class="planning-grid">
-          <div class="planning-card" *ngFor="let planning of plannings">
-            <div class="planning-header">
-              <h3>{{ planning.cours }}</h3>
-              <span class="badge">{{ planning.jour }}</span>
+        <div class="planning-header-section">
+          <p class="section-description">Consultez votre emploi du temps généré par l'administration.</p>
+        </div>
+
+        <!-- Navigation semaine -->
+        <div class="week-navigation">
+          <button class="btn-nav" (click)="changeWeek(-1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Semaine précédente
+          </button>
+          <div class="week-info">
+            <span class="week-label">Semaine du {{ currentWeekStart | date:'dd MMMM yyyy' }}</span>
+          </div>
+          <button class="btn-nav" (click)="changeWeek(1)">
+            Semaine suivante
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+        </div>
+
+        <!-- Stats rapides -->
+        <div class="edt-stats">
+          <div class="edt-stat">
+            <span class="stat-number">{{ getTotalCoursWeek() }}</span>
+            <span class="stat-label">Cours cette semaine</span>
+          </div>
+          <div class="edt-stat">
+            <span class="stat-number">{{ getTotalHeuresWeek() }}h</span>
+            <span class="stat-label">Heures de cours</span>
+          </div>
+        </div>
+
+        <!-- Indicateur de chargement -->
+        <div *ngIf="isLoadingEdt" class="loading-indicator">
+          <div class="spinner"></div>
+          <span>Chargement de l'emploi du temps...</span>
+        </div>
+
+        <!-- Message si pas d'EDT pour cette semaine -->
+        <div *ngIf="!isLoadingEdt && !hasEdt && getTotalCoursWeek() === 0" class="no-edt-message">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <h3>Aucun cours cette semaine</h3>
+          <p>Vous n'avez pas de cours programmé pour cette semaine.</p>
+          <p class="hint">Naviguez vers une autre semaine ou contactez l'administration si vous pensez qu'il y a une erreur.</p>
+        </div>
+
+        <!-- Grille EDT -->
+        <div *ngIf="!isLoadingEdt" class="edt-grid-container">
+          <table class="edt-table">
+            <thead>
+              <tr>
+                <th class="time-col">Heure</th>
+                <th *ngFor="let day of weekDays" 
+                    [class.today]="day.date.toDateString() === (currentWeekStart | date:'EEE')"
+                    [class.past-day]="isPastDay(day)">
+                  <div class="day-header">
+                    <span class="day-name">{{ day.name }}</span>
+                    <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
+                    <span *ngIf="isPastDay(day)" class="past-label">(passé)</span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let slot of timeSlots">
+                <td class="time-col">{{ slot.time }}</td>
+                <td *ngFor="let day of weekDays" 
+                    class="edt-cell" 
+                    [class.has-course]="hasEdtSlot(day, slot)"
+                    [class.past-slot]="isPastSlot(day, slot)">
+                  <div *ngIf="getEdtSlot(day, slot) as edtSlot" 
+                       class="course-card" 
+                       [class]="'type-' + edtSlot.type.toLowerCase()"
+                       [class.past-course]="isPastSlot(day, slot)">
+                    <div class="course-ue">{{ edtSlot.ue }}</div>
+                    <div class="course-meta">
+                      <span class="course-type">{{ edtSlot.type }}</span>
+                      <span class="course-classe">{{ edtSlot.classe }}</span>
+                    </div>
+                    <div class="course-salle">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      {{ edtSlot.salle }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Légende -->
+        <div *ngIf="!isLoadingEdt && getTotalCoursWeek() > 0" class="edt-legend">
+          <div class="legend-title">Légende :</div>
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-color type-cm"></div>
+              <span>CM - Cours Magistral</span>
             </div>
-            <div class="planning-details">
-              <div class="detail-item">
-                <span class="icon">🏫</span>
-                <span>Salle {{ planning.salle }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="icon">🕐</span>
-                <span>{{ planning.heureDebut }} - {{ planning.heureFin }}</span>
-              </div>
+            <div class="legend-item">
+              <div class="legend-color type-td"></div>
+              <span>TD - Travaux Dirigés</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color type-tp"></div>
+              <span>TP - Travaux Pratiques</span>
             </div>
           </div>
         </div>
@@ -259,6 +359,284 @@
       <div *ngIf="activeSection === 'reservations'" class="section">
         <div class="placeholder-content">
           <p>🏫 Vos réservations de salles à venir...</p>
+        </div>
+      </div>
+
+      <!-- Disponibilités -->
+      <div *ngIf="activeSection === 'disponibilites'" class="section-full-height">
+        <div class="disponibilites-page">
+          <!-- Page Header -->
+          <div class="page-header">
+            <div class="header-content">
+              <div class="header-text">
+                <h1 class="page-title">
+                  <span class="title-icon">📅</span>
+                  Mes Disponibilités
+                </h1>
+                <p class="page-subtitle">Renseignez vos créneaux libres pour faciliter la planification de vos cours</p>
+              </div>
+              <div class="header-stats">
+                <div class="stat-card">
+                  <div class="stat-number">{{ disponibilites.length }}</div>
+                  <div class="stat-label">Créneaux ajoutés</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">{{ getTotalHoursAvailable() }}h</div>
+                  <div class="stat-label">Heures par semaine</div>
+                </div>
+                <div class="stat-card debug-card">
+                  <button class="debug-btn" (click)="debugClearAll()" title="Clear all data and cache">
+                    🗑️ Debug Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content Grid -->
+          <div class="content-grid">
+            <!-- Left Panel - Add Availability -->
+            <div class="add-panel">
+              <div class="panel-card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <span class="card-icon">➕</span>
+                    Ajouter une disponibilité
+                  </h3>
+                  <p class="card-subtitle">Sélectionnez un jour et définissez vos heures libres</p>
+                </div>
+
+                <div class="card-body">
+                  <form class="availability-form" (ngSubmit)="ajouterDisponibilite()">
+                    <!-- Date Selection -->
+                    <div class="form-section">
+                      <label class="form-label">
+                        <span class="label-icon">📆</span>
+                        Date de disponibilité
+                      </label>
+                      <div class="date-selector">
+                        <input type="date" 
+                               [(ngModel)]="nouvelleDispo.date" 
+                               name="date"
+                               class="date-input"
+                               [min]="getMinDate()"
+                               (change)="onDateChange()"
+                               required>
+                        <div class="selected-day" *ngIf="nouvelleDispo.date">
+                          <span class="day-indicator" 
+                                [class.invalid-day]="!isValidDay(nouvelleDispo.jour)">
+                            {{ nouvelleDispo.jour }}
+                          </span>
+                          <span *ngIf="!isValidDay(nouvelleDispo.jour)" class="day-warning">
+                            ⚠️ Dimanche non autorisé
+                          </span>
+                        </div>
+                      </div>
+                      <div class="form-help">
+                        <small class="help-text">
+                          📅 Sélectionnez une date future (lundi à samedi uniquement)
+                        </small>
+                      </div>
+                    </div>
+
+                    <!-- Time Selection -->
+                    <div class="form-section">
+                      <label class="form-label">
+                        <span class="label-icon">🕐</span>
+                        Horaires
+                      </label>
+                      <div class="time-inputs">
+                        <div class="time-group">
+                          <label class="time-label">Début</label>
+                          <input type="time" 
+                                 [(ngModel)]="nouvelleDispo.heureDebut" 
+                                 name="heureDebut"
+                                 class="time-input"
+                                 min="08:00"
+                                 max="16:59"
+                                 (change)="validateTimeRange()"
+                                 required>
+                        </div>
+                        <div class="time-separator">
+                          <span class="separator-icon">→</span>
+                        </div>
+                        <div class="time-group">
+                          <label class="time-label">Fin</label>
+                          <input type="time" 
+                                 [(ngModel)]="nouvelleDispo.heureFin" 
+                                 name="heureFin"
+                                 class="time-input"
+                                 min="08:01"
+                                 max="17:00"
+                                 (change)="validateTimeRange()"
+                                 required>
+                        </div>
+                      </div>
+                      <div class="form-help">
+                        <small class="help-text">
+                          🕐 Horaires autorisés : 8h00 à 17h00 (heures ouvrables)
+                        </small>
+                        <div *ngIf="timeValidationMessage" class="validation-message" 
+                             [class.error]="!isTimeRangeValid" 
+                             [class.success]="isTimeRangeValid">
+                          {{ timeValidationMessage }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Add Button -->
+                    <button type="submit" 
+                            class="add-btn"
+                            [disabled]="!isFormValid()">
+                      <span class="btn-icon">✨</span>
+                      <span class="btn-text">Ajouter ce créneau</span>
+                    </button>
+                    
+                    <!-- Validation Summary -->
+                    <div *ngIf="!isFormValid() && (nouvelleDispo.date || nouvelleDispo.heureDebut || nouvelleDispo.heureFin)" 
+                         class="validation-summary">
+                      <div class="validation-title">⚠️ Vérifications requises :</div>
+                      <ul class="validation-list">
+                        <li *ngIf="!nouvelleDispo.date" class="validation-item">
+                          📅 Sélectionnez une date
+                        </li>
+                        <li *ngIf="nouvelleDispo.date && isPastDate(nouvelleDispo.date)" class="validation-item">
+                          ⏰ La date ne peut pas être dans le passé
+                        </li>
+                        <li *ngIf="nouvelleDispo.date && !isValidDay(nouvelleDispo.jour)" class="validation-item">
+                          📅 Seuls les jours lundi à samedi sont autorisés
+                        </li>
+                        <li *ngIf="!nouvelleDispo.heureDebut || !nouvelleDispo.heureFin" class="validation-item">
+                          🕐 Définissez les heures de début et fin
+                        </li>
+                        <li *ngIf="nouvelleDispo.heureDebut && nouvelleDispo.heureFin && !isTimeRangeValid" class="validation-item">
+                          {{ timeValidationMessage }}
+                        </li>
+                      </ul>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Quick Tips -->
+              <div class="tips-card">
+                <h4 class="tips-title">
+                  <span class="tips-icon">💡</span>
+                  Conseils pratiques
+                </h4>
+                <ul class="tips-list">
+                  <li>Ajoutez plusieurs créneaux pour plus de flexibilité</li>
+                  <li>Pensez aux pauses déjeuner dans vos horaires</li>
+                  <li>Vous pouvez modifier vos disponibilités à tout moment</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Right Panel - Availability List -->
+            <div class="list-panel">
+              <div class="panel-card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <span class="card-icon">📋</span>
+                    Vos disponibilités
+                    <span class="availability-count">{{ disponibilites.length }}</span>
+                  </h3>
+                  <p class="card-subtitle">Gérez vos créneaux de disponibilité</p>
+                </div>
+
+                <div class="card-body">
+                  <!-- Availability List -->
+                  <div class="availability-list" *ngIf="disponibilites.length > 0; else emptyState">
+                    <div class="availability-item" 
+                         *ngFor="let dispo of disponibilites; let i = index"
+                         [class.highlight]="i === disponibilites.length - 1 && justAdded">
+                      <div class="item-content">
+                        <div class="item-day">
+                          <span class="day-badge" [class]="'day-' + dispo.jour.toLowerCase()">
+                            {{ dispo.jour }}
+                          </span>
+                          <span class="date-info">{{ dispo.date | date:'dd/MM/yyyy' }}</span>
+                        </div>
+                        <div class="item-time">
+                          <span class="time-range">
+                            <span class="time-start">{{ dispo.heureDebut }}</span>
+                            <span class="time-arrow">→</span>
+                            <span class="time-end">{{ dispo.heureFin }}</span>
+                          </span>
+                          <span class="duration">{{ calculateDuration(dispo.heureDebut, dispo.heureFin) }}</span>
+                        </div>
+                      </div>
+                      <button class="delete-btn" 
+                              (click)="supprimerDisponibilite(i)"
+                              title="Supprimer ce créneau">
+                        <span class="delete-icon">🗑️</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Empty State -->
+                  <ng-template #emptyState>
+                    <div class="empty-state">
+                      <div class="empty-icon">📅</div>
+                      <h4 class="empty-title">Aucune disponibilité ajoutée</h4>
+                      <p class="empty-text">Commencez par ajouter vos premiers créneaux libres</p>
+                    </div>
+                  </ng-template>
+                </div>
+
+                <!-- Card Footer with Actions -->
+                <div class="card-footer" *ngIf="disponibilites.length > 0">
+                  <div class="footer-info">
+                    <span class="total-info">
+                      <strong>{{ disponibilites.length }}</strong> créneau{{ disponibilites.length > 1 ? 'x' : '' }} • 
+                      <strong>{{ getTotalHoursAvailable() }}h</strong> par semaine
+                    </span>
+                  </div>
+                  <div class="footer-actions">
+                    <button class="clear-btn" 
+                            (click)="clearAllDisponibilites()"
+                            title="Effacer tout">
+                      <span class="btn-icon">🗑️</span>
+                      Tout effacer
+                    </button>
+                    <button class="submit-btn" 
+                            (click)="envoyerDisponibilites()"
+                            [disabled]="isSendingDisponibilites">
+                      <span *ngIf="isSendingDisponibilites" class="btn-icon loading">⏳</span>
+                      <span *ngIf="!isSendingDisponibilites" class="btn-icon">📤</span>
+                      <span class="btn-text">
+                        {{ isSendingDisponibilites ? 'Envoi en cours...' : 'Envoyer à l\'administrateur' }}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Overview -->
+          <div class="weekly-overview" *ngIf="disponibilites.length > 0">
+            <div class="overview-card">
+              <h3 class="overview-title">
+                <span class="overview-icon">📊</span>
+                Aperçu hebdomadaire
+              </h3>
+              <div class="week-grid">
+                <div class="week-day" *ngFor="let jour of joursSemaine">
+                  <div class="day-header">{{ jour }}</div>
+                  <div class="day-slots">
+                    <div class="slot-item" 
+                         *ngFor="let dispo of getDisponibilitesForDay(jour)">
+                      <span class="slot-time">{{ dispo.heureDebut }}-{{ dispo.heureFin }}</span>
+                    </div>
+                    <div class="no-slots" *ngIf="getDisponibilitesForDay(jour).length === 0">
+                      <span class="no-slots-text">Aucun créneau</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

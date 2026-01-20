@@ -1,0 +1,360 @@
+<div class="ue-management-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="title-icon">📚</span>
+        Gestion des Unités d'Enseignement
+      </h1>
+      <p class="page-subtitle">Gérez les UEs, assignez les enseignants et consultez les statistiques</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="showAddUEForm()" *ngIf="activeSection === 'list'">
+        <span class="btn-icon">➕</span>
+        Ajouter une UE
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button 
+      class="nav-tab" 
+      [class.active]="activeSection === 'list'"
+      (click)="setActiveSection('list')">
+      <span class="tab-icon">📋</span>
+      Liste des UEs
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeSection === 'statistics'"
+      (click)="setActiveSection('statistics')">
+      <span class="tab-icon">📊</span>
+      Statistiques
+    </button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Chargement en cours...</p>
+  </div>
+
+  <!-- UE List Section -->
+  <div class="section-content" *ngIf="activeSection === 'list' && !isLoading">
+    
+    <!-- Filters and Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Rechercher par code, nom ou description..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          class="search-input">
+        <span class="search-icon">🔍</span>
+      </div>
+      
+      <div class="filter-controls">
+        <select [(ngModel)]="selectedSemestre" (change)="applyFilters()" class="filter-select">
+          <option value="">Tous les semestres</option>
+          <option *ngFor="let semestre of options?.semestres" [value]="semestre">{{semestre}}</option>
+        </select>
+        
+        <select [(ngModel)]="selectedNiveau" (change)="applyFilters()" class="filter-select">
+          <option value="">Tous les niveaux</option>
+          <option *ngFor="let niveau of options?.niveaux" [value]="niveau">{{niveau}}</option>
+        </select>
+        
+        <button class="btn btn-secondary" (click)="clearFilters()">
+          Effacer les filtres
+        </button>
+      </div>
+    </div>
+
+    <!-- UE Cards Grid -->
+    <div class="ue-grid">
+      <div class="ue-card" *ngFor="let ue of filteredUEs">
+        <div class="ue-card-header">
+          <div class="ue-code">{{ue.codeUE}}</div>
+          <div class="ue-credits">{{ue.creditsECTS}} ECTS</div>
+        </div>
+        
+        <div class="ue-card-body">
+          <h3 class="ue-title">{{ue.nomUE}}</h3>
+          <p class="ue-description" *ngIf="ue.description">{{ue.description}}</p>
+          
+          <div class="ue-details">
+            <div class="detail-item">
+              <span class="detail-label">Niveau:</span>
+              <span class="detail-value">{{ue.niveau}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Semestre:</span>
+              <span class="detail-value">{{ue.semestre}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total heures:</span>
+              <span class="detail-value">{{getTotalHeures(ue)}}h</span>
+            </div>
+          </div>
+          
+          <div class="ue-hours">
+            <div class="hour-item">
+              <span class="hour-type">CM</span>
+              <span class="hour-value">{{ue.heuresCM}}h</span>
+            </div>
+            <div class="hour-item">
+              <span class="hour-type">TD</span>
+              <span class="hour-value">{{ue.heuresTD}}h</span>
+            </div>
+            <div class="hour-item">
+              <span class="hour-type">TP</span>
+              <span class="hour-value">{{ue.heuresTP}}h</span>
+            </div>
+          </div>
+          
+          <div class="ue-enseignants" *ngIf="ue.enseignantNames && ue.enseignantNames.length > 0">
+            <div class="enseignants-label">Enseignants:</div>
+            <div class="enseignants-list">
+              <span class="enseignant-tag" *ngFor="let name of ue.enseignantNames">
+                {{name}}
+                <button 
+                  class="remove-enseignant" 
+                  (click)="removeEnseignant(ue, ue.enseignantIds![ue.enseignantNames!.indexOf(name)])"
+                  title="Retirer cet enseignant">
+                  ✕
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="ue-card-actions">
+          <button class="btn btn-sm btn-secondary" (click)="editUE(ue)" title="Modifier">
+            ✏️
+          </button>
+          <button class="btn btn-sm btn-secondary" (click)="showAssignEnseignantModal(ue)" title="Assigner un enseignant">
+            👥
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="deleteUE(ue)" title="Supprimer">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredUEs.length === 0">
+      <div class="empty-icon">📚</div>
+      <h3>Aucune UE trouvée</h3>
+      <p>Aucune unité d'enseignement ne correspond à vos critères de recherche.</p>
+      <button class="btn btn-primary" (click)="showAddUEForm()">
+        Créer la première UE
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Section -->
+  <div class="section-content" *ngIf="activeSection === 'statistics' && !isLoading">
+    <div class="statistics-grid" *ngIf="statistics">
+      <div class="stat-card">
+        <div class="stat-number">{{statistics.totalUEs}}</div>
+        <div class="stat-label">Total UEs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{statistics.totalCredits}}</div>
+        <div class="stat-label">Total Crédits ECTS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{statistics.avgCredits | number:'1.1-1'}}</div>
+        <div class="stat-label">Moyenne Crédits/UE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{statistics.totalHeures}}</div>
+        <div class="stat-label">Total Heures</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add UE Modal -->
+  <div class="modal-overlay" *ngIf="showAddForm" (click)="cancelAdd()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Ajouter une nouvelle UE</h2>
+        <button class="modal-close" (click)="cancelAdd()">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <form class="ue-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Code UE *</label>
+              <input type="text" [(ngModel)]="newUE.codeUE" name="codeUE" required class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Crédits ECTS *</label>
+              <input type="number" [(ngModel)]="newUE.creditsECTS" name="creditsECTS" min="1" required class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Nom de l'UE *</label>
+            <input type="text" [(ngModel)]="newUE.nomUE" name="nomUE" required class="form-input">
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="newUE.description" name="description" rows="3" class="form-textarea"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Heures CM</label>
+              <input type="number" [(ngModel)]="newUE.heuresCM" name="heuresCM" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Heures TD</label>
+              <input type="number" [(ngModel)]="newUE.heuresTD" name="heuresTD" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Heures TP</label>
+              <input type="number" [(ngModel)]="newUE.heuresTP" name="heuresTP" min="0" class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Semestre *</label>
+              <select [(ngModel)]="newUE.semestre" name="semestre" required class="form-select">
+                <option value="">Sélectionner un semestre</option>
+                <option *ngFor="let semestre of options?.semestres" [value]="semestre">{{semestre}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Niveau *</label>
+              <select [(ngModel)]="newUE.niveau" name="niveau" required class="form-select">
+                <option value="">Sélectionner un niveau</option>
+                <option *ngFor="let niveau of options?.niveaux" [value]="niveau">{{niveau}}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelAdd()">Annuler</button>
+        <button class="btn btn-primary" (click)="createUE()">Créer l'UE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit UE Modal -->
+  <div class="modal-overlay" *ngIf="showEditForm" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Modifier l'UE</h2>
+        <button class="modal-close" (click)="cancelEdit()">✕</button>
+      </div>
+      
+      <div class="modal-body" *ngIf="editingUE">
+        <form class="ue-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Code UE *</label>
+              <input type="text" [(ngModel)]="editingUE.codeUE" name="codeUE" required class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Crédits ECTS *</label>
+              <input type="number" [(ngModel)]="editingUE.creditsECTS" name="creditsECTS" min="1" required class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Nom de l'UE *</label>
+            <input type="text" [(ngModel)]="editingUE.nomUE" name="nomUE" required class="form-input">
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="editingUE.description" name="description" rows="3" class="form-textarea"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Heures CM</label>
+              <input type="number" [(ngModel)]="editingUE.heuresCM" name="heuresCM" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Heures TD</label>
+              <input type="number" [(ngModel)]="editingUE.heuresTD" name="heuresTD" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Heures TP</label>
+              <input type="number" [(ngModel)]="editingUE.heuresTP" name="heuresTP" min="0" class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Semestre *</label>
+              <select [(ngModel)]="editingUE.semestre" name="semestre" required class="form-select">
+                <option value="">Sélectionner un semestre</option>
+                <option *ngFor="let semestre of options?.semestres" [value]="semestre">{{semestre}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Niveau *</label>
+              <select [(ngModel)]="editingUE.niveau" name="niveau" required class="form-select">
+                <option value="">Sélectionner un niveau</option>
+                <option *ngFor="let niveau of options?.niveaux" [value]="niveau">{{niveau}}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelEdit()">Annuler</button>
+        <button class="btn btn-primary" (click)="updateUE()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Enseignant Modal -->
+  <div class="modal-overlay" *ngIf="showAssignModal" (click)="closeAssignModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Assigner un enseignant</h2>
+        <button class="modal-close" (click)="closeAssignModal()">✕</button>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedUE">
+        <p>Sélectionnez un enseignant à assigner à l'UE <strong>{{selectedUE.nomUE}}</strong>:</p>
+        
+        <div class="enseignant-list">
+          <div 
+            class="enseignant-item" 
+            *ngFor="let enseignant of enseignants"
+            [class.assigned]="isEnseignantAssigned(selectedUE, enseignant.idUser)"
+            (click)="!isEnseignantAssigned(selectedUE, enseignant.idUser) && assignEnseignant(enseignant.idUser)">
+            
+            <div class="enseignant-info">
+              <div class="enseignant-name">{{enseignant.prenomUser}} {{enseignant.nomUser}}</div>
+              <div class="enseignant-details">{{enseignant.specialite}} - {{enseignant.departement}}</div>
+            </div>
+            
+            <div class="enseignant-status">
+              <span *ngIf="isEnseignantAssigned(selectedUE, enseignant.idUser)" class="status-assigned">✓ Assigné</span>
+              <span *ngIf="!isEnseignantAssigned(selectedUE, enseignant.idUser)" class="status-available">Disponible</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAssignModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>

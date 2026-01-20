@@ -7,24 +7,48 @@ import com.isi4.authentification.entity.User;
 import com.isi4.authentification.repository.UserRepository;
 import com.isi4.authentification.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
+    
+    // Email domain restriction constant
+    private static final String ALLOWED_EMAIL_DOMAIN = "@saintjeaningenieur.org";
+    private static final String DOMAIN_ERROR_MESSAGE = "Seules les adresses email du domaine @saintjeaningenieur.org sont autorisées";
 
     public LoginResponse login(LoginRequest request) {
+        log.info("Tentative de connexion pour l'email: {}", request.getEmail());
+        
+        // Validate email domain before attempting authentication
+        if (!isValidEmailDomain(request.getEmail())) {
+            log.warn("Tentative de connexion avec un domaine email non autorisé: {}", request.getEmail());
+            throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
+        }
+
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email ou mot de passe incorrect"));
+                .orElseThrow(() -> {
+                    log.warn("Tentative de connexion avec un email inexistant: {}", request.getEmail());
+                    return new RuntimeException("Email ou mot de passe incorrect");
+                });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("Tentative de connexion avec un mot de passe incorrect pour: {}", request.getEmail());
             throw new RuntimeException("Email ou mot de passe incorrect");
+        }
+
+        // Additional security check: verify user's email domain in database
+        if (!isValidEmailDomain(user.getEmail())) {
+            log.error("Utilisateur en base avec domaine email non autorisé: {}", user.getEmail());
+            throw new RuntimeException("Compte non autorisé - contactez l'administrateur");
         }
 
         String token = jwtUtil.generateToken(
@@ -32,6 +56,8 @@ public class AuthService {
                 user.getId(),
                 user.getRole().name());
 
+        log.info("Connexion réussie pour: {} ({})", user.getEmail(), user.getRole());
+        
         return new LoginResponse(
                 token,
                 user.getId(),
@@ -42,8 +68,23 @@ public class AuthService {
     }
 
     public User register(RegisterRequest request) {
+        log.info("Tentative d'inscription pour l'email: {}", request.getEmail());
+        
+        // Validate email domain before registration
+        if (!isValidEmailDomain(request.getEmail())) {
+            log.warn("Tentative d'inscription avec un domaine email non autorisé: {}", request.getEmail());
+            throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
+        }
+        
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Tentative d'inscription avec un email déjà existant: {}", request.getEmail());
             throw new RuntimeException("Cet email est déjà utilisé");
+        }
+
+        // Additional validation for institutional email format
+        if (!isValidInstitutionalEmailFormat(request.getEmail())) {
+            log.warn("Format d'email institutionnel invalide: {}", request.getEmail());
+            throw new RuntimeException("Format d'email invalide. Utilisez le format: prenom.nom@saintjeaningenieur.org");
         }
 
         User user = new User();
@@ -55,7 +96,10 @@ public class AuthService {
         user.setTelephone(request.getTelephone());
         user.setRole(User.Role.valueOf(request.getRole().toUpperCase()));
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        log.info("Inscription réussie pour: {} ({})", savedUser.getEmail(), savedUser.getRole());
+        
+        return savedUser;
     }
 
     public long getUserCount() {
@@ -63,8 +107,19 @@ public class AuthService {
     }
 
     public void forgotPassword(String email) {
+        log.info("Demande de réinitialisation de mot de passe pour: {}", email);
+        
+        // Validate email domain before processing password reset
+        if (!isValidEmailDomain(email)) {
+            log.warn("Demande de réinitialisation avec un domaine email non autorisé: {}", email);
+            throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
+        }
+        
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec cet email"));
+                .orElseThrow(() -> {
+                    log.warn("Demande de réinitialisation pour un email inexistant: {}", email);
+                    return new RuntimeException("Utilisateur non trouvé avec cet email");
+                });
 
         String token = java.util.UUID.randomUUID().toString();
         user.setResetPasswordToken(token);
@@ -89,23 +144,95 @@ public class AuthService {
                             resetLink + "\n\n" +
                             "Ce lien est valide pour 30 minutes.\n\n" +
                             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
+            log.info("Email de réinitialisation envoyé à: {}", email);
         } catch (Exception e) {
-            System.err.println("Erreur envoi email: " + e.getMessage());
+            log.error("Erreur envoi email de réinitialisation pour {}: {}", email, e.getMessage());
             // On continue même si l'email échoue (pour le développement)
         }
     }
 
     public void resetPassword(String token, String newPassword) {
+        log.info("Tentative de réinitialisation de mot de passe avec token");
+        
         User user = userRepository.findByResetPasswordToken(token)
-                .orElseThrow(() -> new RuntimeException("Token invalide"));
+                .orElseThrow(() -> {
+                    log.warn("Tentative de réinitialisation avec token invalide");
+                    return new RuntimeException("Token invalide");
+                });
 
         if (user.getResetPasswordTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
+            log.warn("Tentative de réinitialisation avec token expiré pour: {}", user.getEmail());
             throw new RuntimeException("Token expiré");
+        }
+
+        // Additional security check: verify user's email domain
+        if (!isValidEmailDomain(user.getEmail())) {
+            log.error("Tentative de réinitialisation pour utilisateur avec domaine non autorisé: {}", user.getEmail());
+            throw new RuntimeException("Compte non autorisé - contactez l'administrateur");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
+        
+        log.info("Mot de passe réinitialisé avec succès pour: {}", user.getEmail());
+    }
+    
+    /**
+     * Validates that the email belongs to the allowed institutional domain
+     */
+    private boolean isValidEmailDomain(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        return email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN.toLowerCase());
+    }
+    
+    /**
+     * Validates institutional email format: firstname.lastname@saintjeaningenieur.org
+     * Also allows admin.* and system.* patterns for administrative accounts
+     */
+    private boolean isValidInstitutionalEmailFormat(String email) {
+        if (!isValidEmailDomain(email)) {
+            return false;
+        }
+        
+        // Extract the local part (before @)
+        String localPart = email.substring(0, email.lastIndexOf('@')).toLowerCase();
+        
+        // Allow admin and system prefixes for administrative accounts
+        if (localPart.startsWith("admin.") || localPart.startsWith("system.")) {
+            return true;
+        }
+        
+        // Standard format: firstname.lastname (at least one dot, no special characters except dots)
+        return localPart.matches("^[a-z]+\\.[a-z]+$");
+    }
+    
+    /**
+     * Get domain validation info for frontend
+     */
+    public DomainValidationInfo getDomainValidationInfo() {
+        return new DomainValidationInfo(
+            ALLOWED_EMAIL_DOMAIN,
+            "prenom.nom@saintjeaningenieur.org",
+            "Seules les adresses email institutionnelles sont autorisées"
+        );
+    }
+    
+    /**
+     * Domain validation information DTO
+     */
+    public static class DomainValidationInfo {
+        public final String allowedDomain;
+        public final String exampleFormat;
+        public final String message;
+        
+        public DomainValidationInfo(String allowedDomain, String exampleFormat, String message) {
+            this.allowedDomain = allowedDomain;
+            this.exampleFormat = exampleFormat;
+            this.message = message;
+        }
     }
 }
