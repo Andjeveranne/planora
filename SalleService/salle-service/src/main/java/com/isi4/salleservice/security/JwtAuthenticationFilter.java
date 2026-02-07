@@ -1,0 +1,74 @@
+package com.isi4.salleservice.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Collections;
+
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        // Vérifier d'abord si la requête vient du Gateway avec les headers validés
+        String gatewayUserId = request.getHeader("X-User-Id");
+        String gatewayUserRole = request.getHeader("X-User-Role");
+        
+        if (gatewayUserId != null && gatewayUserRole != null) {
+            // La requête a été validée par le Gateway, créer l'authentification directement
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                gatewayUserId, 
+                null, 
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + gatewayUserRole))
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            // Validation JWT classique pour les appels directs
+            String token = getTokenFromRequest(request);
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                String userId = jwtTokenProvider.getUserIdFromToken(token);
+                String role = jwtTokenProvider.getRoleFromToken(token);
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userId, 
+                    null, 
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        // Vérifier l'Authorization header
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/salles/health") || 
+               path.startsWith("/actuator/") ||
+               path.startsWith("/error");
+    }
+}
