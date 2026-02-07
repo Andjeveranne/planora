@@ -1,0 +1,29 @@
+@if (visible && config) {
+  <div class="notification-overlay" (click)="onOverlayClick()">
+    <div class="notification-modal" (click)="$event.stopPropagation()">
+      <div class="notification-header" [class]="headerClass">
+        <span class="notification-icon" [class]="iconClass">
+          @switch (config.type) {
+            @case ('success') { ✓ }
+            @case ('error') { ✕ }
+            @case ('warning') { ⚠ }
+            @default { ℹ }
+          }
+        </span>
+        <h2 class="notification-title">{{ config.title }}</h2>
+        <button type="button" class="notification-close" (click)="onOk()" aria-label="Fermer">×</button>
+      </div>
+      <div class="notification-body">
+        <p class="notification-message">{{ config.message }}</p>
+      </div>
+      <div class="notification-footer">
+        @if (config.type === 'confirm') {
+          <button type="button" class="btn-notif btn-cancel" (click)="onCancel()">{{ config.cancelText }}</button>
+          <button type="button" class="btn-notif btn-confirm" (click)="onOk()">{{ config.confirmText }}</button>
+        } @else {
+          <button type="button" class="btn-notif btn-ok" (click)="onOk()">{{ config.confirmText }}</button>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,327 @@
+<div class="gestion-salles-container">
+  <!-- Messages -->
+  @if (successMessage) {
+    <div class="alert alert-success alert-dismissible">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="clearMessages()"></button>
+    </div>
+  }
+  
+  @if (errorMessage) {
+    <div class="alert alert-danger alert-dismissible">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="clearMessages()"></button>
+    </div>
+  }
+
+  <div class="main-layout">
+    <!-- Section principale -->
+    <div class="main-content">
+      <!-- Header avec recherche et actions -->
+      <div class="header-section">
+        <div class="search-container">
+          <div class="search-input">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149852.png" alt="Search" class="search-icon">
+            <input 
+              type="text" 
+              placeholder="Recherche"
+              [(ngModel)]="filtreRecherche"
+              class="search-field">
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn-export">
+            <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Export" class="btn-icon">
+            Exporter la liste
+          </button>
+          <button class="btn-add" (click)="ouvrirModal()">
+            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="Add" class="btn-icon">
+            Ajouter une salle
+          </button>
+          <select class="school-select" [(ngModel)]="selectedSchool">
+            <option value="SAINT_JEAN_INGENIEUR">Saint Jean Ingénieur</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tableau des salles -->
+      <div class="table-container">
+        <table class="salles-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="sortBy('nomSalle')">
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Checkbox" class="checkbox-icon">
+                Nom Salle
+                <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
+              </th>
+              <th class="sortable" (click)="sortBy('localisation')">
+                Localisation
+                <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
+              </th>
+              <th class="sortable" (click)="sortBy('statut')">
+                Statut
+                <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading) {
+              <tr>
+                <td colspan="4" class="loading-cell">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (salle of sallesFiltrees; track salle.idSalle) {
+                <tr class="table-row">
+                  <td class="name-cell">{{ salle.nomSalle }}</td>
+                  <td class="location-cell">{{ salle.localisation }}</td>
+                  <td class="status-cell">
+                    <span class="status-badge" [class]="getStatusClass(salle.statut)">
+                      {{ getStatutLabel(salle.statut) }}
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <button class="action-btn view-btn" title="Voir">
+                      <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png" alt="View" class="action-icon">
+                    </button>
+                    <button class="action-btn edit-btn" (click)="ouvrirModal(salle)" title="Modifier">
+                      <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" class="action-icon">
+                    </button>
+                    <button class="action-btn delete-btn" (click)="supprimerSalle(salle)" title="Supprimer">
+                      <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png" alt="Delete" class="action-icon">
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+          <div class="pagination-info">
+            <span>Ligne par page</span>
+            <select class="page-size-select" [(ngModel)]="pageSize">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+            <span>de {{ totalItems }} lignes</span>
+          </div>
+          
+          <div class="pagination-controls">
+            <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271220.png" alt="First" class="page-icon">
+            </button>
+            <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271218.png" alt="Previous" class="page-icon">
+            </button>
+            
+            @for (page of getVisiblePages(); track page) {
+              <button 
+                class="page-btn" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            }
+            
+            <span class="page-dots">...</span>
+            <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+            
+            <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" class="page-icon">
+            </button>
+            <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271226.png" alt="Last" class="page-icon">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+t
+
+<!-- Modal pour créer/modifier une salle -->
+<div class="modal" [class.show]="showModal" [style.display]="showModal ? 'flex' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ isEditMode ? 'Modifier la salle' : 'Nouvelle salle' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModal()"></button>
+      </div>
+      <form [formGroup]="salleForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="nomSalle" class="form-label">Nom de la salle *</label>
+                <input 
+                  type="text" 
+                  id="nomSalle"
+                  class="form-control" 
+                  formControlName="nomSalle"
+                  [class.is-invalid]="nomSalle?.invalid && nomSalle?.touched">
+                @if (nomSalle?.invalid && nomSalle?.touched) {
+                  <div class="invalid-feedback">
+                    @if (nomSalle?.errors?.['required']) {
+                      <div>Le nom est obligatoire</div>
+                    }
+                    @if (nomSalle?.errors?.['minlength']) {
+                      <div>Le nom doit contenir au moins 2 caractères</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="type" class="form-label">Type *</label>
+                <select 
+                  id="type"
+                  class="form-select" 
+                  formControlName="type"
+                  [class.is-invalid]="type?.invalid && type?.touched">
+                  <option value="">Sélectionner un type</option>
+                  <option value="AMPHITHEATRE">{{ getTypeLabel(TypeSalle.AMPHITHEATRE) }}</option>
+                  <option value="SALLE_COURS">{{ getTypeLabel(TypeSalle.SALLE_COURS) }}</option>
+                  <option value="LABORATOIRE">{{ getTypeLabel(TypeSalle.LABORATOIRE) }}</option>
+                  <option value="SALLE_INFORMATIQUE">{{ getTypeLabel(TypeSalle.SALLE_INFORMATIQUE) }}</option>
+                  <option value="SALLE_CONFERENCE">{{ getTypeLabel(TypeSalle.SALLE_CONFERENCE) }}</option>
+                  <option value="BIBLIOTHEQUE">{{ getTypeLabel(TypeSalle.BIBLIOTHEQUE) }}</option>
+                  <option value="SALLE_REUNION">{{ getTypeLabel(TypeSalle.SALLE_REUNION) }}</option>
+                </select>
+                @if (type?.invalid && type?.touched) {
+                  <div class="invalid-feedback">
+                    Le type est obligatoire
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label for="localisation" class="form-label">Localisation *</label>
+                <input 
+                  type="text" 
+                  id="localisation"
+                  class="form-control" 
+                  formControlName="localisation"
+                  placeholder="Ex: Bâtiment A, 1er étage"
+                  [class.is-invalid]="localisation?.invalid && localisation?.touched">
+                @if (localisation?.invalid && localisation?.touched) {
+                  <div class="invalid-feedback">
+                    @if (localisation?.errors?.['required']) {
+                      <div>La localisation est obligatoire</div>
+                    }
+                    @if (localisation?.errors?.['minlength']) {
+                      <div>La localisation doit contenir au moins 2 caractères</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="capacite" class="form-label">Capacité normale *</label>
+                <input 
+                  type="number" 
+                  id="capacite"
+                  class="form-control" 
+                  formControlName="capacite"
+                  min="1"
+                  [class.is-invalid]="capacite?.invalid && capacite?.touched">
+                @if (capacite?.invalid && capacite?.touched) {
+                  <div class="invalid-feedback">
+                    @if (capacite?.errors?.['required']) {
+                      <div>La capacité est obligatoire</div>
+                    }
+                    @if (capacite?.errors?.['min']) {
+                      <div>La capacité doit être au moins de 1</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="capaciteExam" class="form-label">Capacité examen *</label>
+                <input 
+                  type="number" 
+                  id="capaciteExam"
+                  class="form-control" 
+                  formControlName="capaciteExam"
+                  min="1"
+                  [class.is-invalid]="capaciteExam?.invalid && capaciteExam?.touched">
+                @if (capaciteExam?.invalid && capaciteExam?.touched) {
+                  <div class="invalid-feedback">
+                    @if (capaciteExam?.errors?.['required']) {
+                      <div>La capacité d'examen est obligatoire</div>
+                    }
+                    @if (capaciteExam?.errors?.['min']) {
+                      <div>La capacité d'examen doit être au moins de 1</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="idEcole" class="form-label">École *</label>
+                <input 
+                  type="text" 
+                  id="idEcole"
+                  class="form-control" 
+                  formControlName="idEcole"
+                  readonly>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="statut" class="form-label">Statut *</label>
+                <select 
+                  id="statut"
+                  class="form-select" 
+                  formControlName="statut">
+                  <option value="DISPONIBLE">{{ getStatutLabel(StatutSalle.DISPONIBLE) }}</option>
+                  <option value="OCCUPEE">{{ getStatutLabel(StatutSalle.OCCUPEE) }}</option>
+                  <option value="MAINTENANCE">{{ getStatutLabel(StatutSalle.MAINTENANCE) }}</option>
+                  <option value="HORS_SERVICE">{{ getStatutLabel(StatutSalle.HORS_SERVICE) }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="fermerModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="salleForm.invalid || isLoading">
+            @if (isLoading) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop du modal -->
+@if (showModal) {
+  <div class="modal-backdrop show" (click)="fermerModal()"></div>
+}
