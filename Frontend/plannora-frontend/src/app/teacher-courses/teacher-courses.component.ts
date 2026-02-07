@@ -122,13 +122,13 @@ export class TeacherCoursesComponent implements OnInit {
    */
   private loadTeacherUEs(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.ueService.getUEsByEnseignant(this.currentTeacherId!).subscribe({
-        next: (ues) => {
+      this.ueService.getAllUEs().subscribe({
+        next: (ues: UEDTO[]) => {
           this.teacherUEs = ues;
           resolve();
         },
-        error: (error) => {
-          console.error('Erreur lors du chargement des UEs:', error);
+        error: (err: unknown) => {
+          console.error('Erreur lors du chargement des UEs:', err);
           this.teacherUEs = [];
           resolve();
         }
@@ -342,20 +342,14 @@ export class TeacherCoursesComponent implements OnInit {
    * Retourne le total des heures pour une UE
    */
   getTotalHeuresUE(ue: UEDTO): number {
-    return (ue.heuresCM || 0) + (ue.heuresTD || 0) + (ue.heuresTP || 0);
+    return ue.quantite ?? 0;
   }
 
   /**
-   * Retourne le type de cours dominant pour une UE
+   * Retourne un libellé pour le volume (nouveau DTO : quantite)
    */
-  getTypeCoursDominantUE(ue: UEDTO): string {
-    const cm = ue.heuresCM || 0;
-    const td = ue.heuresTD || 0;
-    const tp = ue.heuresTP || 0;
-
-    if (cm >= td && cm >= tp) return 'CM';
-    if (td >= tp) return 'TD';
-    return 'TP';
+  getTypeCoursDominantUE(_ue: UEDTO): string {
+    return 'UE';
   }
 
   /**
@@ -363,25 +357,13 @@ export class TeacherCoursesComponent implements OnInit {
    */
   get filteredUEs(): UEDTO[] {
     return this.teacherUEs.filter(ue => {
-      // Filtre par niveau
-      if (this.selectedNiveau && ue.niveau !== this.selectedNiveau) {
-        return false;
-      }
-
-      // Filtre par semestre
-      if (this.selectedSemestre && ue.semestre !== this.selectedSemestre) {
-        return false;
-      }
-
-      // Filtre par terme de recherche
       if (this.searchTerm) {
         const searchLower = this.searchTerm.toLowerCase();
-        const matches = ue.codeUE.toLowerCase().includes(searchLower) ||
-                       ue.nomUE.toLowerCase().includes(searchLower) ||
+        const matches = (ue.codeUE ?? '').toLowerCase().includes(searchLower) ||
+                       (ue.nomUE ?? '').toLowerCase().includes(searchLower) ||
                        (ue.description && ue.description.toLowerCase().includes(searchLower));
         if (!matches) return false;
       }
-
       return true;
     });
   }
@@ -389,7 +371,7 @@ export class TeacherCoursesComponent implements OnInit {
   /**
    * TrackBy function for UEs
    */
-  trackByUEId(_index: number, item: UEDTO): any {
-    return item.id;
+  trackByUEId(_index: number, item: UEDTO): string {
+    return item.idUE ?? '';
   }
 }

@@ -1,10 +1,14 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { UserService, Enseignant, EnseignantRequest } from '../services/user.service';
 import { PlanningService, DisponibiliteDTO, EmploiDuTempsDTO } from '../services/planning.service';
+import { NotificationService } from '../services/notification.service';
 import { UEManagementComponent } from '../ue-management/ue-management.component';
+import { GestionSallesComponent } from './gestion-salles/gestion-salles.component';
+import { GestionEnseignantsComponent } from './gestion-enseignants/gestion-enseignants.component';
+import { GestionEcolesComponent } from './gestion-ecoles/gestion-ecoles.component';
 
 interface UserInfo {
   nom: string;
@@ -37,13 +41,14 @@ interface EdtSlot {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, UEManagementComponent],
+  imports: [CommonModule, FormsModule, UEManagementComponent, GestionSallesComponent, GestionEnseignantsComponent, GestionEcolesComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.css']
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   userInfo: UserInfo | null = null;
   activeSection: string = 'overview';
+  sidebarOpen: boolean = false;
   recentUsers: any[] = [];
   recentRooms: any[] = [];
   enseignants: Enseignant[] = [];
@@ -64,6 +69,7 @@ export class AdminDashboardComponent implements OnInit {
   edtMode: 'view' | 'generate' = 'view';
   isGeneratingEdt: boolean = false;
   edtMap: Map<string, EdtSlot> = new Map();
+  nombreSemainesGeneration: number = 4;
 
   // Grille EDT
   weekDays: Day[] = [];
@@ -77,6 +83,12 @@ export class AdminDashboardComponent implements OnInit {
 
   // Recherche
   searchTerm: string = '';
+
+  // Filtres
+  filterStatus: string = 'all';
+  filterDepartement: string = 'all';
+  filterEcole: string = 'all';
+  availableDepartements: string[] = [];
 
   // Cache for statistics
   private _cachedStats: {
@@ -101,6 +113,7 @@ export class AdminDashboardComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private planningService: PlanningService,
+    private notification: NotificationService,
     private cdr: ChangeDetectorRef
   ) {
     this.initTimeSlots();
@@ -113,6 +126,20 @@ export class AdminDashboardComponent implements OnInit {
     // Initialize empty arrays - no demo data
     this.recentUsers = [];
     this.recentRooms = [];
+
+    // Fermer le dropdown quand on clique ailleurs
+    document.addEventListener('click', this.handleClickOutside.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('click', this.handleClickOutside.bind(this));
+  }
+
+  handleClickOutside(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-container')) {
+      this.closeDropdown();
+    }
   }
 
   initTimeSlots() {
@@ -159,8 +186,20 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
+  getWeekLabel(): string {
+    const start = new Date(this.currentWeekStart);
+    const end = new Date(this.currentWeekStart);
+    end.setDate(end.getDate() + 5); // Samedi
+    
+    const startStr = start.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const endStr = end.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    
+    return `${startStr} - ${endStr}`;
+  }
+
   setActiveSection(section: string): void {
     this.activeSection = section;
+    this.sidebarOpen = false;
     this.cdr.markForCheck();
     if (section === 'enseignants') {
       this.loadEnseignants();
@@ -175,6 +214,7 @@ export class AdminDashboardComponent implements OnInit {
       next: (data) => {
         this.enseignants = data;
         this.isLoadingEnseignants = false;
+        this.extractDepartements();
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -191,15 +231,67 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  extractDepartements(): void {
+    const depts = new Set<string>();
+    this.enseignants.forEach(e => {
+      if (e.departement && e.departement.trim()) {
+        depts.add(e.departement.trim());
+      }
+    });
+    this.availableDepartements = Array.from(depts).sort();
+  }
+
   get filteredEnseignants(): Enseignant[] {
-    if (!this.searchTerm) return this.enseignants;
-    const term = this.searchTerm.toLowerCase();
-    return this.enseignants.filter(e =>
-      e.nomUser?.toLowerCase().includes(term) ||
-      e.prenomUser?.toLowerCase().includes(term) ||
-      e.email?.toLowerCase().includes(term) ||
-      e.specialite?.toLowerCase().includes(term)
-    );
+    let filtered = this.enseignants;
+
+    // Filtre par recherche
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(e =>
+        e.nomUser?.toLowerCase().includes(term) ||
+        e.prenomUser?.toLowerCase().includes(term) ||
+        e.email?.toLowerCase().includes(term) ||
+        e.specialite?.toLowerCase().includes(term) ||
+        e.departement?.toLowerCase().includes(term)
+      );
+    }
+
+    // Filtre par statut (pour l'instant tous sont actifs car pas de champ statut)
+    // Dans une vraie application, il faudrait un champ "actif" dans l'entité
+    if (this.filterStatus !== 'all') {
+      // Simulation: tous les enseignants sont actifs
+      if (this.filterStatus === 'inactive') {
+        filtered = [];
+      }
+    }
+
+    // Filtre par département
+    if (this.filterDepartement !== 'all') {
+      filtered = filtered.filter(e => e.departement === this.filterDepartement);
+    }
+
+    // Filtre par école
+    if (this.filterEcole !== 'all') {
+      // Note: Le champ école n'existe pas encore dans l'entité
+      // Pour l'instant, on ne filtre pas
+      // Dans une vraie application, il faudrait ajouter ce champ
+    }
+
+    return filtered;
+  }
+
+  applyFilters(): void {
+    this.currentPage = 1; // Réinitialiser à la première page
+    this.cdr.markForCheck();
+  }
+
+  resetFilters(): void {
+    this.filterStatus = 'all';
+    this.filterDepartement = 'all';
+    this.filterEcole = 'all';
+    this.searchTerm = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   toggleAddEnseignantForm(): void {
@@ -250,8 +342,7 @@ export class AdminDashboardComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.newEnseignant.email || !this.newEnseignant.mdp ||
-      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser ||
-      !this.newEnseignant.telephone) {
+      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser) {
       this.errorMessage = 'Tous les champs obligatoires doivent être remplis';
       return false;
     }
@@ -271,11 +362,8 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   deleteEnseignant(id: string): void {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet enseignant? Cette action est irréversible.')) {
-      return;
-    }
-
-    this.userService.deleteEnseignant(id).subscribe({
+    this.notification.confirm('Êtes-vous sûr de vouloir supprimer cet enseignant ? Cette action est irréversible.', 'Confirmation', () => {
+      this.userService.deleteEnseignant(id).subscribe({
       next: () => {
         this.enseignants = this.enseignants.filter(e => e.idUser !== id);
         this.successMessage = 'Enseignant supprimé avec succès!';
@@ -290,6 +378,7 @@ export class AdminDashboardComponent implements OnInit {
         this.errorMessage = 'Erreur lors de la suppression de l\'enseignant';
         this.cdr.markForCheck();
       }
+    });
     });
   }
 
@@ -385,7 +474,7 @@ export class AdminDashboardComponent implements OnInit {
           errorMessage += ' Erreur serveur.';
         }
         
-        alert(errorMessage + ' Vérifiez que tous les services sont démarrés.');
+        this.notification.error(errorMessage + ' Vérifiez que tous les services sont démarrés.');
         this.cdr.detectChanges();
       }
     });
@@ -762,17 +851,20 @@ export class AdminDashboardComponent implements OnInit {
 
   generateScheduleFromAvailabilities(): void {
     if (!this.selectedEnseignant || this.getTotalDisponibilites() === 0) {
-      alert('Aucune disponibilité à traiter pour cet enseignant');
+      this.notification.warning('Aucune disponibilité à traiter pour cet enseignant');
       return;
     }
 
-    const confirmation = confirm(
+    this.notification.confirm(
       `Voulez-vous générer l'emploi du temps intelligent pour ${this.selectedEnseignant.prenomUser} ${this.selectedEnseignant.nomUser} ` +
-      `basé sur ses ${this.getTotalDisponibilites()} créneaux de disponibilité et ses cours assignés ?`
+      `basé sur ses ${this.getTotalDisponibilites()} créneaux de disponibilité et ses cours assignés ?`,
+      'Génération EDT',
+      () => this.doGenerateEdtIntelligent()
     );
+  }
 
-    if (!confirmation) return;
-
+  private doGenerateEdtIntelligent(): void {
+    if (!this.selectedEnseignant) return;
     console.log('Génération intelligente de l\'EDT pour:', this.selectedEnseignant);
     console.log('Disponibilités utilisées:', this.selectedEnseignantDisponibilites);
 
@@ -781,9 +873,9 @@ export class AdminDashboardComponent implements OnInit {
       next: (response) => {
         console.log('EDT intelligent généré avec succès:', response);
         if (response.success) {
-          alert(`Emploi du temps intelligent généré avec succès pour ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser}!\n${response.nombreCreneaux} créneaux ont été programmés basés sur les cours réellement assignés.`);
+          this.notification.success(`Emploi du temps intelligent généré avec succès pour ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser}!\n${response.nombreCreneaux} créneaux ont été programmés basés sur les cours réellement assignés.`);
         } else {
-          alert(`Génération partiellement réussie: ${response.message}`);
+          this.notification.info(`Génération partiellement réussie: ${response.message}`);
         }
         
         this.closeDisponibilitesModal();
@@ -799,7 +891,7 @@ export class AdminDashboardComponent implements OnInit {
           this.planningService.genererEdt(this.selectedEnseignant.idUser).subscribe({
             next: (edtGenere) => {
             console.log('EDT généré avec l\'ancienne méthode:', edtGenere);
-            alert(`Emploi du temps généré avec succès (méthode classique) pour ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser}!\n${edtGenere.length} cours ont été programmés.`);
+            this.notification.success(`Emploi du temps généré avec succès (méthode classique) pour ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser}!\n${edtGenere.length} cours ont été programmés.`);
             
             this.closeDisponibilitesModal();
             if (this.selectedEnseignant) {
@@ -816,7 +908,7 @@ export class AdminDashboardComponent implements OnInit {
             } else if (fallbackError.status === 0) {
               errorMsg = 'Service de planning non disponible';
             }
-            alert(errorMsg);
+            this.notification.error(errorMsg);
           }
           });
         }
@@ -832,7 +924,7 @@ export class AdminDashboardComponent implements OnInit {
     
     setTimeout(() => {
       this.isGeneratingEdt = false;
-      alert('EDT généré avec succès!');
+      this.notification.success('EDT généré avec succès !');
       this.closeEdtModal();
     }, 2000);
   }
@@ -860,5 +952,423 @@ export class AdminDashboardComponent implements OnInit {
 
   trackByRoomName(index: number, room: any): string {
     return room.name || index.toString();
+  }
+
+  // Méthodes pour la pagination et les statistiques des enseignants
+  pageSize = 10;
+  currentPage = 1;
+  totalItems = 0;
+
+  // Méthodes de tri
+  sortField = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  sortBy(field: string): void {
+    if (this.sortField === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDirection = 'asc';
+    }
+  }
+
+  // Méthodes de pagination
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  getVisiblePages(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(this.totalPages, this.currentPage + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  trackByPage(index: number, page: number): number {
+    return page;
+  }
+
+  // Méthodes de statistiques pour les enseignants
+  getTotalEnseignants(): number {
+    return this.enseignants.length;
+  }
+
+  getEnseignantsActifs(): number {
+    return this.enseignants.filter(e => e.email && e.nomUser).length;
+  }
+
+  getEnseignantsAvecDisponibilites(): number {
+    // Simulation - dans un vrai projet, cela viendrait d'une API
+    return Math.floor(this.enseignants.length * 0.7);
+  }
+
+  getNombreSpecialites(): number {
+    const specialites = new Set(this.enseignants.map(e => e.specialite).filter(s => s && s.trim()));
+    return specialites.size;
+  }
+
+  // Propriétés pour la pagination des enseignants
+  get totalEnseignants(): number {
+    return this.filteredEnseignants.length;
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalEnseignants / this.pageSize);
+  }
+
+  // Méthode pour effacer les messages
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.cdr.markForCheck();
+  }
+
+  // Gestion du menu déroulant
+  openDropdownId: string | null = null;
+
+  toggleDropdown(enseignantId: string, event?: MouseEvent): void {
+    // Fermer le dropdown précédent et retirer la classe
+    if (this.openDropdownId && this.openDropdownId !== enseignantId) {
+      const prevRow = document.querySelector(`tr[data-enseignant-id="${this.openDropdownId}"]`);
+      if (prevRow) {
+        prevRow.classList.remove('dropdown-open');
+      }
+    }
+
+    if (this.openDropdownId === enseignantId) {
+      this.openDropdownId = null;
+      this.closeDropdown();
+      // Retirer la classe de la ligne
+      const row = (event?.target as HTMLElement)?.closest('tr');
+      if (row) {
+        row.classList.remove('dropdown-open');
+      }
+    } else {
+      this.openDropdownId = enseignantId;
+      
+      // Ajouter la classe à la ligne pour augmenter le z-index
+      const row = (event?.target as HTMLElement)?.closest('tr');
+      if (row) {
+        row.classList.add('dropdown-open');
+        row.setAttribute('data-enseignant-id', enseignantId);
+      }
+      
+      // Vérifier si le menu doit s'afficher au-dessus
+      if (event) {
+        setTimeout(() => {
+          const button = (event.target as HTMLElement).closest('.action-menu-btn');
+          const container = button?.closest('.dropdown-container');
+          const menu = container?.querySelector('.dropdown-menu') as HTMLElement;
+          
+          if (button && menu && container) {
+            const buttonRect = button.getBoundingClientRect();
+            const menuHeight = menu.offsetHeight || 280; // Hauteur estimée si pas encore rendu
+            const windowHeight = window.innerHeight;
+            const tableContainer = button.closest('.table-container');
+            
+            // Calculer l'espace disponible en bas
+            const spaceBelow = windowHeight - buttonRect.bottom;
+            
+            // Si pas assez d'espace en bas (moins de la hauteur du menu + marge)
+            if (spaceBelow < menuHeight + 20) {
+              container.classList.add('show-above');
+            } else {
+              container.classList.remove('show-above');
+            }
+            
+            // S'assurer que le conteneur du tableau permet le débordement
+            if (tableContainer) {
+              (tableContainer as HTMLElement).style.overflow = 'visible';
+            }
+          }
+        }, 10);
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeDropdown(): void {
+    this.openDropdownId = null;
+    // Retirer toutes les classes show-above et dropdown-open
+    document.querySelectorAll('.dropdown-container.show-above').forEach(el => {
+      el.classList.remove('show-above');
+    });
+    document.querySelectorAll('tr.dropdown-open').forEach(el => {
+      el.classList.remove('dropdown-open');
+    });
+    this.cdr.markForCheck();
+  }
+
+  // Actions du menu déroulant
+  showInfoModal: boolean = false;
+  
+  viewEnseignantInfo(enseignant: Enseignant): void {
+    this.selectedEnseignant = enseignant;
+    this.showInfoModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeInfoModal(): void {
+    this.showInfoModal = false;
+    this.selectedEnseignant = null;
+    this.cdr.markForCheck();
+  }
+
+  // Export/Import CSV
+  exportEnseignantsCSV(): void {
+    if (this.enseignants.length === 0) {
+      this.notification.warning('Aucun enseignant à exporter');
+      return;
+    }
+
+    // Créer le contenu CSV
+    const headers = ['Nom', 'Prénom', 'Email', 'Téléphone', 'Spécialité', 'Département', 'Rôle'];
+    const csvContent = [
+      headers.join(';'),
+      ...this.enseignants.map(e => [
+        e.nomUser || '',
+        e.prenomUser || '',
+        e.email || '',
+        e.telephone || '',
+        e.specialite || '',
+        e.departement || '',
+        e.role || 'ENSEIGNANT'
+      ].join(';'))
+    ].join('\n');
+
+    // Créer le fichier et le télécharger
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const date = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `enseignants_${date}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.successMessage = `✅ ${this.enseignants.length} enseignant(s) exporté(s) avec succès!`;
+    setTimeout(() => {
+      this.successMessage = '';
+      this.cdr.markForCheck();
+    }, 3000);
+  }
+
+  triggerFileInput(): void {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  importEnseignantsCSV(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      this.errorMessage = '❌ Veuillez sélectionner un fichier CSV';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const csvContent = e.target.result;
+        const lines = csvContent.split('\n').filter((line: string) => line.trim());
+        
+        if (lines.length < 2) {
+          this.errorMessage = '❌ Le fichier CSV est vide ou invalide';
+          return;
+        }
+
+        // Ignorer la première ligne (headers)
+        const dataLines = lines.slice(1);
+        const enseignantsToImport: EnseignantRequest[] = [];
+        const errors: string[] = [];
+
+        dataLines.forEach((line: string, index: number) => {
+          const values = line.split(';').map(v => v.trim());
+          
+          if (values.length < 3) {
+            errors.push(`Ligne ${index + 2}: Données insuffisantes`);
+            return;
+          }
+
+          const [nom, prenom, email, telephone, specialite, departement, role] = values;
+
+          if (!nom || !prenom || !email) {
+            errors.push(`Ligne ${index + 2}: Nom, prénom et email sont obligatoires`);
+            return;
+          }
+
+          // Validation email
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            errors.push(`Ligne ${index + 2}: Email invalide (${email})`);
+            return;
+          }
+
+          enseignantsToImport.push({
+            nomUser: nom,
+            prenomUser: prenom,
+            email: email,
+            telephone: telephone || '',
+            specialite: specialite || '',
+            departement: departement || '',
+            role: role || 'ENSEIGNANT',
+            mdp: this.generateRandomPassword()
+          });
+        });
+
+        if (errors.length > 0) {
+          const errorMsg = `Erreurs détectées:\n${errors.join('\n')}\n\nVoulez-vous continuer avec les ${enseignantsToImport.length} enseignant(s) valide(s) ?`;
+          this.notification.confirm(errorMsg, 'Import CSV', () => this.proceedWithImport(enseignantsToImport));
+          return;
+        }
+
+        this.proceedWithImport(enseignantsToImport);
+      } catch (error) {
+        console.error('Erreur lors de la lecture du CSV:', error);
+        this.errorMessage = '❌ Erreur lors de la lecture du fichier CSV';
+      }
+
+      // Réinitialiser l'input file
+      event.target.value = '';
+    };
+
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  private proceedWithImport(enseignantsToImport: EnseignantRequest[]): void {
+    if (enseignantsToImport.length === 0) {
+      this.errorMessage = '❌ Aucun enseignant valide à importer';
+      return;
+    }
+    this.importEnseignantsBatch(enseignantsToImport);
+  }
+
+  private generateRandomPassword(): string {
+    const length = 12;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  }
+
+  private importEnseignantsBatch(enseignants: EnseignantRequest[]): void {
+    let successCount = 0;
+    let errorCount = 0;
+    const total = enseignants.length;
+
+    this.successMessage = `⏳ Import en cours... 0/${total}`;
+    this.cdr.markForCheck();
+
+    const importNext = (index: number) => {
+      if (index >= enseignants.length) {
+        // Fin de l'import
+        this.loadEnseignants();
+        this.successMessage = `✅ Import terminé: ${successCount} réussi(s), ${errorCount} échec(s)`;
+        setTimeout(() => {
+          this.successMessage = '';
+          this.cdr.markForCheck();
+        }, 5000);
+        return;
+      }
+
+      const enseignant = enseignants[index];
+      this.userService.creerEnseignant(enseignant).subscribe({
+        next: () => {
+          successCount++;
+          this.successMessage = `⏳ Import en cours... ${index + 1}/${total} (${successCount} réussi(s))`;
+          this.cdr.markForCheck();
+          importNext(index + 1);
+        },
+        error: (error) => {
+          errorCount++;
+          console.error(`Erreur import ${enseignant.email}:`, error);
+          this.successMessage = `⏳ Import en cours... ${index + 1}/${total} (${successCount} réussi(s), ${errorCount} échec(s))`;
+          this.cdr.markForCheck();
+          importNext(index + 1);
+        }
+      });
+    };
+
+    importNext(0);
+  }
+
+  editEnseignant(enseignant: Enseignant): void {
+    // Pré-remplir le formulaire avec les données de l'enseignant
+    this.newEnseignant = {
+      email: enseignant.email || '',
+      mdp: '', // Ne pas pré-remplir le mot de passe
+      nomUser: enseignant.nomUser || '',
+      prenomUser: enseignant.prenomUser || '',
+      telephone: enseignant.telephone || '',
+      role: 'ENSEIGNANT',
+      specialite: enseignant.specialite || '',
+      departement: enseignant.departement || ''
+    };
+    this.showAddEnseignantForm = true;
+    this.successMessage = `Modification de ${enseignant.prenomUser} ${enseignant.nomUser}`;
+    this.cdr.markForCheck();
+    
+    // Scroll vers le formulaire
+    setTimeout(() => {
+      const formElement = document.querySelector('.form-container');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
+  desactiverEnseignant(id: string): void {
+    const enseignant = this.enseignants.find(e => e.idUser === id);
+    const nom = enseignant ? `${enseignant.prenomUser} ${enseignant.nomUser}` : 'cet enseignant';
+    
+    this.notification.confirm(
+      `Êtes-vous sûr de vouloir désactiver ${nom} ?\n\n• L'enseignant ne pourra plus se connecter\n• Ses disponibilités seront conservées\n• Son emploi du temps sera conservé\n• Vous pourrez le réactiver ultérieurement`,
+      'Confirmation de désactivation',
+      () => this.doDesactiverEnseignant(id, nom)
+    );
+  }
+
+  private doDesactiverEnseignant(id: string, nom: string): void {
+    // Dans une vraie application, il faudrait une API de désactivation
+    this.userService.deleteEnseignant(id).subscribe({
+      next: () => {
+        this.enseignants = this.enseignants.filter(e => e.idUser !== id);
+        this.successMessage = `✅ ${nom} a été désactivé avec succès!`;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.successMessage = '';
+          this.cdr.markForCheck();
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Erreur lors de la désactivation:', error);
+        let errorMsg = 'Erreur lors de la désactivation de l\'enseignant';
+        if (error.status === 404) {
+          errorMsg = 'Enseignant non trouvé';
+        } else if (error.status === 403) {
+          errorMsg = 'Vous n\'avez pas les permissions nécessaires';
+        } else if (error.status === 0) {
+          errorMsg = 'Impossible de contacter le serveur';
+        }
+        this.errorMessage = `❌ ${errorMsg}`;
+        this.cdr.markForCheck();
+      }
+    });
   }
 }

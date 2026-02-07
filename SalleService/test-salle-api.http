@@ -1,0 +1,30 @@
+### Test de santé du service salle (public)
+GET http://localhost:8087/api/salles/health
+
+### Test de santé via Gateway (public)
+GET http://localhost:8081/api/salles/health
+
+### Test des types de salles (public)
+GET http://localhost:8081/api/salles/types
+
+### Test des statuts de salles (public)
+GET http://localhost:8081/api/salles/statuts
+
+### Test d'obtention de toutes les salles (nécessite authentification)
+GET http://localhost:8081/api/salles
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test de création d'une salle (nécessite authentification ADMIN)
+POST http://localhost:8081/api/salles
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "nomSalle": "Nouvelle Salle Test",
+  "type": "SALLE_COURS",
+  "localisation": "Bâtiment Test, 1er étage",
+  "capacite": 40,
+  "capaciteExam": 20,
+  "idEcole": "SAINT_JEAN_INGENIEUR",
+  "statut": "DISPONIBLE"
+}

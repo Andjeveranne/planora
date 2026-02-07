@@ -27,7 +27,7 @@ export interface EmploiDuTempsDTO {
     providedIn: 'root'
 })
 export class PlanningService {
-    private baseUrl = 'http://localhost:8088/api/planning';
+    private baseUrl = 'http://localhost:8081/api/planning';
     private dispoUrl = `${this.baseUrl}/disponibilites`;
     private edtUrl = `${this.baseUrl}/edt`;
 
@@ -82,9 +82,9 @@ export class PlanningService {
         });
     }
 
-    // NOUVEAU: Génération intelligente d'emploi du temps via UserService
+    // Génération intelligente d'emploi du temps via UserService
     genererEdtIntelligent(enseignantId: string, nombreSemaines: number = 4): Observable<any> {
-        const userServiceUrl = 'http://localhost:8086/api/emplois-du-temps';
+        const userServiceUrl = 'http://localhost:8081/api/emplois-du-temps';
         return this.http.post<any>(`${userServiceUrl}/generer-intelligent/${enseignantId}?nombreSemaines=${nombreSemaines}`, {}, {
             headers: this.getHeaders()
         });
@@ -92,7 +92,7 @@ export class PlanningService {
 
     // Récupérer l'emploi du temps depuis UserService
     getEdtFromUserService(enseignantId: string): Observable<EmploiDuTempsDTO[]> {
-        const userServiceUrl = 'http://localhost:8086/api/emplois-du-temps';
+        const userServiceUrl = 'http://localhost:8081/api/emplois-du-temps';
         return this.http.get<EmploiDuTempsDTO[]>(`${userServiceUrl}/enseignant/${enseignantId}`, {
             headers: this.getHeaders()
         });

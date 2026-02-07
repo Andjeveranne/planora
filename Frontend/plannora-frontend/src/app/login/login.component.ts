@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { NotificationService } from '../services/notification.service';
 
 interface LoginResponse {
   token: string;
@@ -33,12 +34,13 @@ export class LoginComponent implements OnInit {
   isLoading: boolean = false;
   showPassword: boolean = false;
   domainInfo: DomainValidationInfo | null = null;
-  private apiUrl = 'http://localhost:8085/api/auth';
+  private apiUrl = 'http://localhost:8081/api/auth';
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private notification: NotificationService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email, this.institutionalEmailValidator.bind(this)]],
@@ -130,7 +132,7 @@ export class LoginComponent implements OnInit {
           } else if (response.role === 'ENSEIGNANT') {
             this.router.navigate(['/enseignant-dashboard']);
           } else {
-            alert(`Bienvenue ${response.prenom} ${response.nom}!\nRôle: ${response.role}\nDashboard étudiant à venir...`);
+            this.notification.info(`Bienvenue ${response.prenom} ${response.nom}!\nRôle: ${response.role}\nDashboard étudiant à venir...`, 'Connexion réussie');
           }
         },
         error: (error) => {
@@ -164,7 +166,7 @@ export class LoginComponent implements OnInit {
     this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email: emailControl.value }).subscribe({
       next: (response) => {
         this.isLoading = false;
-        alert(response.message);
+        this.notification.success(response.message);
       },
       error: (error) => {
         this.isLoading = false;

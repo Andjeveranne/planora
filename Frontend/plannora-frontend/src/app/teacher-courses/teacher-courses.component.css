@@ -26,8 +26,10 @@
   gap: 1rem;
 }
 
-.title-section h1 i {
-  font-size: 2rem;
+.title-icon {
+  width: 2rem;
+  height: 2rem;
+  filter: brightness(0) invert(1);
 }
 
 .subtitle {
@@ -52,8 +54,10 @@
   min-width: 120px;
 }
 
-.stat-icon {
-  font-size: 2rem;
+.stat-icon-img {
+  width: 2rem;
+  height: 2rem;
+  filter: brightness(0) invert(1);
   opacity: 0.8;
 }
 
@@ -100,6 +104,19 @@
   background: #667eea;
   color: white;
   border-color: #667eea;
+}
+
+.mode-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.mode-btn:not(.active) .mode-icon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(8%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%);
+}
+
+.mode-btn.active .mode-icon {
+  filter: brightness(0) invert(1);
 }
 
 /* ===== UES LIST ===== */
@@ -241,12 +258,14 @@
   min-width: 300px;
 }
 
-.search-box i {
+.search-icon {
   position: absolute;
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #666;
+  width: 1rem;
+  height: 1rem;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(8%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%);
 }
 
 .search-input {
@@ -315,28 +334,56 @@
   background: #5a6fd8;
 }
 
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn-clear-filters .btn-icon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(8%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%);
+}
+
+.btn-refresh .btn-icon {
+  filter: brightness(0) invert(1);
+}
+
 /* ===== LOADING & ERROR ===== */
 .loading-container, .error-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 300px;
-}
-
-.loading-spinner, .error-message {
-  text-align: center;
   padding: 2rem;
 }
 
-.loading-spinner i {
-  font-size: 3rem;
-  color: #667eea;
-  margin-bottom: 1rem;
+.loading-spinner, .error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  gap: 1rem;
 }
 
-.error-message i {
-  font-size: 3rem;
-  color: #dc3545;
+.loading-icon {
+  width: 3rem;
+  height: 3rem;
+  filter: brightness(0) saturate(100%) invert(47%) sepia(79%) saturate(2476%) hue-rotate(225deg) brightness(98%) contrast(95%);
+  margin-bottom: 1rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  width: 3rem;
+  height: 3rem;
+  filter: brightness(0) saturate(100%) invert(17%) sepia(94%) saturate(7151%) hue-rotate(356deg) brightness(91%) contrast(135%);
   margin-bottom: 1rem;
 }
 
@@ -359,9 +406,10 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.no-courses-icon i {
-  font-size: 4rem;
-  color: #ccc;
+.no-courses-img {
+  width: 4rem;
+  height: 4rem;
+  filter: brightness(0) saturate(100%) invert(80%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(103%);
   margin-bottom: 1rem;
 }
 
@@ -497,8 +545,10 @@
   border-bottom: 2px solid #e1e5e9;
 }
 
-.semestre-title i {
-  color: #667eea;
+.semestre-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  filter: brightness(0) saturate(100%) invert(47%) sepia(79%) saturate(2476%) hue-rotate(225deg) brightness(98%) contrast(95%);
 }
 
 /* ===== COURSES GRID ===== */
@@ -599,8 +649,18 @@
   font-weight: 600;
 }
 
-.status-complete i, .status-incomplete i {
+.status-icon {
+  width: 0.8rem;
+  height: 0.8rem;
   margin-right: 0.25rem;
+}
+
+.status-complete .status-icon {
+  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(100deg) brightness(104%) contrast(97%);
+}
+
+.status-incomplete .status-icon {
+  filter: brightness(0) saturate(100%) invert(84%) sepia(78%) saturate(2476%) hue-rotate(2deg) brightness(101%) contrast(103%);
 }
 
 .schedule-info {

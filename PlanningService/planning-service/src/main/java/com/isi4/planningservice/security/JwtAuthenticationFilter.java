@@ -24,18 +24,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = getTokenFromRequest(request);
-
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            String userId = jwtTokenProvider.getUserIdFromToken(token);
-            String role = jwtTokenProvider.getRoleFromToken(token);
-
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null,
-                    authorities);
-
+        // Vérifier si les headers du Gateway sont présents (priorité)
+        String userId = request.getHeader("X-User-Id");
+        String userRole = request.getHeader("X-User-Role");
+        
+        if (userId != null && userRole != null) {
+            // Authentification basée sur les headers du Gateway
+            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
+            UsernamePasswordAuthenticationToken authentication = 
+                new UsernamePasswordAuthenticationToken(userId, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            // Fallback: authentification JWT classique (pour les appels directs)
+            String token = getTokenFromRequest(request);
+
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                String userIdFromToken = jwtTokenProvider.getUserIdFromToken(token);
+                String roleFromToken = jwtTokenProvider.getRoleFromToken(token);
+
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleFromToken));
+                UsernamePasswordAuthenticationToken authentication = 
+                    new UsernamePasswordAuthenticationToken(userIdFromToken, null, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
 
         filterChain.doFilter(request, response);

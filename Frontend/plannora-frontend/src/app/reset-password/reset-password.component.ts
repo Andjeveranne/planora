@@ -18,7 +18,7 @@ export class ResetPasswordComponent implements OnInit {
     successMessage: string = '';
     isLoading: boolean = false;
     showPassword: boolean = false;
-    private apiUrl = 'http://localhost:8085/api/auth';
+    private apiUrl = 'http://localhost:8081/api/auth';
 
     constructor(
         private fb: FormBuilder,
