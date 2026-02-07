@@ -23,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
             try {
                 userRepository.delete(user);
             } catch (Exception e) {
-                System.out.println("⚠️ Cannot delete admin user (foreign key constraint): " + e.getMessage());
+                System.out.println(" Cannot delete admin user (foreign key constraint): " + e.getMessage());
             }
         });
         
@@ -41,9 +41,9 @@ public class DataInitializer implements CommandLineRunner {
             admin.setTelephone("0000000000");
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);
-            System.out.println("✅ Admin user created!");
+            System.out.println(" Admin user created!");
         } else {
-            System.out.println("ℹ️ Admin user already exists, skipping creation.");
+            System.out.println("ℹ Admin user already exists, skipping creation.");
         }
         
         // Créer l'enseignant seulement s'il n'existe pas déjà
@@ -57,13 +57,13 @@ public class DataInitializer implements CommandLineRunner {
             enseignant.setTelephone("0612345678");
             enseignant.setRole(User.Role.ENSEIGNANT);
             userRepository.save(enseignant);
-            System.out.println("✅ Teacher user created!");
+            System.out.println(" Teacher user created!");
         } else {
-            System.out.println("ℹ️ Teacher user already exists, skipping creation.");
+            System.out.println("ℹ Teacher user already exists, skipping creation.");
         }
         
-        System.out.println("✅ DataInitializer completed successfully!");
-        System.out.println("📧 Available test accounts:");
+        System.out.println(" DataInitializer completed successfully!");
+        System.out.println(" Available test accounts:");
         System.out.println("   admin.systeme@saintjeaningenieur.org / password123");
         System.out.println("   jean.dupont@saintjeaningenieur.org / password123");
     }

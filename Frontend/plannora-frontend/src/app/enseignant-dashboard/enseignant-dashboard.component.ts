@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { PlanningService, EmploiDuTempsDTO, DisponibiliteDTO } from '../services/planning.service';
+import { NotificationService } from '../services/notification.service';
 
 interface UserInfo {
   nom: string;
@@ -204,7 +205,8 @@ export class EnseignantDashboardComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private planningService: PlanningService
+    private planningService: PlanningService,
+    private notification: NotificationService
   ) {
     this.initTimeSlots();
   }
@@ -256,7 +258,7 @@ export class EnseignantDashboardComponent implements OnInit {
     console.log('After clear - disponibilites:', this.disponibilites);
     console.log('LocalStorage cleared, SessionStorage cleared');
     
-    alert('All data and cache cleared! Refresh the page to see clean state.');
+    this.notification.success('Données et cache effacés. Actualisez la page pour voir l\'état initial.');
   }
 
   initTimeSlots(): void {
@@ -480,24 +482,24 @@ export class EnseignantDashboardComponent implements OnInit {
   ajouterDisponibilite(): void {
     // Use comprehensive form validation
     if (!this.isFormValid()) {
-      alert('Veuillez corriger les erreurs de validation avant d\'ajouter ce créneau.');
+      this.notification.warning('Veuillez corriger les erreurs de validation avant d\'ajouter ce créneau.');
       return;
     }
     
     // Additional business logic checks
     if (this.isPastDate(this.nouvelleDispo.date)) {
-      alert('Vous ne pouvez pas sélectionner une date dans le passé.');
+      this.notification.warning('Vous ne pouvez pas sélectionner une date dans le passé.');
       return;
     }
     
     if (!this.isValidDay(this.nouvelleDispo.jour)) {
-      alert('Les disponibilités ne peuvent être ajoutées que du lundi au samedi.');
+      this.notification.warning('Les disponibilités ne peuvent être ajoutées que du lundi au samedi.');
       return;
     }
     
     if (!this.isWithinBusinessHours(this.nouvelleDispo.heureDebut) || 
         !this.isWithinBusinessHours(this.nouvelleDispo.heureFin)) {
-      alert('Les horaires doivent être entre 8h00 et 17h00 (heures ouvrables).');
+      this.notification.warning('Les horaires doivent être entre 8h00 et 17h00 (heures ouvrables).');
       return;
     }
     
@@ -508,7 +510,7 @@ export class EnseignantDashboardComponent implements OnInit {
     );
     
     if (conflict) {
-      alert(`Conflit détecté avec le créneau ${conflict.heureDebut} - ${conflict.heureFin} du ${conflict.date}`);
+      this.notification.warning(`Conflit détecté avec le créneau ${conflict.heureDebut} - ${conflict.heureFin} du ${conflict.date}`);
       return;
     }
     
@@ -570,17 +572,13 @@ export class EnseignantDashboardComponent implements OnInit {
   }
 
   clearAllDisponibilites(): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer toutes vos disponibilités ?')) {
+    this.notification.confirm('Êtes-vous sûr de vouloir supprimer toutes vos disponibilités ?', 'Confirmation', () => {
       this.disponibilites = [];
-      
-      // Also clear from server if user is logged in
       const user = this.authService.getCurrentUser();
       if (user && (user as any).userId) {
-        // Note: This would require a backend API to delete all availabilities for a user
-        // For now, we just clear the local array
         console.log('Disponibilités locales effacées. Pour supprimer du serveur, implémentez l\'API correspondante.');
       }
-    }
+    });
   }
 
   supprimerDisponibilite(index: number): void {
@@ -590,12 +588,12 @@ export class EnseignantDashboardComponent implements OnInit {
   envoyerDisponibilites(): void {
     const user = this.authService.getCurrentUser();
     if (!user || !(user as any).userId) {
-      alert('Erreur: Utilisateur non connecté');
+      this.notification.error('Utilisateur non connecté');
       return;
     }
 
     if (this.disponibilites.length === 0) {
-      alert('Aucune disponibilité à envoyer');
+      this.notification.warning('Aucune disponibilité à envoyer');
       return;
     }
 
@@ -671,12 +669,12 @@ export class EnseignantDashboardComponent implements OnInit {
     this.isSendingDisponibilites = false;
     
     if (errorCount === 0) {
-      alert(`Toutes vos disponibilités (${successCount}) ont été envoyées à l'administrateur avec succès !`);
+      this.notification.success(`Toutes vos disponibilités (${successCount}) ont été envoyées à l'administrateur avec succès !`);
       this.disponibilites = []; // Reset après envoi réussi
     } else if (successCount > 0) {
-      alert(`${successCount} disponibilités envoyées avec succès, ${errorCount} ont échoué. Veuillez réessayer pour les échecs.`);
+      this.notification.info(`${successCount} disponibilités envoyées avec succès, ${errorCount} ont échoué. Veuillez réessayer pour les échecs.`);
     } else {
-      alert(`Erreur: Aucune disponibilité n'a pu être envoyée. Vérifiez votre connexion et réessayez.`);
+      this.notification.error(`Aucune disponibilité n'a pu être envoyée. Vérifiez votre connexion et réessayez.`);
     }
   }
 

@@ -1,47 +1,32 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+/**
+ * DTO conforme au diagramme de classes : IdUE, CodeUE, NomUE, Quantite, Description, NCredit.
+ */
 export interface UEDTO {
-  id?: number;
+  idUE?: string;
   codeUE: string;
   nomUE: string;
+  quantite?: number;
   description?: string;
-  heuresCM: number;
-  heuresTD: number;
-  heuresTP: number;
-  creditsECTS: number;
-  semestre: string;
-  niveau: string;
-  active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  enseignantIds?: string[];
-  enseignantNames?: string[];
-  nombreEnseignants?: number;
-  nombreEmploisDuTemps?: number;
+  nCredit?: number;
 }
 
+/** Statistiques calculées côté client à partir de la liste des UEs. */
 export interface UEStatistics {
   totalUEs: number;
   totalCredits: number;
   avgCredits: number;
-  totalHeures: number;
-  statsBySemestre: any[];
-  statsByNiveau: any[];
-}
-
-export interface UEOptions {
-  semestres: string[];
-  niveaux: string[];
-  typesCours: string[];
+  totalQuantite: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class UEService {
-  private baseUrl = 'http://localhost:8086/api/ues';
+  private baseUrl = 'http://localhost:8081/api/ues';
 
   constructor(private http: HttpClient) { }
 
@@ -53,35 +38,14 @@ export class UEService {
     });
   }
 
-  // ========== CRUD Operations ==========
-
   getAllUEs(): Observable<UEDTO[]> {
     return this.http.get<UEDTO[]>(this.baseUrl, {
       headers: this.getHeaders()
     });
   }
 
-  getUEsPaginated(page: number = 0, size: number = 10, sortBy: string = 'nomUE', sortDir: string = 'asc'): Observable<any> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sortBy', sortBy)
-      .set('sortDir', sortDir);
-
-    return this.http.get<any>(`${this.baseUrl}/paginated`, {
-      headers: this.getHeaders(),
-      params: params
-    });
-  }
-
-  getUEById(id: number): Observable<UEDTO> {
-    return this.http.get<UEDTO>(`${this.baseUrl}/${id}`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  getUEByCode(codeUE: string): Observable<UEDTO> {
-    return this.http.get<UEDTO>(`${this.baseUrl}/code/${codeUE}`, {
+  getUEById(idUE: string): Observable<UEDTO> {
+    return this.http.get<UEDTO>(`${this.baseUrl}/${idUE}`, {
       headers: this.getHeaders()
     });
   }
@@ -92,103 +56,35 @@ export class UEService {
     });
   }
 
-  updateUE(id: number, ue: UEDTO): Observable<UEDTO> {
-    return this.http.put<UEDTO>(`${this.baseUrl}/${id}`, ue, {
+  updateUE(idUE: string, ue: UEDTO): Observable<UEDTO> {
+    return this.http.put<UEDTO>(`${this.baseUrl}/${idUE}`, ue, {
       headers: this.getHeaders()
     });
   }
 
-  deleteUE(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+  deleteUE(idUE: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${idUE}`, {
       headers: this.getHeaders()
     });
   }
 
-  restoreUE(id: number): Observable<UEDTO> {
-    return this.http.put<UEDTO>(`${this.baseUrl}/${id}/restore`, {}, {
-      headers: this.getHeaders()
-    });
-  }
-
-  // ========== Search and Filter ==========
-
-  searchUEs(searchTerm: string): Observable<UEDTO[]> {
-    const params = new HttpParams().set('q', searchTerm);
-    return this.http.get<UEDTO[]>(`${this.baseUrl}/search`, {
-      headers: this.getHeaders(),
-      params: params
-    });
-  }
-
-  getUEsBySemestre(semestre: string): Observable<UEDTO[]> {
-    return this.http.get<UEDTO[]>(`${this.baseUrl}/semestre/${semestre}`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  getUEsByNiveau(niveau: string): Observable<UEDTO[]> {
-    return this.http.get<UEDTO[]>(`${this.baseUrl}/niveau/${niveau}`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  getUEsByEnseignant(enseignantId: string): Observable<UEDTO[]> {
-    return this.http.get<UEDTO[]>(`${this.baseUrl}/enseignant/${enseignantId}`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  // ========== Enseignant Assignment ==========
-
-  assignEnseignantToUE(ueId: number, enseignantId: string): Observable<UEDTO> {
-    return this.http.post<UEDTO>(`${this.baseUrl}/${ueId}/enseignants/${enseignantId}`, {}, {
-      headers: this.getHeaders()
-    });
-  }
-
-  assignEnseignantToUESimple(ueId: number, enseignantId: string): Observable<UEDTO> {
-    return this.http.post<UEDTO>(`${this.baseUrl}/${ueId}/enseignants/${enseignantId}/simple`, {}, {
-      headers: this.getHeaders()
-    });
-  }
-
-  removeEnseignantFromUE(ueId: number, enseignantId: string): Observable<UEDTO> {
-    return this.http.delete<UEDTO>(`${this.baseUrl}/${ueId}/enseignants/${enseignantId}`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  // ========== Statistics and Options ==========
-
-  getUEStatistics(): Observable<UEStatistics> {
-    return this.http.get<UEStatistics>(`${this.baseUrl}/statistics`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  getUEOptions(): Observable<UEOptions> {
-    return this.http.get<UEOptions>(`${this.baseUrl}/options`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  // ========== Utility Methods ==========
-
-  getTotalHeures(ue: UEDTO): number {
-    return (ue.heuresCM || 0) + (ue.heuresTD || 0) + (ue.heuresTP || 0);
-  }
-
-  getTypeCoursDominant(ue: UEDTO): string {
-    const cm = ue.heuresCM || 0;
-    const td = ue.heuresTD || 0;
-    const tp = ue.heuresTP || 0;
-
-    if (cm >= td && cm >= tp) return 'CM';
-    if (td >= tp) return 'TD';
-    return 'TP';
+  /**
+   * Calcule les statistiques à partir de la liste des UEs (côté client).
+   */
+  computeStatistics(ues: UEDTO[]): UEStatistics {
+    const totalUEs = ues.length;
+    const totalCredits = ues.reduce((sum, u) => sum + (u.nCredit ?? 0), 0);
+    const totalQuantite = ues.reduce((sum, u) => sum + (u.quantite ?? 0), 0);
+    return {
+      totalUEs,
+      totalCredits,
+      avgCredits: totalUEs > 0 ? totalCredits / totalUEs : 0,
+      totalQuantite
+    };
   }
 
   formatUEText(ue: UEDTO): string {
-    return `${ue.codeUE} - ${ue.nomUE} (${ue.creditsECTS} ECTS)`;
+    const credits = ue.nCredit != null ? ` (${ue.nCredit} cr.)` : '';
+    return `${ue.codeUE} - ${ue.nomUE}${credits}`;
   }
 }

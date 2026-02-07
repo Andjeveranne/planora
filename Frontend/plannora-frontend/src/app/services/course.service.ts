@@ -70,7 +70,7 @@ export interface ClasseStats {
   providedIn: 'root'
 })
 export class CourseService {
-  private baseUrl = 'http://localhost:8082/api';
+  private baseUrl = 'http://localhost:8081/api';
 
   constructor(private http: HttpClient) {}
 

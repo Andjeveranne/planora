@@ -1,0 +1,671 @@
+<div class="enseignants-container">
+  <!-- Messages -->
+  @if (successMessage) {
+    <div class="alert alert-success alert-dismissible">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="clearMessages()"></button>
+    </div>
+  }
+  
+  @if (errorMessage) {
+    <div class="alert alert-danger alert-dismissible">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="clearMessages()"></button>
+    </div>
+  }
+
+  <div class="main-layout">
+    <!-- Section principale -->
+    <div class="main-content">
+      <!-- Header avec recherche et actions -->
+      <div class="header-section">
+        <div class="search-container">
+          <div class="search-input">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149852.png" alt="Search" class="search-icon">
+            <input 
+              type="text" 
+              placeholder="Recherche"
+              [(ngModel)]="searchTerm"
+              class="search-field">
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn-export" (click)="loadEnseignants()">
+            <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Refresh" class="btn-icon">
+            Actualiser
+          </button>
+          <button class="btn-export" (click)="exportEnseignantsCSV()">
+            <img src="https://cdn-icons-png.flaticon.com/512/3097/3097412.png" alt="Export" class="btn-icon">
+            Exporter CSV
+          </button>
+          <button class="btn-export" (click)="triggerFileInput()">
+            <img src="https://cdn-icons-png.flaticon.com/512/3097/3097369.png" alt="Import" class="btn-icon">
+            Importer CSV
+          </button>
+          <input 
+            type="file" 
+            #fileInput 
+            accept=".csv" 
+            style="display: none;" 
+            (change)="importEnseignantsCSV($event)">
+          <button class="btn-add" (click)="toggleAddEnseignantForm()">
+            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="Add" class="btn-icon">
+            Ajouter un enseignant
+          </button>
+        </div>
+      </div>
+
+      <!-- Barre de filtres -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label class="filter-label">
+            <img src="https://cdn-icons-png.flaticon.com/512/2920/2920349.png" alt="Status" class="filter-icon">
+            Statut
+          </label>
+          <select class="filter-select" [(ngModel)]="filterStatus" (change)="applyFilters()">
+            <option value="all">Tous</option>
+            <option value="active">Actifs</option>
+            <option value="inactive">Désactivés</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">
+            <img src="https://cdn-icons-png.flaticon.com/512/3281/3281289.png" alt="Department" class="filter-icon">
+            Département
+          </label>
+          <select class="filter-select" [(ngModel)]="filterDepartement" (change)="applyFilters()">
+            <option value="all">Tous les départements</option>
+            @for (dept of availableDepartements; track dept) {
+              <option [value]="dept">{{ dept }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="School" class="filter-icon">
+            École
+          </label>
+          <select class="filter-select" [(ngModel)]="filterEcole" (change)="applyFilters()">
+            <option value="all">Toutes les écoles</option>
+            <option value="SAINT_JEAN_INGENIEUR">Saint Jean Ingénieur</option>
+            <option value="SAINT_JEAN_COMMERCE">Saint Jean Commerce</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <button class="btn-reset-filters" (click)="resetFilters()" title="Réinitialiser les filtres">
+            <img src="https://cdn-icons-png.flaticon.com/512/3094/3094837.png" alt="Reset" class="filter-icon">
+            Réinitialiser
+          </button>
+        </div>
+
+        <div class="filter-results">
+          <span class="results-count">{{ filteredEnseignants.length }} résultat(s)</span>
+        </div>
+      </div>
+
+      <!-- Formulaire d'ajout -->
+      @if (showAddEnseignantForm) {
+        <div class="form-container">
+          <h3>Ajouter un nouvel enseignant</h3>
+          <form (ngSubmit)="ajouterEnseignant()" class="enseignant-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nom">Nom *</label>
+                <input type="text" id="nom" [(ngModel)]="newEnseignant.nomUser" name="nom" required>
+              </div>
+              <div class="form-group">
+                <label for="prenom">Prénom *</label>
+                <input type="text" id="prenom" [(ngModel)]="newEnseignant.prenomUser" name="prenom" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" [(ngModel)]="newEnseignant.email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="mdp">Mot de passe *</label>
+                <input type="password" id="mdp" [(ngModel)]="newEnseignant.mdp" name="mdp" required placeholder="Min. 6 caractères">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="telephone">Téléphone</label>
+                <input type="tel" id="telephone" [(ngModel)]="newEnseignant.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
+              </div>
+              <div class="form-group">
+                <label for="specialite">Spécialité</label>
+                <input type="text" id="specialite" [(ngModel)]="newEnseignant.specialite" name="specialite">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="departement">Département</label>
+                <select id="departement" [(ngModel)]="newEnseignant.departement" name="departement">
+                  <option value="">Sélectionner un département</option>
+                  <option value="Informatique">Informatique</option>
+                  <option value="Génie Civil">Génie Civil</option>
+                  <option value="Électronique">Électronique</option>
+                  <option value="Mathématiques">Mathématiques</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <!-- Espace vide pour l'alignement -->
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" (click)="toggleAddEnseignantForm()">Annuler</button>
+              <button type="submit" class="btn-primary">Ajouter l'enseignant</button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Tableau des enseignants -->
+      <div class="table-container">
+        <div class="table-scroll-wrapper">
+        <table class="enseignants-table">
+          <thead>
+            <tr>
+              <th class="sortable">
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Checkbox" class="checkbox-icon">
+                Enseignant
+              </th>
+              <th class="sortable">
+                Email
+              </th>
+              <th class="sortable">
+                Spécialité
+              </th>
+              <th class="sortable">
+                Département
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoadingEnseignants) {
+              <tr>
+                <td colspan="5" class="loading-cell">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @if (filteredEnseignants.length === 0) {
+                <tr>
+                  <td colspan="5" class="empty-cell">
+                    <div class="empty-state">
+                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" stroke-width="1">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                      <h3>Aucun enseignant trouvé</h3>
+                      <p>Commencez par ajouter votre premier enseignant.</p>
+                    </div>
+                  </td>
+                </tr>
+              } @else {
+                @for (enseignant of filteredEnseignants; track enseignant.idUser) {
+                  <tr class="table-row">
+                    <td class="name-cell">{{ enseignant.prenomUser }} {{ enseignant.nomUser }}</td>
+                    <td class="email-cell">{{ enseignant.email }}</td>
+                    <td class="specialty-cell">{{ enseignant.specialite || 'Non définie' }}</td>
+                    <td class="dept-cell">{{ enseignant.departement || 'Non défini' }}</td>
+                    <td class="actions-cell">
+                      <div class="dropdown-container">
+                        <button class="action-menu-btn" (click)="toggleDropdown(enseignant.idUser || '', $event)" title="Actions">
+                          <span class="dots">⋮</span>
+                        </button>
+                        @if (openDropdownId === enseignant.idUser) {
+                          <div class="dropdown-menu">
+                            <button class="dropdown-item" (click)="openDisponibilitesModal(enseignant); closeDropdown()">
+                              <img src="https://cdn-icons-png.flaticon.com/512/2838/2838779.png" alt="Disponibilités" class="dropdown-icon">
+                              Consulter les disponibilités
+                            </button>
+                            <button class="dropdown-item" (click)="openEdtModal(enseignant, 'view'); closeDropdown()">
+                              <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" alt="Emploi du temps" class="dropdown-icon">
+                              Consulter l'emploi du temps
+                            </button>
+                            <button class="dropdown-item" (click)="viewEnseignantInfo(enseignant); closeDropdown()">
+                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828791.png" alt="Informations" class="dropdown-icon">
+                              Voir les informations
+                            </button>
+                            <button class="dropdown-item" (click)="editEnseignant(enseignant); closeDropdown()">
+                              <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Modifier" class="dropdown-icon">
+                              Modifier l'enseignant
+                            </button>
+                            <button class="dropdown-item danger" (click)="desactiverEnseignant(enseignant.idUser || ''); closeDropdown()">
+                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" alt="Désactiver" class="dropdown-icon">
+                              Désactiver l'enseignant
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            }
+          </tbody>
+        </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+          <div class="pagination-info">
+            <span>Ligne par page</span>
+            <select class="page-size-select" [(ngModel)]="pageSize">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+            <span>de {{ totalEnseignants }} lignes</span>
+          </div>
+          
+          <div class="pagination-controls">
+            <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271220.png" alt="First" class="page-icon">
+            </button>
+            
+            
+            @for (page of getVisiblePages(); track page) {
+              <button 
+                class="page-btn" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            }
+            
+            <span class="page-dots">...</span>
+            <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+            
+            <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" class="page-icon">
+            </button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Disponibilités -->
+@if (showDisponibilitesModal && selectedEnseignant) {
+  <div class="modal-overlay" (click)="closeDisponibilitesModal()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <h2>📅 Disponibilités de {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</h2>
+          <p class="modal-subtitle">Consultation des créneaux disponibles</p>
+        </div>
+        <button class="btn-close" (click)="closeDisponibilitesModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="week-nav">
+          <button class="btn-nav" (click)="changeWeek(-1)">
+            <img src="https://cdn-icons-png.flaticon.com/512/271/271218.png" alt="Previous" style="width: 16px; height: 16px;">
+            Semaine précédente
+          </button>
+          <span class="week-label">{{ getWeekLabel() }}</span>
+          <button class="btn-nav" (click)="changeWeek(1)">
+            Semaine suivante
+            <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" style="width: 16px; height: 16px;">
+          </button>
+          <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+        </div>
+
+        <div class="dispo-stats">
+          <div class="stat-item">
+            <div class="stat-number">{{ getTotalDisponibilites() }}</div>
+            <div class="stat-label">Créneaux disponibles</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getAvailableHoursThisWeek() }}h</div>
+            <div class="stat-label">Heures cette semaine</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getMostAvailableDay() }}</div>
+            <div class="stat-label">Jour le plus disponible</div>
+          </div>
+        </div>
+
+        @if (isLoadingDisponibilites) {
+          <div class="loading-inline">
+            <div class="loading-spinner"></div>
+            <span>Chargement des disponibilités...</span>
+          </div>
+        } @else {
+          <div class="calendar-grid">
+            <table class="dispo-table">
+              <thead>
+                <tr>
+                  <th class="time-col">Horaire</th>
+                  @for (day of weekDays; track day.name) {
+                    <th [class.past-day]="isPastDay(day)">
+                      <div class="day-header">
+                        <span class="day-name">{{ day.name }}</span>
+                        <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
+                        @if (isPastDay(day)) {
+                          <span class="past-label">(passé)</span>
+                        }
+                      </div>
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (slot of timeSlots; track slot.startHour; let slotIndex = $index) {
+                  <tr>
+                    <td class="time-col">{{ slot.time }}</td>
+                    @for (day of weekDays; track day.name; let dayIndex = $index) {
+                      <td class="dispo-cell"
+                          [class.available]="isAvailableByIndex(dayIndex, slotIndex)"
+                          [class.past-slot]="isPastSlot(day, slot)"
+                          [title]="getAvailabilityTooltip(day, slot)">
+                        @if (isAvailableByIndex(dayIndex, slotIndex)) {
+                          <div class="availability-indicator">
+                            <span class="check">✓</span>
+                          </div>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-item">
+              <div class="legend-box available"></div>
+              <span>Disponible</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box"></div>
+              <span>Non disponible</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box past"></div>
+              <span>Passé</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDisponibilitesModal()">Fermer</button>
+        <button class="btn-primary" (click)="exportDisponibilites()">
+          <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Export" style="width: 16px; height: 16px; margin-right: 8px;">
+          Exporter
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Emploi du Temps -->
+@if (showEdtModal && selectedEnseignant) {
+  <div class="modal-overlay" (click)="closeEdtModal()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header" [class.generate-mode]="edtMode === 'generate'">
+        <div class="modal-title-section">
+          <h2>
+            @if (edtMode === 'view') {
+              📊 Emploi du temps de {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}
+            } @else {
+              🔄 Génération de l'emploi du temps
+            }
+          </h2>
+          <p class="modal-subtitle">
+            @if (edtMode === 'view') {
+              Consultation et gestion des cours programmés
+            } @else {
+              Configuration et génération automatique
+            }
+          </p>
+        </div>
+        <button class="btn-close" (click)="closeEdtModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        @if (edtMode === 'view') {
+          <div class="week-nav">
+            <button class="btn-nav" (click)="changeWeek(-1)">
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271218.png" alt="Previous" style="width: 16px; height: 16px;">
+              Semaine précédente
+            </button>
+            <span class="week-label">{{ getWeekLabel() }}</span>
+            <button class="btn-nav" (click)="changeWeek(1)">
+              Semaine suivante
+              <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" style="width: 16px; height: 16px;">
+            </button>
+            <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+          </div>
+
+          <div class="calendar-grid">
+            <table class="edt-table">
+              <thead>
+                <tr>
+                  <th class="time-col">Horaire</th>
+                  @for (day of weekDays; track day.name) {
+                    <th [class.past-day]="isPastDay(day)">
+                      <div class="day-header">
+                        <span class="day-name">{{ day.name }}</span>
+                        <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
+                        @if (isPastDay(day)) {
+                          <span class="past-label">(passé)</span>
+                        }
+                      </div>
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (slot of timeSlots; track slot.startHour) {
+                  <tr>
+                    <td class="time-col">{{ slot.time }}</td>
+                    @for (day of weekDays; track day.name) {
+                      <td class="edt-cell"
+                          [class.has-course]="hasEdtSlot(day, slot)"
+                          [class.past-slot]="isPastSlot(day, slot)">
+                        @if (hasEdtSlot(day, slot)) {
+                          @if (getEdtSlot(day, slot); as course) {
+                            <div class="course-card" [class.past-course]="isPastSlot(day, slot)">
+                              <div class="course-ue">{{ course.ue }}</div>
+                              <div class="course-details">
+                                <span class="course-type">{{ course.type }}</span>
+                                <span class="course-classe">{{ course.classe }}</span>
+                              </div>
+                              <div class="course-salle">📍 {{ course.salle }}</div>
+                            </div>
+                          }
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-item">
+              <div class="legend-box course"></div>
+              <span>Cours programmé</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box"></div>
+              <span>Libre</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box past"></div>
+              <span>Passé</span>
+            </div>
+          </div>
+        } @else {
+          <div class="info-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <div>
+              <strong>Génération intelligente de l'emploi du temps</strong>
+              <p>L'algorithme va créer automatiquement l'emploi du temps en tenant compte des disponibilités de l'enseignant, des cours assignés et des contraintes de salles.</p>
+            </div>
+          </div>
+
+          <div class="generate-section">
+            <h4>Paramètres de génération</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre de semaines</label>
+                <select class="form-control" [(ngModel)]="nombreSemainesGeneration">
+                  <option value="1">1 semaine</option>
+                  <option value="2">2 semaines</option>
+                  <option value="4" selected>4 semaines</option>
+                  <option value="8">8 semaines</option>
+                  <option value="12">12 semaines (trimestre)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEdtModal()">Fermer</button>
+        @if (edtMode === 'view') {
+          <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()">
+            @if (isGeneratingEdt) {
+              <span class="loading-spinner-small"></span>
+            }
+            <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Generate" style="width: 16px; height: 16px; margin-right: 8px;">
+            Générer l'emploi du temps
+          </button>
+        } @else {
+          <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()" [disabled]="isGeneratingEdt">
+            @if (isGeneratingEdt) {
+              <span class="loading-spinner-small"></span>
+              Génération en cours...
+            } @else {
+              Lancer la génération
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Informations Enseignant -->
+@if (showInfoModal && selectedEnseignant) {
+  <div class="modal-overlay" (click)="closeInfoModal()">
+    <div class="modal-content modal-info" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <h2>👤 Informations de l'enseignant</h2>
+          <p class="modal-subtitle">Profil détaillé</p>
+        </div>
+        <button class="btn-close" (click)="closeInfoModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-card">
+          <div class="info-header">
+            <div class="info-avatar">
+              {{ selectedEnseignant.prenomUser.charAt(0) }}{{ selectedEnseignant.nomUser.charAt(0) }}
+            </div>
+            <div class="info-name-section">
+              <h3 class="info-full-name">{{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</h3>
+              <span class="info-role-badge">{{ selectedEnseignant.role || 'ENSEIGNANT' }}</span>
+            </div>
+          </div>
+
+          <div class="info-details">
+            <div class="info-section">
+              <h4 class="info-section-title">
+                <img src="https://cdn-icons-png.flaticon.com/512/561/561127.png" alt="Contact" class="section-icon">
+                Coordonnées
+              </h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">
+                    <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" class="info-icon">
+                    Email
+                  </span>
+                  <span class="info-value">{{ selectedEnseignant.email }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">
+                    <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Phone" class="info-icon">
+                    Téléphone
+                  </span>
+                  <span class="info-value">{{ selectedEnseignant.telephone || 'Non renseigné' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <h4 class="info-section-title">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Academic" class="section-icon">
+                Informations académiques
+              </h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" alt="Specialty" class="info-icon">
+                    Spécialité
+                  </span>
+                  <span class="info-value">{{ selectedEnseignant.specialite || 'Non définie' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3281/3281289.png" alt="Department" class="info-icon">
+                    Département
+                  </span>
+                  <span class="info-value">{{ selectedEnseignant.departement || 'Non défini' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <h4 class="info-section-title">
+                <img src="https://cdn-icons-png.flaticon.com/512/2920/2920349.png" alt="System" class="section-icon">
+                Informations système
+              </h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2920/2920235.png" alt="ID" class="info-icon">
+                    Identifiant
+                  </span>
+                  <span class="info-value info-id">{{ selectedEnseignant.idUser || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeInfoModal()">Fermer</button>
+        <button class="btn-primary" (click)="editEnseignant(selectedEnseignant); closeInfoModal()">
+          <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" style="width: 16px; height: 16px; margin-right: 8px;">
+          Modifier
+        </button>
+      </div>
+    </div>
+  </div>
+}

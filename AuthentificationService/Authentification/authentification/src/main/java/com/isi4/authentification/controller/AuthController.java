@@ -17,7 +17,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -103,16 +102,29 @@ public class AuthController {
         }
     }
     
+    @GetMapping("/health")
+    public ResponseEntity<?> health() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("service", "authentification-service");
+        response.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/domain-validation")
     public ResponseEntity<?> getDomainValidation() {
         try {
+            System.out.println("=== Auth Controller - getDomainValidation called ===");
             AuthService.DomainValidationInfo info = authService.getDomainValidationInfo();
             Map<String, Object> response = new HashMap<>();
             response.put("allowedDomain", info.allowedDomain);
             response.put("exampleFormat", info.exampleFormat);
             response.put("message", info.message);
+            System.out.println("✓ Domain validation info returned successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.out.println("✗ Error in getDomainValidation: " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

@@ -1,0 +1,14 @@
+com\isi4\ueservice\UEServiceApplication.class
+com\isi4\ueservice\service\UEService.class
+com\isi4\ueservice\exception\ValidationException.class
+com\isi4\ueservice\controller\UEController.class
+com\isi4\ueservice\entity\UE.class
+com\isi4\ueservice\exception\ResourceNotFoundException.class
+com\isi4\ueservice\config\SecurityConfig.class
+com\isi4\ueservice\entity\UE$UEBuilder.class
+com\isi4\ueservice\config\DataInitializer.class
+com\isi4\ueservice\repository\UERepository.class
+com\isi4\ueservice\dto\UEDTO.class
+com\isi4\ueservice\exception\GlobalExceptionHandler.class
+com\isi4\ueservice\security\JwtAuthenticationFilter.class
+com\isi4\ueservice\security\JwtTokenProvider.class

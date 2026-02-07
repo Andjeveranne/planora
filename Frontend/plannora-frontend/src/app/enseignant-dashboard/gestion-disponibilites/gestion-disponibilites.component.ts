@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlanningService, DisponibiliteDTO } from '../../services/planning.service';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 
 interface TimeSlot {
     time: string;
@@ -43,7 +44,8 @@ export class GestionDisponibilitesComponent implements OnInit {
 
     constructor(
         private planningService: PlanningService,
-        private authService: AuthService
+        private authService: AuthService,
+        private notification: NotificationService
     ) {
         this.initTimeSlots();
     }
@@ -77,14 +79,22 @@ export class GestionDisponibilitesComponent implements OnInit {
     }
 
     changeWeek(offset: number) {
-        // Reset pending changes when switching weeks
         if (this.hasPendingChanges()) {
-            if (!confirm('Vous avez des modifications non sauvegardées. Voulez-vous les abandonner ?')) {
-                return;
-            }
+            this.notification.confirm(
+                'Vous avez des modifications non sauvegardées. Voulez-vous les abandonner ?',
+                'Modifications non sauvegardées',
+                () => {
+                    this.clearPendingChanges();
+                    this.doChangeWeek(offset);
+                }
+            );
+            return;
         }
-        this.clearPendingChanges();
+        this.doChangeWeek(offset);
+    }
 
+    private doChangeWeek(offset: number): void {
+        this.clearPendingChanges();
         const newDate = new Date(this.currentWeekStart);
         newDate.setDate(newDate.getDate() + (offset * 7));
         this.currentWeekStart = newDate;

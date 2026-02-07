@@ -10,12 +10,16 @@
     </div>
 
     <!-- Messages -->
-    <div *ngIf="successMessage" class="alert alert-success">
+    @if (successMessage) {
+      <div class="alert alert-success">
         ✅ {{ successMessage }}
-    </div>
-    <div *ngIf="errorMessage" class="alert alert-error">
+      </div>
+    }
+    @if (errorMessage) {
+      <div class="alert alert-error">
         ❌ {{ errorMessage }}
-    </div>
+      </div>
+    }
 
     <!-- Instructions -->
     <div class="instructions">
@@ -28,43 +32,61 @@
             <thead>
                 <tr>
                     <th class="time-header">Heure</th>
-                    <th *ngFor="let day of weekDays" [class.past-day]="isPastDay(day)">
+                    <ng-container *ngFor="let day of weekDays">
+                      <th [class.past-day]="isPastDay(day)">
                         <div class="day-name">{{ day.name }}</div>
                         <div class="day-date">{{ day.date | date:'dd/MM' }}</div>
-                        <div *ngIf="isPastDay(day)" class="past-label">Passé</div>
-                    </th>
+                        @if (isPastDay(day)) {
+                          <div class="past-label">Passé</div>
+                        }
+                      </th>
+                    </ng-container>
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let slot of timeSlots">
+                <ng-container *ngFor="let slot of timeSlots">
+                  <tr>
                     <td class="time-slot">{{ slot.time }}</td>
-                    <td *ngFor="let day of weekDays" class="calendar-cell" [class.available]="isAvailable(day, slot)"
-                        [class.pending]="isPending(day, slot)" [class.past-slot]="isPastSlot(day, slot)"
-                        [class.disabled]="isPastSlot(day, slot)" (click)="toggleAvailability(day, slot)">
+                    <ng-container *ngFor="let day of weekDays">
+                      <td class="calendar-cell" [class.available]="isAvailable(day, slot)"
+                          [class.pending]="isPending(day, slot)" [class.past-slot]="isPastSlot(day, slot)"
+                          [class.disabled]="isPastSlot(day, slot)" (click)="toggleAvailability(day, slot)">
                         <div class="cell-content">
-                            <span *ngIf="isAvailable(day, slot)" class="check-mark">✓</span>
-                            <span *ngIf="isPending(day, slot)" class="pending-indicator">●</span>
+                          @if (isAvailable(day, slot)) {
+                            <span class="check-mark">✓</span>
+                          }
+                          @if (isPending(day, slot)) {
+                            <span class="pending-indicator">●</span>
+                          }
                         </div>
-                    </td>
-                </tr>
+                      </td>
+                    </ng-container>
+                  </tr>
+                </ng-container>
             </tbody>
         </table>
     </div>
 
     <!-- Actions -->
     <div class="actions">
-        <div class="pending-info" *ngIf="hasPendingChanges()">
+        @if (hasPendingChanges()) {
+          <div class="pending-info">
             <span class="pending-badge">{{ getPendingChangesCount() }}</span>
             modification(s) en attente
-        </div>
+          </div>
+        }
 
         <div class="action-buttons">
             <button class="btn-cancel" (click)="clearPendingChanges()" [disabled]="!hasPendingChanges() || saving">
                 Annuler
             </button>
             <button class="btn-confirm" (click)="confirmChanges()" [disabled]="!hasPendingChanges() || saving">
-                <span *ngIf="saving">Enregistrement...</span>
-                <span *ngIf="!saving">✓ Confirmer les disponibilités</span>
+                @if (saving) {
+                  <span>Enregistrement...</span>
+                }
+                @if (!saving) {
+                  <span>✓ Confirmer les disponibilités</span>
+                }
             </button>
         </div>
     </div>

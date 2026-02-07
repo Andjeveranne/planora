@@ -43,9 +43,8 @@ export interface Disponibilite {
   providedIn: 'root'
 })
 export class UserService {
-  // Acces direct au UserService (port 8086)
-  private apiUrl = 'http://localhost:8086/api/utilisateurs';
-  private apiDispoUrl = 'http://localhost:8086/api/disponibilites';
+  private apiUrl = 'http://localhost:8081/api/utilisateurs';
+  private apiDispoUrl = 'http://localhost:8081/api/disponibilites';
 
   constructor(private http: HttpClient) {}
 
