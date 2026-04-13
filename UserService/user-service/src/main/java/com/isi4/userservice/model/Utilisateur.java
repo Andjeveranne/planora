@@ -32,7 +32,7 @@ public class Utilisateur {
     @Column(name = "nom_user", nullable = false)
     private String nomUser;
     
-    @NotBlank(message = "Le prénom est obligatoire")
+    
     @Column(name = "prenom_user", nullable = false)
     private String prenomUser;
     

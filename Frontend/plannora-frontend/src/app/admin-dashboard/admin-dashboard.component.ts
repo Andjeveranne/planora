@@ -1,14 +1,19 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { UserService, Enseignant, EnseignantRequest } from '../services/user.service';
+import { SalleService, SalleDTO, StatutSalle, TypeSalle } from '../services/salle.service';
 import { PlanningService, DisponibiliteDTO, EmploiDuTempsDTO } from '../services/planning.service';
 import { NotificationService } from '../services/notification.service';
 import { UEManagementComponent } from '../ue-management/ue-management.component';
 import { GestionSallesComponent } from './gestion-salles/gestion-salles.component';
 import { GestionEnseignantsComponent } from './gestion-enseignants/gestion-enseignants.component';
 import { GestionEcolesComponent } from './gestion-ecoles/gestion-ecoles.component';
+import { GestionClassesComponent } from './gestion-classes/gestion-classes.component';
+import { GenerationEmploisComponent } from './generation-emplois/generation-emplois.component';
 
 interface UserInfo {
   nom: string;
@@ -41,7 +46,7 @@ interface EdtSlot {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, UEManagementComponent, GestionSallesComponent, GestionEnseignantsComponent, GestionEcolesComponent],
+  imports: [CommonModule, FormsModule, UEManagementComponent, GestionSallesComponent, GestionEnseignantsComponent, GestionEcolesComponent, GestionClassesComponent, GenerationEmploisComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.css']
 })
@@ -49,9 +54,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   userInfo: UserInfo | null = null;
   activeSection: string = 'overview';
   sidebarOpen: boolean = false;
-  recentUsers: any[] = [];
-  recentRooms: any[] = [];
+  recentUsers: { name: string; initials: string; color: string; meta: string }[] = [];
+  recentRooms: { name: string; capacity: number; type: string }[] = [];
   enseignants: Enseignant[] = [];
+  dashboardSalles: SalleDTO[] = [];
+  /** Métriques issues de la base (enseignants, salles) */
+  metricEnseignants: number = 0;
+  metricSalles: number = 0;
+  metricSallesOccupees: number = 0;
+  isLoadingOverview: boolean = false;
+  /** Données pour les graphiques (EDT agrégés) */
+  chartTop5Salles: { salle: string; count: number }[] = [];
+  chartClassesLabos: { classe: string; count: number }[] = [];
+  isLoadingCharts: boolean = false;
+  /** Valeur max pour la hauteur des barres (pourcentage) */
+  chartTop5Max: number = 1;
+  chartClassesLabosMax: number = 1;
   selectedEnseignant: Enseignant | null = null;
   disponibilitesEnseignant: DisponibiliteDTO[] = [];
   showAddEnseignantForm: boolean = false;
@@ -112,6 +130,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private salleService: SalleService,
     private planningService: PlanningService,
     private notification: NotificationService,
     private cdr: ChangeDetectorRef
@@ -122,13 +141,149 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.userInfo = this.authService.getCurrentUser();
     this.setWeekToCurrent();
-
-    // Initialize empty arrays - no demo data
-    this.recentUsers = [];
-    this.recentRooms = [];
+    this.loadDashboardData();
 
     // Fermer le dropdown quand on clique ailleurs
     document.addEventListener('click', this.handleClickOutside.bind(this));
+  }
+
+  /** Charge les données du dashboard (enseignants, salles) et met à jour les métriques */
+  loadDashboardData(): void {
+    this.isLoadingOverview = true;
+    this.cdr.markForCheck();
+
+    this.userService.getEnseignants().subscribe({
+      next: (enseignants) => {
+        this.enseignants = enseignants;
+        this.extractDepartements();
+        this.buildRecentUsersFromEnseignants();
+        this.computeMetrics();
+        this.loadChartData();
+        this.isLoadingOverview = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.enseignants = [];
+        this.recentUsers = [];
+        this.computeMetrics();
+        this.isLoadingOverview = false;
+        this.cdr.markForCheck();
+      }
+    });
+
+    this.salleService.obtenirToutesLesSalles().subscribe({
+      next: (salles) => {
+        this.dashboardSalles = salles;
+        this.buildRecentRoomsFromSalles();
+        this.computeMetrics();
+        this.loadChartData();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.dashboardSalles = [];
+        this.recentRooms = [];
+        this.computeMetrics();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private buildRecentUsersFromEnseignants(): void {
+    const colors = ['#667eea', '#764ba2', '#48bb78', '#38a169', '#ed8936', '#dd6b20'];
+    this.recentUsers = this.enseignants.slice(0, 8).map((e, i) => {
+      const prenom = e.prenomUser || '';
+      const nom = e.nomUser || '';
+      const name = `${prenom} ${nom}`.trim() || e.email;
+      const initials = (prenom.charAt(0) + nom.charAt(0)).toUpperCase() || e.email.charAt(0).toUpperCase();
+      return {
+        name,
+        initials: initials || '?',
+        color: colors[i % colors.length],
+        meta: e.specialite ? `${e.specialite} • ${e.departement || ''}`.trim() : (e.email || 'Enseignant')
+      };
+    });
+  }
+
+  private buildRecentRoomsFromSalles(): void {
+    this.recentRooms = this.dashboardSalles.slice(0, 8).map(s => ({
+      name: s.nomSalle,
+      capacity: s.capacite,
+      type: this.salleService.getTypeLabel(s.type)
+    }));
+  }
+
+  private computeMetrics(): void {
+    this.metricEnseignants = this.enseignants.length;
+    this.metricSalles = this.dashboardSalles.length;
+    this.metricSallesOccupees = this.dashboardSalles.filter(s => s.statut === StatutSalle.OCCUPEE).length;
+  }
+
+  /** Charge les données des graphiques (top 5 salles, classes en labos) à partir des EDT des enseignants */
+  loadChartData(): void {
+    if (this.enseignants.length === 0) {
+      this.chartTop5Salles = [];
+      this.chartClassesLabos = [];
+      this.chartTop5Max = 1;
+      this.chartClassesLabosMax = 1;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.isLoadingCharts = true;
+    this.cdr.markForCheck();
+    const labRoomNames = new Set(
+      this.dashboardSalles
+        .filter(s => s.type === TypeSalle.LABORATOIRE)
+        .map(s => s.nomSalle.trim())
+    );
+    const requests = this.enseignants
+      .filter(e => e.idUser)
+      .map(e => this.planningService.getEdtFromUserService(e.idUser!).pipe(catchError(() => of([]))));
+    if (requests.length === 0) {
+      this.chartTop5Salles = [];
+      this.chartClassesLabos = [];
+      this.isLoadingCharts = false;
+      this.cdr.markForCheck();
+      return;
+    }
+    forkJoin(requests).subscribe({
+      next: (allEdt) => {
+        const merged = (allEdt as EmploiDuTempsDTO[][]).flat();
+        const bySalle = new Map<string, number>();
+        merged.forEach(edt => {
+          const s = (edt.salle || '').trim();
+          if (s) bySalle.set(s, (bySalle.get(s) || 0) + 1);
+        });
+        this.chartTop5Salles = Array.from(bySalle.entries())
+          .map(([salle, count]) => ({ salle, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+        this.chartTop5Max = Math.max(1, ...this.chartTop5Salles.map(x => x.count));
+
+        const labEdt = merged.filter(edt => labRoomNames.has((edt.salle || '').trim()));
+        const byClasse = new Map<string, number>();
+        labEdt.forEach(edt => {
+          const c = (edt.classe || '').trim();
+          if (c) byClasse.set(c, (byClasse.get(c) || 0) + 1);
+        });
+        this.chartClassesLabos = Array.from(byClasse.entries())
+          .map(([classe, count]) => ({ classe, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 8);
+        this.chartClassesLabosMax = Math.max(1, ...this.chartClassesLabos.map(x => x.count));
+        this.isLoadingCharts = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.chartTop5Salles = [];
+        this.chartClassesLabos = [];
+        this.isLoadingCharts = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  getBarHeightPercent(value: number, max: number): number {
+    return max > 0 ? Math.round((value / max) * 100) : 0;
   }
 
   ngOnDestroy(): void {
@@ -204,6 +359,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     if (section === 'enseignants') {
       this.loadEnseignants();
     }
+  }
+
+  /** Titre et description de l'en-tête selon la section active */
+  getSectionHeader(): { title: string; description: string } {
+    const headers: Record<string, { title: string; description: string }> = {
+      overview: { title: 'Tableau de bord', description: 'Vue d\'ensemble des indicateurs et des listes de la plateforme Planora.' },
+      enseignants: { title: 'Gestion des enseignants', description: 'Consulter, ajouter et gérer les comptes et les disponibilités des enseignants.' },
+      ues: { title: 'Unités d\'enseignement', description: 'Gérer les UE, les matières et leur affectation aux formations.' },
+      rooms: { title: 'Gestion des salles', description: 'Créer et gérer les salles, capacités et types pour la planification.' },
+      ecoles: { title: 'Gestion des écoles', description: 'Administrer les établissements et leurs paramètres.' },
+      equipment: { title: 'Gestion des équipements', description: 'Suivre et gérer le matériel et les équipements disponibles.' },
+      reservations: { title: 'Réservations', description: 'Consulter et gérer les réservations de salles et créneaux.' },
+      reporting: { title: 'Rapports', description: 'Générer et consulter les rapports et statistiques de la plateforme.' },
+      calendar: { title: 'Calendrier', description: 'Visualiser et planifier les événements et emplois du temps.' },
+      classes: { title: 'Gestion des classes', description: 'Gérer les classes et les effectifs des formations.' },
+      'emplois-du-temps': { title: 'Génération des Emplois du Temps', description: 'Générer et gérer les emplois du temps avec l\'algorithme Ford-Fulkerson' }
+    };
+    return headers[this.activeSection] ?? { title: 'Administration', description: 'Gestion de la plateforme Planora.' };
   }
 
   loadEnseignants(): void {

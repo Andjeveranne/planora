@@ -25,9 +25,9 @@ public class GatewayConfig {
             
             // ========== ROUTES PROTÉGÉES (JWT requis via GlobalJwtFilter) ==========
             
-            // Route pour le service utilisateurs (sans /api/ues/** → géré par ue-service)
+            // Route pour le service utilisateurs
             .route("user-service", r -> r
-                .path("/api/utilisateurs/**", "/api/users/**", "/api/courses/**", "/api/classes/**")
+                .path("/api/utilisateurs/**", "/api/users/**", "/api/courses/**", "/api/enseignant-ues/**")
                 .uri("lb://user-service"))
 
             // Route pour le service des Unités d'enseignement (UE)
@@ -44,6 +44,11 @@ public class GatewayConfig {
             .route("salle-service", r -> r
                 .path("/api/salles/**", "/api/rooms/**")
                 .uri("lb://salle-service"))
+
+            // Route pour le service des classes et filières
+            .route("classes-service", r -> r
+                .path("/api/classes/**", "/api/filieres/**")
+                .uri("lb://classes-service"))
             
             // Route pour le service des écoles (CRUD)
             .route("ecole-service", r -> r

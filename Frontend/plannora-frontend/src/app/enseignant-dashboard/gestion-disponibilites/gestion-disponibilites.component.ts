@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { PlanningService, DisponibiliteDTO } from '../../services/planning.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -61,12 +62,14 @@ export class GestionDisponibilitesComponent implements OnInit {
     }
 
     initTimeSlots() {
-        for (let h = 8; h < 17; h++) {
-            this.timeSlots.push({
-                time: `${h}h - ${h + 1}h`,
-                startHour: h
-            });
-        }
+        // Créneaux de 2h : 8h-10h, 10h-12h, 12h-14h, 14h-16h, 16h-18h
+        this.timeSlots = [
+            { time: '8h - 10h',  startHour: 8  },
+            { time: '10h - 12h', startHour: 10 },
+            { time: '12h - 14h', startHour: 12 },
+            { time: '14h - 16h', startHour: 14 },
+            { time: '16h - 18h', startHour: 16 }
+        ];
     }
 
     setWeekToCurrent() {
@@ -104,9 +107,9 @@ export class GestionDisponibilitesComponent implements OnInit {
 
     updateWeekDays() {
         this.weekDays = [];
-        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 5; i++) {
             const date = new Date(this.currentWeekStart);
             date.setDate(date.getDate() + i);
             this.weekDays.push({
@@ -161,12 +164,13 @@ export class GestionDisponibilitesComponent implements OnInit {
         return dayDate < today;
     }
 
-    // Vérifie si un créneau spécifique est passé
+    // Vérifie si un créneau spécifique est passé (jour passé uniquement, pas l'heure)
     isPastSlot(day: Day, slot: TimeSlot): boolean {
-        const now = new Date();
-        const slotDateTime = new Date(day.date);
-        slotDateTime.setHours(slot.startHour, 0, 0, 0);
-        return slotDateTime < now;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dayDate = new Date(day.date);
+        dayDate.setHours(0, 0, 0, 0);
+        return dayDate < today;
     }
 
     // Vérifie si le slot est disponible (sauvegardé OU en attente d'ajout, SAUF si en attente de suppression)
@@ -247,8 +251,8 @@ export class GestionDisponibilitesComponent implements OnInit {
         this.saving = true;
         this.clearMessages();
 
-        const addPromises: Promise<void>[] = [];
-        const deletePromises: Promise<void>[] = [];
+        const addObservables: any[] = [];
+        const deleteObservables: any[] = [];
 
         // Traiter les ajouts
         this.pendingAdditions.forEach(key => {
@@ -256,8 +260,11 @@ export class GestionDisponibilitesComponent implements OnInit {
             const [year, month, day] = datePart.split('-').map(Number);
             const hour = parseInt(hourPart);
 
+            // Durée fixe : 2h par créneau
+            const duration = 2;
+
             const dStart = new Date(year, month - 1, day, hour, 0, 0, 0);
-            const dEnd = new Date(year, month - 1, day, hour + 1, 0, 0, 0);
+            const dEnd = new Date(year, month - 1, day, hour + duration, 0, 0, 0);
 
             const newDispo: DisponibiliteDTO = {
                 enseignantId: this.enseignantId,
@@ -265,49 +272,42 @@ export class GestionDisponibilitesComponent implements OnInit {
                 dateHeureFin: dEnd.toISOString()
             };
 
-            const promise = new Promise<void>((resolve, reject) => {
-                this.planningService.addDisponibilite(newDispo).subscribe({
-                    next: (savedDispo) => {
-                        this.disponibilitesMap.set(key, savedDispo);
-                        resolve();
-                    },
-                    error: (err) => reject(err)
-                });
-            });
-            addPromises.push(promise);
+            addObservables.push(this.planningService.addDisponibilite(newDispo));
         });
 
         // Traiter les suppressions
         this.pendingDeletions.forEach(key => {
             const dispo = this.disponibilitesMap.get(key);
             if (dispo && dispo.id) {
-                const promise = new Promise<void>((resolve, reject) => {
-                    this.planningService.deleteDisponibilite(dispo.id!).subscribe({
-                        next: () => {
-                            this.disponibilitesMap.delete(key);
-                            resolve();
-                        },
-                        error: (err) => reject(err)
-                    });
-                });
-                deletePromises.push(promise);
+                deleteObservables.push(this.planningService.deleteDisponibilite(dispo.id));
             }
         });
 
-        // Attendre toutes les opérations
-        Promise.all([...addPromises, ...deletePromises])
-            .then(() => {
+        const allOps = [...addObservables, ...deleteObservables];
+        if (allOps.length === 0) {
+            this.saving = false;
+            this.clearPendingChanges();
+            return;
+        }
+
+        forkJoin(allOps).subscribe({
+            next: () => {
                 this.pendingAdditions.clear();
                 this.pendingDeletions.clear();
                 this.saving = false;
-                this.showSuccess("Disponibilités enregistrées avec succès !");
-            })
-            .catch((err) => {
+                this.notification.success(
+                    `✅ Disponibilités enregistrées avec succès ! L'administrateur peut maintenant les consulter.`
+                );
+                this.loadDisponibilites();
+            },
+            error: (err) => {
                 console.error("Erreur lors de la sauvegarde", err);
                 this.saving = false;
-                this.showError("Erreur lors de la sauvegarde. Veuillez réessayer.");
-                this.loadDisponibilites(); // Recharger pour sync
-            });
+                const msg = err?.error?.message || err?.message || 'Erreur lors de la sauvegarde.';
+                this.notification.error(`❌ ${msg} Veuillez réessayer.`);
+                this.loadDisponibilites();
+            }
+        });
     }
 
     showSuccess(message: string) {

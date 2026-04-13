@@ -1404,3 +1404,289 @@
 
 
 
+
+/* ===== UEs déclarées dans le modal info ===== */
+.info-loading, .info-empty {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.ue-enseignant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ue-enseignant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9ff;
+  border: 1px solid #e0e4ff;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.ue-enseignant-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.ue-nom {
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.ue-types {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.type-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.type-badge.cm { background: #fee2e2; color: #991b1b; }
+.type-badge.td { background: #fef3c7; color: #92400e; }
+.type-badge.tp { background: #dbeafe; color: #1e40af; }
+/* UE Assignment Modal Styles */
+.assignment-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  min-height: 400px;
+}
+
+.ue-selection-section h4,
+.assignment-form-section h4 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.ue-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.ue-item {
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.ue-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.ue-item.selected {
+  border-color: #007bff;
+  background: #f8f9ff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.ue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ue-info strong {
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.ue-name {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.ue-details {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ue-level,
+.ue-filiere {
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.assignment-form-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.selected-ue-info {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #007bff;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.competences-section h5 {
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkmark {
+  position: absolute;
+  left: 0;
+  height: 1.25rem;
+  width: 1.25rem;
+  background-color: white;
+  border: 2px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-item:hover .checkmark {
+  border-color: #007bff;
+}
+
+.checkbox-item input:checked ~ .checkmark {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-item input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-label {
+  color: #495057;
+  font-weight: 500;
+  user-select: none;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Remove UE button in info modal */
+.ue-enseignant-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.btn-remove-ue {
+  background: #dc3545;
+  color: white;
+  border: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-ue:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.btn-remove-ue:active {
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .assignment-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .checkbox-group {
+    gap: 0.5rem;
+  }
+  
+  .ue-item {
+    padding: 0.75rem;
+  }
+}

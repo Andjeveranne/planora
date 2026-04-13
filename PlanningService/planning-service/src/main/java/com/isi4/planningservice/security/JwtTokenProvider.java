@@ -3,53 +3,55 @@ package com.isi4.planningservice.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:your-secret-key-change-this-in-production-environment-variable}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    public String extractUserId(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return claims.getSubject();
+        } catch (Exception e) {
+            log.error("Error extracting userId from token", e);
+            return null;
+        }
+    }
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    public String extractRole(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return (String) claims.get("role");
+        } catch (Exception e) {
+            log.error("Error extracting role from token", e);
+            return null;
+        }
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
+            getAllClaimsFromToken(token);
             return true;
         } catch (Exception e) {
+            log.error("Token validation failed", e);
             return false;
         }
     }
 
-    public String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+    private Claims getAllClaimsFromToken(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.parser()
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.getSubject();
-    }
-
-    public String getRoleFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("role", String.class);
     }
 }

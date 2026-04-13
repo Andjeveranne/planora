@@ -60,7 +60,7 @@ public class UtilisateurController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UtilisateurResponseDTO> updateUtilisateur(
             @PathVariable String id,
-            @Valid @RequestBody UtilisateurDTO dto) {
+            @Valid @RequestBody EnseignantDTO dto) {
         UtilisateurResponseDTO response = utilisateurService.updateUtilisateur(id, dto);
         return ResponseEntity.ok(response);
     }

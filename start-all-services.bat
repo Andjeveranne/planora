@@ -4,8 +4,7 @@ setlocal EnableDelayedExpansion
 
 rem ============================================
 rem  PLANORA - Demarrage de tous les services
-rem  Lancer ce script depuis le dossier projet-tutore
-rem  (Double-clic ou: cd chemin\vers\projet-tutore puis start-all-services.bat)
+rem  Lancer depuis le dossier projet-tutore
 rem ============================================
 
 set "BASE=%~dp0"
@@ -16,67 +15,112 @@ echo ========================================
 echo   PLANORA - Demarrage des services
 echo ========================================
 echo.
-echo Dossier de base: %BASE%
-echo.
-echo Chaque service utilise mvnw.cmd (Maven Wrapper).
+echo Dossier de base : %BASE%
 echo.
 
-rem ----- 1. Eureka (8761) - DOIT demarrer en premier -----
-echo [1/8] Eureka (port 8761)...
-start "Eureka - 8761" cmd /k "cd /d ""%BASE%\EurekaService\eureka\eureka"" && mvnw.cmd spring-boot:run"
-echo       Attente 45 s que Eureka soit pret...
-timeout /t 45 /nobreak >nul
+if not exist "%BASE%\EurekaService\eureka\eureka\mvnw.cmd" (
+    echo [ERREUR] Maven Wrapper introuvable pour Eureka. Verifiez le chemin.
+    pause
+    exit /b 1
+)
+
+rem --- Copie du Maven Wrapper pour NotificationService si absent ---
+if not exist "%BASE%\NotificationService\notification-service\mvnw.cmd" (
+    echo [SETUP] Copie du Maven Wrapper vers NotificationService...
+    xcopy /e /i /q "%BASE%\ClassesService\classes-service\.mvn" "%BASE%\NotificationService\notification-service\.mvn" >nul
+    copy /y "%BASE%\ClassesService\classes-service\mvnw.cmd" "%BASE%\NotificationService\notification-service\mvnw.cmd" >nul
+    copy /y "%BASE%\ClassesService\classes-service\mvnw"     "%BASE%\NotificationService\notification-service\mvnw"     >nul 2>&1
+    echo       Maven Wrapper copie.
+)
+
+echo IMPORTANT : Avant de relancer, fermez les fenetres des services
+echo             ou executez stop-all-services.bat pour liberer les ports.
+echo.
+pause
+
+rem ----- 1. Eureka (8761) -----
+echo [1/11] Demarrage Eureka (port 8761)...
+start "PLANORA - Eureka 8761" /d "%BASE%\EurekaService\eureka\eureka" cmd /k "mvnw.cmd spring-boot:run"
+echo       Attente 50 s que Eureka soit pret...
+timeout /t 50 /nobreak >nul
 
 rem ----- 2. Gateway (8081) -----
-echo [2/8] Gateway (port 8081)...
-start "Gateway - 8081" cmd /k "cd /d ""%BASE%\GatewayService\gateway\gateway"" && mvnw.cmd spring-boot:run"
-echo       Attente 25 s...
-timeout /t 25 /nobreak >nul
+echo [2/11] Demarrage Gateway (port 8081)...
+start "PLANORA - Gateway 8081" /d "%BASE%\GatewayService\gateway\gateway" cmd /k "mvnw.cmd spring-boot:run"
+echo       Attente 30 s...
+timeout /t 30 /nobreak >nul
 
 rem ----- 3. Authentification (8085) -----
-echo [3/8] Authentification (port 8085)...
-start "Authentification - 8085" cmd /k "cd /d ""%BASE%\AuthentificationService\Authentification\authentification"" && mvnw.cmd spring-boot:run"
-timeout /t 15 /nobreak >nul
+echo [3/11] Demarrage Authentification (port 8085)...
+start "PLANORA - Auth 8085" /d "%BASE%\AuthentificationService\Authentification\authentification" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
 
 rem ----- 4. User Service (8086) -----
-echo [4/8] User Service (port 8086)...
-start "UserService - 8086" cmd /k "cd /d ""%BASE%\UserService\user-service"" && mvnw.cmd spring-boot:run"
-timeout /t 15 /nobreak >nul
+echo [4/11] Demarrage User Service (port 8086)...
+start "PLANORA - UserService 8086" /d "%BASE%\UserService\user-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
 
-rem ----- 5. Salle Service (8087) -----
-echo [5/8] Salle Service (port 8087)...
-start "SalleService - 8087" cmd /k "cd /d ""%BASE%\SalleService\salle-service"" && mvnw.cmd spring-boot:run"
-timeout /t 10 /nobreak >nul
+rem ----- 5. UE Service (8090) -----
+echo [5/11] Demarrage UE Service (port 8090)...
+start "PLANORA - UEService 8090" /d "%BASE%\UEService\ue-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
 
-rem ----- 6. Planning Service (8088) -----
-echo [6/8] Planning Service (port 8088)...
-start "PlanningService - 8088" cmd /k "cd /d ""%BASE%\PlanningService\planning-service"" && mvnw.cmd spring-boot:run"
-timeout /t 10 /nobreak >nul
+rem ----- 6. Planning Service (8084) -----
+echo [6/11] Demarrage Planning Service (port 8084)...
+start "PLANORA - PlanningService 8084" /d "%BASE%\PlanningService\planning-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 25 /nobreak >nul
 
-rem ----- 7. Ecole Service (8089) -----
-echo [7/8] Ecole Service (port 8089)...
-start "EcoleService - 8089" cmd /k "cd /d ""%BASE%\EcoleService\ecole-service"" && mvnw.cmd spring-boot:run"
-timeout /t 10 /nobreak >nul
+rem ----- 7. Classes Service (8092) -----
+echo [7/11] Demarrage Classes Service (port 8092)...
+start "PLANORA - ClassesService 8092" /d "%BASE%\ClassesService\classes-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
 
-rem ----- 8. UE Service (8090) -----
-echo [8/8] UE Service (port 8090)...
-start "UEService - 8090" cmd /k "cd /d ""%BASE%\UEService\ue-service"" && mvnw.cmd spring-boot:run"
+rem ----- 8. Salle Service (8087) -----
+echo [8/11] Demarrage Salle Service (port 8087)...
+start "PLANORA - SalleService 8087" /d "%BASE%\SalleService\salle-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
+
+rem ----- 9. Notification Service (8088) -----
+echo [9/11] Demarrage Notification Service (port 8088)...
+start "PLANORA - NotificationService 8088" /d "%BASE%\NotificationService\notification-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
+
+rem ----- 10. Ecole Service (8089) -----
+echo [10/11] Demarrage Ecole Service (port 8089)...
+start "PLANORA - EcoleService 8089" /d "%BASE%\EcoleService\ecole-service" cmd /k "mvnw.cmd spring-boot:run"
+timeout /t 20 /nobreak >nul
+
+rem ----- 11. Frontend Angular -----
+echo [11/11] Nettoyage du cache Angular et demarrage Frontend (port 4200)...
+if exist "%BASE%\Frontend\plannora-frontend\.angular\cache" (
+    rmdir /s /q "%BASE%\Frontend\plannora-frontend\.angular\cache"
+    echo       Cache Angular supprime.
+)
+start "PLANORA - Frontend 4200" /d "%BASE%\Frontend\plannora-frontend" cmd /k "ng serve --open"
 
 echo.
 echo ========================================
-echo   Tous les services ont ete lances.
+echo   Tous les services ont ete lances
 echo ========================================
 echo.
-echo Eureka       : http://localhost:8761
-echo Gateway      : http://localhost:8081
-echo Auth         : http://localhost:8085
-echo UserService  : http://localhost:8086
-echo SalleService : http://localhost:8087
-echo Planning     : http://localhost:8088
-echo EcoleService : http://localhost:8089
-echo UEService    : http://localhost:8090
+echo  Point d'entree unique : Gateway http://localhost:8081
+echo  Frontend              : http://localhost:4200
+echo.
+echo  Services backend (enregistres dans Eureka) :
+echo   Eureka              : http://localhost:8761
+echo   Gateway             : http://localhost:8081
+echo   Auth                : http://localhost:8085
+echo   UserService         : http://localhost:8086
+echo   UEService           : http://localhost:8090
+echo   PlanningService     : http://localhost:8084
+echo   ClassesService      : http://localhost:8092
+echo   SalleService        : http://localhost:8087
+echo   NotificationService : http://localhost:8088
+echo   EcoleService        : http://localhost:8089
+echo.
+echo  Temps d'attente : 4-5 minutes pour que tous les services soient operationnels
 echo.
 echo Chaque service tourne dans sa propre fenetre.
-echo Fermez les fenetres pour arreter les services.
+echo Pour arreter tous les services : executez stop-all-services.bat
 echo.
 pause

@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 public class UtilisateurDTO {
     private String idUser;
     
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    private String mdp;
+    private String mdp; // Optionnel lors d'une mise à jour
     
     @ValidInstitutionalEmail
     @NotBlank(message = "L'email est obligatoire")

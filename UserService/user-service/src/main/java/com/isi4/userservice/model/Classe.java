@@ -17,7 +17,7 @@ import java.util.List;
  * Basée sur le diagramme de classes fourni
  */
 @Entity
-@Table(name = "classes")
+@Table(name = "user_classes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

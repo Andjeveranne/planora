@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { NotificationService, NotificationConfig } from '../../services/notification.service';
 
 @Component({
@@ -12,7 +13,7 @@ import { NotificationService, NotificationConfig } from '../../services/notifica
 export class NotificationModalComponent implements OnInit, OnDestroy {
   config: NotificationConfig | null = null;
   visible = false;
-  private unsub: (() => void) | null = null;
+  private unsub: Subscription | null = null;
 
   constructor(private notification: NotificationService) {}
 
@@ -24,7 +25,7 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unsub?.();
+    this.unsub?.unsubscribe();
   }
 
   onOverlayClick(): void {

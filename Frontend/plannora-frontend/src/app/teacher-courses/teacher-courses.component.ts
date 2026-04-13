@@ -1,16 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CourseService, CourseDTO, ClasseDTO } from '../services/course.service';
+import { EmploiDuTempsService, UEEnseignantDTO } from '../services/emploi-du-temps.service';
 import { UEService, UEDTO } from '../services/ue.service';
-import { UserService } from '../services/user.service';
-
-interface ClasseCourses {
-  classe: ClasseDTO;
-  courses: CourseDTO[];
-  totalHeures: number;
-  totalCredits: number;
-}
+import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-teacher-courses',
@@ -20,358 +14,186 @@ interface ClasseCourses {
   styleUrls: ['./teacher-courses.component.css']
 })
 export class TeacherCoursesComponent implements OnInit {
-  classesCourses: ClasseCourses[] = [];
-  teacherUEs: UEDTO[] = [];
+  mesUEEnseignants: UEEnseignantDTO[] = [];
+  toutesLesUEs: UEDTO[] = [];
   loading = false;
-  error: string | null = null;
-  currentTeacherId: string | null = null;
-  
-  // View mode
-  viewMode: 'courses' | 'ues' = 'courses';
-  
-  // Statistiques globales
-  totalClasses = 0;
-  totalCourses = 0;
-  totalUEs = 0;
-  totalHeures = 0;
-  
-  // Filtres
-  selectedNiveau = '';
-  selectedSemestre = '';
-  searchTerm = '';
-  
-  // Options de filtre
-  niveaux = ['L1', 'L2', 'L3', 'M1', 'M2'];
-  semestres = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+  savingId: number | null = null;
+
+  currentTeacherId = '';
+
+  // Formulaire d'ajout
+  showAddForm = false;
+  selectedUEId: number | null = null;
+  newPeutCM = false;
+  newPeutTD = false;
+  newPeutTP = false;
+  adding = false;
 
   constructor(
-    private courseService: CourseService,
+    private emploiDuTempsService: EmploiDuTempsService,
     private ueService: UEService,
-    private userService: UserService
+    private authService: AuthService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
-    this.getCurrentTeacher();
-  }
-
-  /**
-   * Récupère l'enseignant connecté
-   */
-  getCurrentTeacher(): void {
-    try {
-      const currentUser = this.userService.getCurrentUser();
-      
-      if (currentUser && currentUser.role === 'ENSEIGNANT') {
-        this.currentTeacherId = currentUser.idUser;
-        this.loadTeacherCourses();
-      } else {
-        this.error = 'Vous devez être connecté en tant qu\'enseignant pour accéder à cette page.';
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'utilisateur connecté:', error);
-      this.error = 'Erreur lors de la récupération des informations utilisateur.';
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      this.notification.error('Vous devez être connecté pour accéder à cette page.');
+      return;
     }
+    this.currentTeacherId = String(user.userId);
+    this.loadData();
   }
 
-  /**
-   * Charge les cours de l'enseignant groupés par classe
-   */
-  loadTeacherCourses(): void {
-    if (!this.currentTeacherId) return;
-
+  loadData(): void {
     this.loading = true;
-    this.error = null;
+    // Load teacher's UE assignments and all available UEs in parallel
+    let ueDone = false;
+    let assignDone = false;
 
-    // Charger à la fois les cours et les UEs
-    Promise.all([
-      this.loadCoursesByClasses(),
-      this.loadTeacherUEs()
-    ]).then(() => {
-      this.calculateStats();
-      this.loading = false;
-    }).catch(error => {
-      console.error('Erreur lors du chargement des données:', error);
-      this.error = 'Erreur lors du chargement des données.';
-      this.loading = false;
+    this.ueService.getAllUEs().subscribe({
+      next: (ues) => {
+        this.toutesLesUEs = ues;
+        ueDone = true;
+        if (assignDone) this.loading = false;
+      },
+      error: () => {
+        this.toutesLesUEs = [];
+        ueDone = true;
+        if (assignDone) this.loading = false;
+      }
+    });
+
+    this.emploiDuTempsService.getUEEnseignantsParEnseignant(this.currentTeacherId).subscribe({
+      next: (data) => {
+        this.mesUEEnseignants = data;
+        assignDone = true;
+        if (ueDone) this.loading = false;
+      },
+      error: () => {
+        this.mesUEEnseignants = [];
+        assignDone = true;
+        if (ueDone) this.loading = false;
+      }
     });
   }
 
-  /**
-   * Charge les cours par classes
-   */
-  private loadCoursesByClasses(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Récupérer les classes enseignées par l'enseignant
-      this.courseService.getClassesByEnseignant(this.currentTeacherId!).subscribe({
-        next: (classes) => {
-          this.loadCoursesForClasses(classes);
-          resolve();
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des classes:', error);
-          // Ne pas rejeter, juste résoudre avec des données vides
-          this.classesCourses = [];
-          resolve();
-        }
-      });
-    });
+  /** UEs pas encore assignées à cet enseignant */
+  get uesDisponibles(): UEDTO[] {
+    const assignedIds = new Set(this.mesUEEnseignants.map(ue => ue.ueId));
+    return this.toutesLesUEs.filter(ue => ue.id != null && !assignedIds.has(ue.id));
   }
 
-  /**
-   * Charge les UEs de l'enseignant
-   */
-  private loadTeacherUEs(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.ueService.getAllUEs().subscribe({
-        next: (ues: UEDTO[]) => {
-          this.teacherUEs = ues;
-          resolve();
-        },
-        error: (err: unknown) => {
-          console.error('Erreur lors du chargement des UEs:', err);
-          this.teacherUEs = [];
-          resolve();
-        }
-      });
-    });
+  getNomUE(ueId: number): string {
+    const ue = this.toutesLesUEs.find(u => u.id === ueId);
+    return ue ? `${ue.codeUE} – ${ue.nomUE}` : `UE #${ueId}`;
   }
 
-  /**
-   * Charge les cours pour chaque classe
-   */
-  loadCoursesForClasses(classes: ClasseDTO[]): void {
-    if (!this.currentTeacherId || classes.length === 0) {
-      this.classesCourses = [];
-      this.calculateStats();
-      this.loading = false;
+  toggleAddForm(): void {
+    this.showAddForm = !this.showAddForm;
+    if (!this.showAddForm) this.resetAddForm();
+  }
+
+  resetAddForm(): void {
+    this.selectedUEId = null;
+    this.newPeutCM = false;
+    this.newPeutTD = false;
+    this.newPeutTP = false;
+  }
+
+  ajouterUE(): void {
+    if (!this.selectedUEId) {
+      this.notification.warning('Veuillez sélectionner une UE.');
+      return;
+    }
+    if (!this.newPeutCM && !this.newPeutTD && !this.newPeutTP) {
+      this.notification.warning('Veuillez sélectionner au moins un type de cours (CM, TD ou TP).');
       return;
     }
 
-    // Process classes one by one to avoid Promise.all with toPromise
-    this.classesCourses = [];
-    let processedCount = 0;
+    this.adding = true;
+    const dto: UEEnseignantDTO = {
+      ueId: this.selectedUEId,
+      enseignantId: this.currentTeacherId,
+      peutCM: this.newPeutCM,
+      peutTD: this.newPeutTD,
+      peutTP: this.newPeutTP
+    };
 
-    classes.forEach(classe => {
-      this.courseService.getCoursesByEnseignantAndClasse(this.currentTeacherId!, classe.id!)
-        .subscribe({
-          next: (courses) => {
-            if (courses && courses.length > 0) {
-              this.classesCourses.push({
-                classe,
-                courses: courses,
-                totalHeures: courses.reduce((sum, course) => sum + course.nombreHeures, 0),
-                totalCredits: 0
-              });
-            }
-            
-            processedCount++;
-            if (processedCount === classes.length) {
-              this.calculateStats();
-              this.loading = false;
-            }
+    this.emploiDuTempsService.creerUEEnseignant(dto).subscribe({
+      next: (created) => {
+        // Enrich with UE info from local cache
+        const ueInfo = this.toutesLesUEs.find(u => u.id === created.ueId);
+        if (ueInfo && !created.codeUE) {
+          created.codeUE = ueInfo.codeUE;
+          created.nomUE = ueInfo.nomUE;
+        }
+        this.mesUEEnseignants = [...this.mesUEEnseignants, created];
+        this.notification.success('UE ajoutée avec succès.');
+        this.showAddForm = false;
+        this.resetAddForm();
+        this.adding = false;
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Erreur lors de l\'ajout de l\'UE.';
+        this.notification.error(msg);
+        this.adding = false;
+      }
+    });
+  }
+
+  updateTypes(entry: UEEnseignantDTO): void {
+    if (!entry.id) return;
+    this.savingId = entry.id;
+
+    this.emploiDuTempsService.mettreAJourUEEnseignant(entry.id, entry).subscribe({
+      next: (updated) => {
+        const idx = this.mesUEEnseignants.findIndex(e => e.id === updated.id);
+        if (idx !== -1) {
+          // preserve enriched fields if backend doesn't return them
+          this.mesUEEnseignants[idx] = {
+            ...this.mesUEEnseignants[idx],
+            peutCM: updated.peutCM,
+            peutTD: updated.peutTD,
+            peutTP: updated.peutTP
+          };
+        }
+        this.savingId = null;
+      },
+      error: () => {
+        this.notification.error('Erreur lors de la mise à jour.');
+        this.savingId = null;
+        // reload to restore original state
+        this.loadData();
+      }
+    });
+  }
+
+  supprimerUE(entry: UEEnseignantDTO): void {
+    const nom = entry.nomUE ?? this.getNomUE(entry.ueId);
+    this.notification.confirm(
+      `Retirer l'UE "${nom}" de votre liste ?`,
+      'Confirmation',
+      () => {
+        this.emploiDuTempsService.supprimerUEEnseignant(entry.id!).subscribe({
+          next: () => {
+            this.mesUEEnseignants = this.mesUEEnseignants.filter(e => e.id !== entry.id);
+            this.notification.success('UE retirée.');
           },
-          error: (error) => {
-            console.error('Erreur lors du chargement des cours pour la classe:', classe.nomClasse, error);
-            processedCount++;
-            if (processedCount === classes.length) {
-              this.calculateStats();
-              this.loading = false;
-            }
-          }
+          error: () => this.notification.error('Erreur lors de la suppression.')
         });
-    });
-  }
-
-  /**
-   * Calcule les statistiques globales
-   */
-  calculateStats(): void {
-    this.totalClasses = this.classesCourses.length;
-    this.totalCourses = this.classesCourses.reduce((sum, cc) => sum + cc.courses.length, 0);
-    this.totalUEs = this.teacherUEs.length;
-    this.totalHeures = this.classesCourses.reduce((sum, cc) => sum + cc.totalHeures, 0) +
-                      this.teacherUEs.reduce((sum, ue) => sum + this.getTotalHeuresUE(ue), 0);
-  }
-
-  /**
-   * Filtre les classes et cours selon les critères sélectionnés
-   */
-  get filteredClassesCourses(): ClasseCourses[] {
-    return this.classesCourses.filter(cc => {
-      // Filtre par niveau
-      if (this.selectedNiveau && cc.classe.niveau !== this.selectedNiveau) {
-        return false;
       }
-
-      // Filtre par semestre (au moins un cours du semestre)
-      if (this.selectedSemestre) {
-        const hasCourseSemestre = cc.courses.some(course => 
-          course.semestre === this.selectedSemestre
-        );
-        if (!hasCourseSemestre) return false;
-      }
-
-      // Filtre par terme de recherche
-      if (this.searchTerm) {
-        const searchLower = this.searchTerm.toLowerCase();
-        const matchesClasse = cc.classe.nomClasse.toLowerCase().includes(searchLower) ||
-                             cc.classe.filiere.toLowerCase().includes(searchLower);
-        const matchesCourse = cc.courses.some(course =>
-          course.codeCourse.toLowerCase().includes(searchLower) ||
-          (course.ueCode && course.ueCode.toLowerCase().includes(searchLower)) ||
-          (course.ueNom && course.ueNom.toLowerCase().includes(searchLower))
-        );
-        if (!matchesClasse && !matchesCourse) return false;
-      }
-
-      return true;
-    }).map(cc => ({
-      ...cc,
-      courses: this.selectedSemestre ? 
-        cc.courses.filter(course => course.semestre === this.selectedSemestre) :
-        cc.courses
-    }));
+    );
   }
 
-  /**
-   * Réinitialise les filtres
-   */
-  clearFilters(): void {
-    this.selectedNiveau = '';
-    this.selectedSemestre = '';
-    this.searchTerm = '';
+  get totalCM(): number {
+    return this.mesUEEnseignants.filter(e => e.peutCM).length;
   }
-
-  /**
-   * Actualise les données
-   */
-  refresh(): void {
-    this.loadTeacherCourses();
+  get totalTD(): number {
+    return this.mesUEEnseignants.filter(e => e.peutTD).length;
   }
-
-  /**
-   * Formate le type de cours avec une couleur
-   */
-  getCourseTypeClass(typeCours: string): string {
-    switch (typeCours) {
-      case 'CM': return 'course-type-cm';
-      case 'TD': return 'course-type-td';
-      case 'TP': return 'course-type-tp';
-      default: return 'course-type-default';
-    }
-  }
-
-  /**
-   * Formate le niveau avec une couleur
-   */
-  getNiveauClass(niveau: string): string {
-    switch (niveau) {
-      case 'L1': return 'niveau-l1';
-      case 'L2': return 'niveau-l2';
-      case 'L3': return 'niveau-l3';
-      case 'M1': return 'niveau-m1';
-      case 'M2': return 'niveau-m2';
-      default: return 'niveau-default';
-    }
-  }
-
-  /**
-   * Retourne le nom complet du cours
-   */
-  getCourseNomComplet(course: CourseDTO): string {
-    return this.courseService.formatCourseNomComplet(course);
-  }
-
-  /**
-   * Retourne les informations de la classe
-   */
-  getClasseInfo(classe: ClasseDTO): string {
-    return `${classe.nomClasse} - ${classe.niveau} (${classe.filiere})`;
-  }
-
-  /**
-   * Vérifie si une classe a des cours
-   */
-  hasCoursesInSemestre(courses: CourseDTO[], semestre: string): boolean {
-    return courses.some(course => course.semestre === semestre);
-  }
-
-  /**
-   * Groupe les cours par semestre pour une classe
-   */
-  getCoursesBySemestre(courses: CourseDTO[]): { [semestre: string]: CourseDTO[] } {
-    return courses.reduce((acc, course) => {
-      if (!acc[course.semestre]) {
-        acc[course.semestre] = [];
-      }
-      acc[course.semestre].push(course);
-      return acc;
-    }, {} as { [semestre: string]: CourseDTO[] });
-  }
-
-  /**
-   * Retourne les semestres uniques pour une classe
-   */
-  getUniqueSemestres(courses: CourseDTO[]): string[] {
-    const semestres = [...new Set(courses.map(course => course.semestre))];
-    return semestres.sort();
-  }
-
-  /**
-   * TrackBy function for classes
-   */
-  trackByClasseId(_index: number, item: ClasseCourses): any {
-    return item.classe.id;
-  }
-
-  /**
-   * TrackBy function for courses
-   */
-  trackByCourseId(_index: number, item: CourseDTO): any {
-    return item.id;
-  }
-
-  /**
-   * Bascule entre les modes d'affichage
-   */
-  setViewMode(mode: 'courses' | 'ues'): void {
-    this.viewMode = mode;
-  }
-
-  /**
-   * Retourne le total des heures pour une UE
-   */
-  getTotalHeuresUE(ue: UEDTO): number {
-    return ue.quantite ?? 0;
-  }
-
-  /**
-   * Retourne un libellé pour le volume (nouveau DTO : quantite)
-   */
-  getTypeCoursDominantUE(_ue: UEDTO): string {
-    return 'UE';
-  }
-
-  /**
-   * Filtre les UEs selon les critères sélectionnés
-   */
-  get filteredUEs(): UEDTO[] {
-    return this.teacherUEs.filter(ue => {
-      if (this.searchTerm) {
-        const searchLower = this.searchTerm.toLowerCase();
-        const matches = (ue.codeUE ?? '').toLowerCase().includes(searchLower) ||
-                       (ue.nomUE ?? '').toLowerCase().includes(searchLower) ||
-                       (ue.description && ue.description.toLowerCase().includes(searchLower));
-        if (!matches) return false;
-      }
-      return true;
-    });
-  }
-
-  /**
-   * TrackBy function for UEs
-   */
-  trackByUEId(_index: number, item: UEDTO): string {
-    return item.idUE ?? '';
+  get totalTP(): number {
+    return this.mesUEEnseignants.filter(e => e.peutTP).length;
   }
 }

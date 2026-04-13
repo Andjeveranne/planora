@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UEDTO {
 
+    private Long id;
+
     private String idUE;
 
     @NotBlank(message = "Le code UE est obligatoire")
@@ -18,9 +20,28 @@ public class UEDTO {
     @NotBlank(message = "Le nom de l'UE est obligatoire")
     private String nomUE;
 
-    private Integer quantite;
-
     private String description;
 
-    private Integer nCredit;
+    private Integer nombreCredit;
+
+    /** Total heures (conservé pour compatibilité) */
+    private Integer nombreHeur;
+
+    /** Heures de cours magistral */
+    private Integer heuresCM;
+
+    /** Heures de travaux dirigés */
+    private Integer heuresTD;
+
+    /** Heures de travaux pratiques */
+    private Integer heuresTP;
+
+    /** Niveau ciblé : ING1, ING2, ING3, L1, L2, M1, M2... */
+    private String niveau;
+
+    /** Identifiant de la filière */
+    private String idFiliere;
+
+    /** Nom de la filière (dénormalisé pour affichage) */
+    private String nomFiliere;
 }

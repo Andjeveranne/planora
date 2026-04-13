@@ -1,90 +1,85 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-/**
- * DTO conforme au diagramme de classes : IdUE, CodeUE, NomUE, Quantite, Description, NCredit.
- */
 export interface UEDTO {
+  id?: number;
   idUE?: string;
   codeUE: string;
   nomUE: string;
-  quantite?: number;
   description?: string;
-  nCredit?: number;
+  nombreCredit?: number;
+  nombreHeur?: number;
+  heuresCM?: number;
+  heuresTD?: number;
+  heuresTP?: number;
+  /** Niveau ciblé : ING1, ING2, ING3, L1, L2, M1, M2... */
+  niveau?: string;
+  /** Identifiant de la filière (ClassesService) */
+  idFiliere?: string;
+  /** Nom de la filière (dénormalisé) */
+  nomFiliere?: string;
 }
 
-/** Statistiques calculées côté client à partir de la liste des UEs. */
 export interface UEStatistics {
   totalUEs: number;
   totalCredits: number;
+  totalHeures: number;
   avgCredits: number;
-  totalQuantite: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class UEService {
-  private baseUrl = 'http://localhost:8081/api/ues';
+  private apiUrl = 'http://localhost:8081/api/ues';
 
-  constructor(private http: HttpClient) { }
-
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-  }
+  constructor(private http: HttpClient) {}
 
   getAllUEs(): Observable<UEDTO[]> {
-    return this.http.get<UEDTO[]>(this.baseUrl, {
-      headers: this.getHeaders()
-    });
+    return this.http.get<UEDTO[]>(this.apiUrl);
   }
 
-  getUEById(idUE: string): Observable<UEDTO> {
-    return this.http.get<UEDTO>(`${this.baseUrl}/${idUE}`, {
-      headers: this.getHeaders()
-    });
+  getUEs(): Observable<UEDTO[]> {
+    return this.getAllUEs();
+  }
+
+  getUEById(id: number): Observable<UEDTO> {
+    return this.http.get<UEDTO>(`${this.apiUrl}/${id}`);
   }
 
   createUE(ue: UEDTO): Observable<UEDTO> {
-    return this.http.post<UEDTO>(this.baseUrl, ue, {
-      headers: this.getHeaders()
-    });
+    return this.http.post<UEDTO>(this.apiUrl, ue);
   }
 
-  updateUE(idUE: string, ue: UEDTO): Observable<UEDTO> {
-    return this.http.put<UEDTO>(`${this.baseUrl}/${idUE}`, ue, {
-      headers: this.getHeaders()
-    });
+  updateUE(id: number, ue: UEDTO): Observable<UEDTO> {
+    return this.http.put<UEDTO>(`${this.apiUrl}/${id}`, ue);
   }
 
-  deleteUE(idUE: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${idUE}`, {
-      headers: this.getHeaders()
-    });
+  deleteUE(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  /**
-   * Calcule les statistiques à partir de la liste des UEs (côté client).
-   */
+  getUEsByFiliere(idFiliere: string): Observable<UEDTO[]> {
+    return this.http.get<UEDTO[]>(`${this.apiUrl}/filiere/${idFiliere}`);
+  }
+
+  getUEsByNiveau(niveau: string): Observable<UEDTO[]> {
+    return this.http.get<UEDTO[]>(`${this.apiUrl}/niveau/${niveau}`);
+  }
+
+  getUEsByFiliereAndNiveau(idFiliere: string, niveau: string): Observable<UEDTO[]> {
+    return this.http.get<UEDTO[]>(`${this.apiUrl}/filiere/${idFiliere}/niveau/${niveau}`);
+  }
+
   computeStatistics(ues: UEDTO[]): UEStatistics {
-    const totalUEs = ues.length;
-    const totalCredits = ues.reduce((sum, u) => sum + (u.nCredit ?? 0), 0);
-    const totalQuantite = ues.reduce((sum, u) => sum + (u.quantite ?? 0), 0);
+    const totalCredits = ues.reduce((sum, ue) => sum + (ue.nombreCredit ?? 0), 0);
+    const totalHeures = ues.reduce((sum, ue) => sum + (ue.nombreHeur ?? 0), 0);
     return {
-      totalUEs,
+      totalUEs: ues.length,
       totalCredits,
-      avgCredits: totalUEs > 0 ? totalCredits / totalUEs : 0,
-      totalQuantite
+      totalHeures,
+      avgCredits: ues.length > 0 ? totalCredits / ues.length : 0
     };
-  }
-
-  formatUEText(ue: UEDTO): string {
-    const credits = ue.nCredit != null ? ` (${ue.nCredit} cr.)` : '';
-    return `${ue.codeUE} - ${ue.nomUE}${credits}`;
   }
 }

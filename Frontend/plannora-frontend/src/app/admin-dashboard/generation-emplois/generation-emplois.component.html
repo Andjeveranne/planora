@@ -1,0 +1,170 @@
+<div class="gen-container">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Génération des Emplois du Temps</h1>
+      <p class="page-subtitle">Planification automatique de la semaine à venir</p>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  @if (messages.success) {
+    <div class="alert alert-success">{{ messages.success }}</div>
+  }
+  @if (messages.error) {
+    <div class="alert alert-error">{{ messages.error }}</div>
+  }
+
+  <div class="top-grid">
+
+    <!-- Panneau : Enseignants avec disponibilités -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Enseignants disponibles</h2>
+        <span class="badge-count">{{ enseignantsDispo.length }}</span>
+        <button class="btn-icon" (click)="loadEnseignantsDispo()" title="Rafraîchir">↺</button>
+      </div>
+
+      @if (isLoadingEnseignants) {
+        <div class="loading-row"><div class="spinner"></div> Chargement…</div>
+      } @else if (enseignantsDispo.length === 0) {
+        <div class="empty-state">
+          <p>Aucun enseignant n'a encore renseigné ses disponibilités.</p>
+        </div>
+      } @else {
+        <div class="enseignants-list">
+          @for (ens of enseignantsDispo; track ens.enseignantId) {
+            <div class="ens-card">
+              <div class="ens-avatar">{{ (ens.prenom ?? ens.enseignantId)[0] | uppercase }}</div>
+              <div class="ens-info">
+                <div class="ens-name">
+                  @if (ens.nom || ens.prenom) {
+                    {{ ens.prenom }} {{ ens.nom }}
+                  } @else {
+                    {{ ens.enseignantId }}
+                  }
+                </div>
+                @if (ens.departement) {
+                  <div class="ens-dept">{{ ens.departement }}</div>
+                }
+              </div>
+              <div class="ens-dispo-count" title="Créneaux déclarés">
+                {{ ens.nombreDisponibilites }} créneau(x)
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Panneau : Lancer la génération -->
+    <div class="panel panel-action">
+      <div class="panel-header">
+        <h2 class="panel-title">Générer l'emploi du temps</h2>
+      </div>
+
+      <div class="action-body">
+        <div class="form-group">
+          <label class="form-label">École</label>
+          @if (isLoadingEcoles) {
+            <div class="loading-row"><div class="spinner-sm"></div> Chargement…</div>
+          } @else {
+            <select class="form-select" [(ngModel)]="selectedEcoleId">
+              <option value="">— Toutes les écoles —</option>
+              @for (ecole of ecoles; track ecole.idEcole) {
+                <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        <div class="info-box">
+          <span class="info-icon">ℹ</span>
+          La génération cible automatiquement la <strong>semaine à venir</strong>.
+          Les créneaux non couverts seront marqués <strong>TPE</strong>.
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-num">{{ enseignantsDispo.length }}</span>
+            <span class="stat-lbl">Enseignants prêts</span>
+          </div>
+        </div>
+
+        <button class="btn-generate" (click)="generer()" [disabled]="isGenerating || isLoadingEcoles">
+          @if (isGenerating) {
+            <span class="spinner-btn"></span> Génération en cours…
+          } @else {
+            ⚡ Générer la semaine à venir
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Résultats -->
+  @if (emploisGeneres.length > 0) {
+    <div class="results-section">
+      <div class="results-header">
+        <h2 class="panel-title">Emplois du temps générés</h2>
+        <div class="legend">
+          <span class="legend-item slot-cm">CM</span>
+          <span class="legend-item slot-td">TD</span>
+          <span class="legend-item slot-tp">TP</span>
+          <span class="legend-item slot-tpe">TPE</span>
+        </div>
+        <div class="results-stats">
+          <span class="stat-badge cm">CM : {{ nombreCM }}</span>
+          <span class="stat-badge td">TD : {{ nombreTD }}</span>
+          <span class="stat-badge tp">TP : {{ nombreTP }}</span>
+          <span class="stat-badge tpe">TPE : {{ nombreTPE }}</span>
+        </div>
+      </div>
+
+      @for (classeId of classesIds; track classeId) {
+        <div class="timetable-block">
+          <div class="timetable-class-name">{{ grille[classeId].nomClasse }}</div>
+          <div class="timetable-scroll">
+            <table class="timetable">
+              <thead>
+                <tr>
+                  <th class="th-creneau">Créneau</th>
+                  @for (jour of JOURS; track jour.num) {
+                    <th>{{ jour.label }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (creneau of CRENEAUX; track creneau) {
+                  <tr>
+                    <td class="td-creneau">{{ creneau }}</td>
+                    @for (jour of JOURS; track jour.num) {
+                      <td class="td-slot">
+                        @let slot = getSlot(classeId, jour.num, creneau);
+                        @if (slot) {
+                          <div [class]="'slot ' + getSlotClass(slot)" [title]="getSlotTooltip(slot)">
+                            <span class="slot-type">{{ slot.typeCours }}</span>
+                            @if (slot.typeCours !== 'TPE') {
+                              <span class="slot-ue">{{ slot.codeUE }}</span>
+                              @if (slot.nomSalle) {
+                                <span class="slot-salle">{{ slot.nomSalle }}</span>
+                              }
+                            }
+                          </div>
+                        } @else {
+                          <div class="slot slot-empty">—</div>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

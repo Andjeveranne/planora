@@ -5,16 +5,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
-@Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -23,37 +23,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
-        // Vérifier si les headers du Gateway sont présents (priorité)
-        String userId = request.getHeader("X-User-Id");
-        String userRole = request.getHeader("X-User-Role");
-        
-        if (userId != null && userRole != null) {
-            // Authentification basée sur les headers du Gateway
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
-            UsernamePasswordAuthenticationToken authentication = 
-                new UsernamePasswordAuthenticationToken(userId, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            // Fallback: authentification JWT classique (pour les appels directs)
-            String token = getTokenFromRequest(request);
-
+        try {
+            String token = extractTokenFromRequest(request);
             if (token != null && jwtTokenProvider.validateToken(token)) {
-                String userIdFromToken = jwtTokenProvider.getUserIdFromToken(token);
-                String roleFromToken = jwtTokenProvider.getRoleFromToken(token);
+                String userId = jwtTokenProvider.extractUserId(token);
+                String role = jwtTokenProvider.extractRole(token);
 
-                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleFromToken));
-                UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(userIdFromToken, null, authorities);
+                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                if (role != null && !role.isBlank()) {
+                    String springRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                    authorities = Collections.singletonList(new SimpleGrantedAuthority(springRole));
+                }
 
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("JWT Token validated for user: {} role: {}", userId, role);
             }
+        } catch (Exception e) {
+            log.error("JWT authentication failed", e);
         }
-
         filterChain.doFilter(request, response);
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
+    private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);

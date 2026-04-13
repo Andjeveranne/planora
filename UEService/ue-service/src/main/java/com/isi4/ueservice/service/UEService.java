@@ -10,12 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Service CRUD pour les Unités d'enseignement (UE) conformes au diagramme de classes.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,53 +20,65 @@ public class UEService {
     private final UERepository ueRepository;
 
     public UEDTO creer(UEDTO dto) {
+        if (ueRepository.existsByCodeUE(dto.getCodeUE())) {
+            throw new ValidationException("Une UE avec le code " + dto.getCodeUE() + " existe déjà");
+        }
         UE ue = toEntity(dto);
-        if (ue.getIdUE() == null || ue.getIdUE().isBlank()) {
-            ue.setIdUE(UUID.randomUUID().toString());
-        } else if (ueRepository.existsByIdUE(ue.getIdUE())) {
-            throw new ValidationException("Une UE avec l'ID " + ue.getIdUE() + " existe déjà");
-        }
-        if (ueRepository.existsByCodeUE(ue.getCodeUE())) {
-            throw new ValidationException("Une UE avec le code " + ue.getCodeUE() + " existe déjà");
-        }
-        UE saved = ueRepository.save(ue);
-        return toDTO(saved);
+        ue.setId(null);
+        return toDTO(ueRepository.save(ue));
     }
 
     @Transactional(readOnly = true)
     public List<UEDTO> obtenirToutes() {
-        return ueRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        return ueRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public UEDTO obtenirParId(String idUE) {
-        UE ue = ueRepository.findById(idUE)
-                .orElseThrow(() -> new ResourceNotFoundException("UE non trouvée avec l'ID: " + idUE));
-        return toDTO(ue);
+    public UEDTO obtenirParId(Long id) {
+        return toDTO(ueRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("UE non trouvée avec l'ID: " + id)));
     }
 
-    public UEDTO mettreAJour(String idUE, UEDTO dto) {
-        UE ue = ueRepository.findById(idUE)
-                .orElseThrow(() -> new ResourceNotFoundException("UE non trouvée avec l'ID: " + idUE));
+    @Transactional(readOnly = true)
+    public List<UEDTO> obtenirParFiliere(String idFiliere) {
+        return ueRepository.findByIdFiliere(idFiliere).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UEDTO> obtenirParNiveau(String niveau) {
+        return ueRepository.findByNiveau(niveau).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UEDTO> obtenirParFiliereEtNiveau(String idFiliere, String niveau) {
+        return ueRepository.findByIdFiliereAndNiveau(idFiliere, niveau).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public UEDTO mettreAJour(Long id, UEDTO dto) {
+        UE ue = ueRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("UE non trouvée avec l'ID: " + id));
         if (!ue.getCodeUE().equals(dto.getCodeUE()) && ueRepository.existsByCodeUE(dto.getCodeUE())) {
             throw new ValidationException("Une autre UE utilise déjà le code " + dto.getCodeUE());
         }
         ue.setCodeUE(dto.getCodeUE());
         ue.setNomUE(dto.getNomUE());
-        ue.setQuantite(dto.getQuantite());
         ue.setDescription(dto.getDescription());
-        ue.setNCredit(dto.getNCredit());
-        UE updated = ueRepository.save(ue);
-        return toDTO(updated);
+        ue.setNombreCredit(dto.getNombreCredit());
+        ue.setNombreHeur(dto.getNombreHeur());
+        ue.setHeuresCM(dto.getHeuresCM());
+        ue.setHeuresTD(dto.getHeuresTD());
+        ue.setHeuresTP(dto.getHeuresTP());
+        ue.setNiveau(dto.getNiveau());
+        ue.setIdFiliere(dto.getIdFiliere());
+        ue.setNomFiliere(dto.getNomFiliere());
+        return toDTO(ueRepository.save(ue));
     }
 
-    public void supprimer(String idUE) {
-        if (!ueRepository.existsByIdUE(idUE)) {
-            throw new ResourceNotFoundException("UE non trouvée avec l'ID: " + idUE);
+    public void supprimer(Long id) {
+        if (!ueRepository.existsById(id)) {
+            throw new ResourceNotFoundException("UE non trouvée avec l'ID: " + id);
         }
-        ueRepository.deleteById(idUE);
+        ueRepository.deleteById(id);
     }
 
     private UE toEntity(UEDTO dto) {
@@ -78,20 +86,33 @@ public class UEService {
         u.setIdUE(dto.getIdUE());
         u.setCodeUE(dto.getCodeUE());
         u.setNomUE(dto.getNomUE());
-        u.setQuantite(dto.getQuantite());
         u.setDescription(dto.getDescription());
-        u.setNCredit(dto.getNCredit());
+        u.setNombreCredit(dto.getNombreCredit());
+        u.setNombreHeur(dto.getNombreHeur());
+        u.setHeuresCM(dto.getHeuresCM());
+        u.setHeuresTD(dto.getHeuresTD());
+        u.setHeuresTP(dto.getHeuresTP());
+        u.setNiveau(dto.getNiveau());
+        u.setIdFiliere(dto.getIdFiliere());
+        u.setNomFiliere(dto.getNomFiliere());
         return u;
     }
 
     private UEDTO toDTO(UE u) {
         UEDTO dto = new UEDTO();
+        dto.setId(u.getId());
         dto.setIdUE(u.getIdUE());
         dto.setCodeUE(u.getCodeUE());
         dto.setNomUE(u.getNomUE());
-        dto.setQuantite(u.getQuantite());
         dto.setDescription(u.getDescription());
-        dto.setNCredit(u.getNCredit());
+        dto.setNombreCredit(u.getNombreCredit());
+        dto.setNombreHeur(u.getNombreHeur());
+        dto.setHeuresCM(u.getHeuresCM());
+        dto.setHeuresTD(u.getHeuresTD());
+        dto.setHeuresTP(u.getHeuresTP());
+        dto.setNiveau(u.getNiveau());
+        dto.setIdFiliere(u.getIdFiliere());
+        dto.setNomFiliere(u.getNomFiliere());
         return dto;
     }
 }

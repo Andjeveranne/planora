@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService, Enseignant, EnseignantRequest } from '../../services/user.service';
 import { PlanningService, DisponibiliteDTO, EmploiDuTempsDTO } from '../../services/planning.service';
+import { EmploiDuTempsService, UEEnseignantDTO } from '../../services/emploi-du-temps.service';
+import { UEService, UEDTO } from '../../services/ue.service';
 import { NotificationService } from '../../services/notification.service';
 
 interface TimeSlot {
@@ -106,10 +108,31 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
   // Modal info
   showInfoModal: boolean = false;
+  selectedEnseignantUEs: UEEnseignantDTO[] = [];
+  allUEs: UEDTO[] = [];
+  loadingUEs: boolean = false;
+
+  // Modal UE assignment
+  showUEAssignmentModal: boolean = false;
+  selectedUEForAssignment: UEDTO | null = null;
+  assignmentForm = {
+    peutCM: false,
+    peutTD: false,
+    peutTP: false,
+    preference: 1,
+    commentaire: ''
+  };
+
+  // Modal modification
+  showEditModal: boolean = false;
+  editingEnseignant: Enseignant | null = null;
+  editForm: Partial<EnseignantRequest> = {};
 
   constructor(
     private userService: UserService,
     private planningService: PlanningService,
+    private emploiDuTempsService: EmploiDuTempsService,
+    private ueService: UEService,
     private notification: NotificationService,
     private cdr: ChangeDetectorRef
   ) {
@@ -136,13 +159,13 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   }
 
   initTimeSlots() {
-    this.timeSlots = [];
-    for (let h = 8; h < 17; h++) {
-      this.timeSlots.push({
-        time: `${h}h - ${h + 1}h`,
-        startHour: h
-      });
-    }
+    this.timeSlots = [
+      { time: '8h - 10h',  startHour: 8  },
+      { time: '10h - 12h', startHour: 10 },
+      { time: '12h - 14h', startHour: 12 },
+      { time: '14h - 16h', startHour: 14 },
+      { time: '16h - 18h', startHour: 16 }
+    ];
   }
 
   setWeekToCurrent() {
@@ -1050,13 +1073,163 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   viewEnseignantInfo(enseignant: Enseignant): void {
     this.selectedEnseignant = enseignant;
     this.showInfoModal = true;
+    this.selectedEnseignantUEs = [];
+    this.loadingUEs = true;
+    // Charger les UEs de cet enseignant
+    this.emploiDuTempsService.getUEEnseignantsParEnseignant(enseignant.idUser ?? '').subscribe({
+      next: (ues) => {
+        this.selectedEnseignantUEs = ues;
+        this.loadingUEs = false;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.loadingUEs = false; this.cdr.markForCheck(); }
+    });
+    // Charger toutes les UEs pour afficher le nom si pas déjà chargé
+    if (this.allUEs.length === 0) {
+      this.ueService.getAllUEs().subscribe({
+        next: (ues) => { this.allUEs = ues; this.cdr.markForCheck(); },
+        error: () => {}
+      });
+    }
     this.cdr.markForCheck();
+  }
+
+  getNomUE(ueId: number): string {
+    const ue = this.allUEs.find(u => u.id === ueId);
+    return ue ? `${ue.codeUE} – ${ue.nomUE}` : `UE #${ueId}`;
   }
 
   closeInfoModal(): void {
     this.showInfoModal = false;
     this.selectedEnseignant = null;
+    this.selectedEnseignantUEs = [];
     this.cdr.markForCheck();
+  }
+
+  // UE Assignment functionality
+  assignerUE(enseignant: Enseignant): void {
+    this.selectedEnseignant = enseignant;
+    this.showUEAssignmentModal = true;
+    
+    // Charger toutes les UEs si pas déjà fait
+    if (this.allUEs.length === 0) {
+      this.ueService.getAllUEs().subscribe({
+        next: (ues) => {
+          this.allUEs = ues;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des UEs:', error);
+          this.notification.error('Erreur lors du chargement des UEs');
+        }
+      });
+    }
+    
+    this.cdr.markForCheck();
+  }
+
+  closeUEAssignmentModal(): void {
+    this.showUEAssignmentModal = false;
+    this.selectedEnseignant = null;
+    this.selectedUEForAssignment = null;
+    this.resetAssignmentForm();
+    this.cdr.markForCheck();
+  }
+
+  selectUEForAssignment(ue: UEDTO): void {
+    this.selectedUEForAssignment = ue;
+    this.resetAssignmentForm();
+    
+    // Vérifier si l'enseignant a déjà cette UE assignée
+    if (this.selectedEnseignant) {
+      this.emploiDuTempsService.getUEEnseignantsParEnseignant(this.selectedEnseignant.idUser ?? '').subscribe({
+        next: (ues) => {
+          const existingUE = ues.find(u => u.ueId === ue.id);
+          if (existingUE) {
+            this.assignmentForm = {
+              peutCM: existingUE.peutCM || false,
+              peutTD: existingUE.peutTD || false,
+              peutTP: existingUE.peutTP || false,
+              preference: existingUE.preference || 1,
+              commentaire: existingUE.commentaire || ''
+            };
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // Ignore l'erreur, on garde les valeurs par défaut
+        }
+      });
+    }
+  }
+
+  resetAssignmentForm(): void {
+    this.assignmentForm = {
+      peutCM: false,
+      peutTD: false,
+      peutTP: false,
+      preference: 1,
+      commentaire: ''
+    };
+  }
+
+  saveUEAssignment(): void {
+    if (!this.selectedEnseignant || !this.selectedUEForAssignment) {
+      this.notification.error('Sélectionnez un enseignant et une UE');
+      return;
+    }
+
+    if (!this.assignmentForm.peutCM && !this.assignmentForm.peutTD && !this.assignmentForm.peutTP) {
+      this.notification.error('Sélectionnez au moins un type de cours (CM, TD ou TP)');
+      return;
+    }
+
+    const assignment: UEEnseignantDTO = {
+      enseignantId: this.selectedEnseignant.idUser!,
+      ueId: this.selectedUEForAssignment.id!,
+      codeUE: this.selectedUEForAssignment.codeUE,
+      nomUE: this.selectedUEForAssignment.nomUE,
+      peutCM: this.assignmentForm.peutCM,
+      peutTD: this.assignmentForm.peutTD,
+      peutTP: this.assignmentForm.peutTP,
+      preference: this.assignmentForm.preference,
+      commentaire: this.assignmentForm.commentaire
+    };
+
+    this.emploiDuTempsService.ajouterUEEnseignant(assignment).subscribe({
+      next: () => {
+        this.notification.success(`UE ${this.selectedUEForAssignment?.codeUE} assignée avec succès à ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser}`);
+        this.closeUEAssignmentModal();
+      },
+      error: (error) => {
+        console.error('Erreur lors de l\'assignation:', error);
+        this.notification.error('Erreur lors de l\'assignation de l\'UE');
+      }
+    });
+  }
+
+  removeUEAssignment(ueEnseignant: UEEnseignantDTO): void {
+    if (!ueEnseignant.id) return;
+
+    this.notification.confirm(
+      `Êtes-vous sûr de vouloir retirer l'UE ${ueEnseignant.codeUE} de ${this.selectedEnseignant?.prenomUser} ${this.selectedEnseignant?.nomUser} ?`,
+      'Confirmation',
+      () => {
+        this.emploiDuTempsService.supprimerUEEnseignant(ueEnseignant.id!).subscribe({
+          next: () => {
+            this.notification.success('UE retirée avec succès');
+            // Recharger les UEs de l'enseignant
+            if (this.selectedEnseignant) {
+              this.viewEnseignantInfo(this.selectedEnseignant);
+            }
+          },
+          error: (error) => {
+            console.error('Erreur lors de la suppression:', error);
+            this.notification.error('Erreur lors de la suppression de l\'UE');
+          }
+        });
+      }
+    );
   }
 
   // Export/Import CSV
@@ -1241,9 +1414,9 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   }
 
   editEnseignant(enseignant: Enseignant): void {
-    this.newEnseignant = {
+    this.editingEnseignant = enseignant;
+    this.editForm = {
       email: enseignant.email || '',
-      mdp: '',
       nomUser: enseignant.nomUser || '',
       prenomUser: enseignant.prenomUser || '',
       telephone: enseignant.telephone || '',
@@ -1251,16 +1424,63 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
       specialite: enseignant.specialite || '',
       departement: enseignant.departement || ''
     };
-    this.showAddEnseignantForm = true;
-    this.successMessage = `Modification de ${enseignant.prenomUser} ${enseignant.nomUser}`;
+    this.showEditModal = true;
     this.cdr.markForCheck();
-    
-    setTimeout(() => {
-      const formElement = document.querySelector('.form-container');
-      if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editingEnseignant = null;
+    this.editForm = {};
+    this.cdr.markForCheck();
+  }
+
+  saveEditEnseignant(): void {
+    if (!this.editingEnseignant?.idUser) return;
+
+    if (!this.editForm.nomUser || !this.editForm.prenomUser || !this.editForm.email) {
+      this.errorMessage = 'Nom, prénom et email sont obligatoires';
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.editForm.email || '')) {
+      this.errorMessage = 'Email invalide';
+      return;
+    }
+
+    const payload = { ...this.editForm, role: this.editingEnseignant.role || 'ENSEIGNANT' };
+    const editedId = this.editingEnseignant.idUser;
+
+    this.userService.updateEnseignant(editedId, payload).subscribe({
+      next: () => {
+        const index = this.enseignants.findIndex(e => e.idUser === editedId);
+        if (index !== -1) {
+          this.enseignants[index] = {
+            ...this.enseignants[index],
+            nomUser: this.editForm.nomUser || this.enseignants[index].nomUser,
+            prenomUser: this.editForm.prenomUser || this.enseignants[index].prenomUser,
+            email: this.editForm.email || this.enseignants[index].email,
+            telephone: this.editForm.telephone || this.enseignants[index].telephone,
+            specialite: this.editForm.specialite ?? this.enseignants[index].specialite,
+            departement: this.editForm.departement ?? this.enseignants[index].departement,
+          };
+          this.enseignants = [...this.enseignants]; // force la détection de changement
+        }
+        this.successMessage = `✅ Enseignant modifié avec succès!`;
+        this.closeEditModal();
+        this.cdr.markForCheck();
+        setTimeout(() => { this.successMessage = ''; this.cdr.markForCheck(); }, 3000);
+      },
+      error: (error) => {
+        let errorMsg = 'Erreur lors de la modification';
+        if (error.status === 404) errorMsg = 'Enseignant non trouvé';
+        else if (error.status === 403) errorMsg = 'Accès refusé';
+        else if (error.error?.message) errorMsg = error.error.message;
+        this.errorMessage = `❌ ${errorMsg}`;
+        this.cdr.markForCheck();
       }
-    }, 100);
+    });
   }
 
   desactiverEnseignant(id: string): void {

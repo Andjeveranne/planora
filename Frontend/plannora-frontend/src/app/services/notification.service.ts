@@ -1,91 +1,78 @@
 import { Injectable } from '@angular/core';
-
-export type NotificationType = 'success' | 'error' | 'info' | 'confirm' | 'warning';
+import { Subject } from 'rxjs';
 
 export interface NotificationConfig {
-  type: NotificationType;
-  title: string;
   message: string;
+  title?: string;
+  type: 'success' | 'error' | 'warning' | 'info' | 'confirm';
   confirmText?: string;
   cancelText?: string;
-  onConfirm?: () => void;
+  onOk?: () => void;
   onCancel?: () => void;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class NotificationService {
-  private config: NotificationConfig | null = null;
-  private visible = false;
-  private listeners: ((c: NotificationConfig | null, v: boolean) => void)[] = [];
+  private notificationSubject = new Subject<NotificationConfig>();
+  private currentConfig: NotificationConfig | null = null;
 
-  getConfig(): NotificationConfig | null {
-    return this.config;
+  success(message: string, title?: string): void {
+    this.showNotification(message, 'success', title);
   }
 
-  isVisible(): boolean {
-    return this.visible;
+  error(message: string, title?: string): void {
+    this.showNotification(message, 'error', title);
   }
 
-  subscribe(fn: (c: NotificationConfig | null, v: boolean) => void): () => void {
-    this.listeners.push(fn);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== fn);
-    };
+  warning(message: string, title?: string): void {
+    this.showNotification(message, 'warning', title);
   }
 
-  private notify(): void {
-    this.listeners.forEach(fn => fn(this.config, this.visible));
+  info(message: string, title?: string): void {
+    this.showNotification(message, 'info', title);
   }
 
-  private show(type: NotificationType, title: string, message: string, options?: Partial<NotificationConfig>): void {
-    this.config = {
-      type,
-      title,
-      message,
-      confirmText: options?.confirmText ?? 'OK',
-      cancelText: options?.cancelText ?? 'Annuler',
-      onConfirm: options?.onConfirm,
-      onCancel: options?.onCancel,
-    };
-    this.visible = true;
-    this.notify();
+  confirm(message: string, title?: string, onOk?: () => void, onCancel?: () => void): void {
+    // Pour l'instant, utiliser confirm() natif
+    const result = confirm(message);
+    if (result && onOk) {
+      onOk();
+    } else if (!result && onCancel) {
+      onCancel();
+    }
   }
 
-  success(message: string, title = 'Succès'): void {
-    this.show('success', title, message);
-  }
-
-  error(message: string, title = 'Erreur'): void {
-    this.show('error', title, message);
-  }
-
-  info(message: string, title = 'Information'): void {
-    this.show('info', title, message);
-  }
-
-  warning(message: string, title = 'Attention'): void {
-    this.show('warning', title, message);
-  }
-
-  confirm(message: string, title = 'Confirmation', onConfirm?: () => void, onCancel?: () => void): void {
-    this.show('confirm', title, message, { onConfirm, onCancel });
-  }
-
-  close(): void {
-    this.visible = false;
-    this.config = null;
-    this.notify();
+  subscribe(callback: (config: NotificationConfig, visible: boolean) => void) {
+    return this.notificationSubject.subscribe((config) => {
+      this.currentConfig = config;
+      callback(config, true);
+    });
   }
 
   onOk(): void {
-    const c = this.config;
-    this.close();
-    c?.onConfirm?.();
+    if (this.currentConfig?.onOk) {
+      this.currentConfig.onOk();
+    }
+    this.currentConfig = null;
   }
 
   onCancel(): void {
-    const c = this.config;
-    this.close();
-    c?.onCancel?.();
+    if (this.currentConfig?.onCancel) {
+      this.currentConfig.onCancel();
+    }
+    this.currentConfig = null;
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info', title?: string): void {
+    // Simple alert pour l'instant, peut être remplacé par une notification plus sophistiquée
+    const prefix = type === 'error' ? '❌ ' : 
+                   type === 'success' ? '✅ ' : 
+                   type === 'warning' ? '⚠️ ' : 
+                   'ℹ️ ';
+    
+    const displayMessage = title ? `${title}: ${message}` : message;
+    alert(prefix + displayMessage);
   }
 }

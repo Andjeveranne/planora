@@ -1,0 +1,70 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "AuthentificationApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.authentification.AuthentificationApplication",
+            "projectName": "authentification"
+        },
+        {
+            "type": "java",
+            "name": "EcoleServiceApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.ecoleservice.EcoleServiceApplication",
+            "projectName": "ecole-service"
+        },
+        {
+            "type": "java",
+            "name": "EurekaApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.eureka.EurekaApplication",
+            "projectName": "eureka"
+        },
+        {
+            "type": "java",
+            "name": "GatewayApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.gateway.GatewayApplication",
+            "projectName": "gateway"
+        },
+        {
+            "type": "java",
+            "name": "PlanningServiceApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.planningservice.PlanningServiceApplication",
+            "projectName": "planning-service"
+        },
+        {
+            "type": "java",
+            "name": "SalleServiceApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.salleservice.SalleServiceApplication",
+            "projectName": "salle-service"
+        },
+        {
+            "type": "java",
+            "name": "UEServiceApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.ueservice.UEServiceApplication",
+            "projectName": "ue-service"
+        },
+        {
+            "type": "java",
+            "name": "UserServiceApplication",
+            "request": "launch",
+            "mainClass": "com.isi4.userservice.UserServiceApplication",
+            "projectName": "user-service"
+        }
+    ]
+}

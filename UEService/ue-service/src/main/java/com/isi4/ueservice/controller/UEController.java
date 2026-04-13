@@ -13,9 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Contrôleur REST CRUD pour les Unités d'enseignement (UE), conforme au diagramme de classes.
- */
 @RestController
 @RequestMapping("/api/ues")
 @RequiredArgsConstructor
@@ -26,8 +23,7 @@ public class UEController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATEUR')")
     public ResponseEntity<UEDTO> creer(@Valid @RequestBody UEDTO dto) {
-        UEDTO created = ueService.creer(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ueService.creer(dto));
     }
 
     @GetMapping
@@ -35,23 +31,38 @@ public class UEController {
         return ResponseEntity.ok(ueService.obtenirToutes());
     }
 
-    @GetMapping("/{idUE}")
-    public ResponseEntity<UEDTO> obtenirParId(@PathVariable String idUE) {
-        return ResponseEntity.ok(ueService.obtenirParId(idUE));
+    @GetMapping("/{id}")
+    public ResponseEntity<UEDTO> obtenirParId(@PathVariable Long id) {
+        return ResponseEntity.ok(ueService.obtenirParId(id));
     }
 
-    @PutMapping("/{idUE}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATEUR')")
-    public ResponseEntity<UEDTO> mettreAJour(
-            @PathVariable String idUE,
-            @Valid @RequestBody UEDTO dto) {
-        return ResponseEntity.ok(ueService.mettreAJour(idUE, dto));
+    @GetMapping("/filiere/{idFiliere}")
+    public ResponseEntity<List<UEDTO>> obtenirParFiliere(@PathVariable String idFiliere) {
+        return ResponseEntity.ok(ueService.obtenirParFiliere(idFiliere));
     }
 
-    @DeleteMapping("/{idUE}")
+    @GetMapping("/niveau/{niveau}")
+    public ResponseEntity<List<UEDTO>> obtenirParNiveau(@PathVariable String niveau) {
+        return ResponseEntity.ok(ueService.obtenirParNiveau(niveau));
+    }
+
+    @GetMapping("/filiere/{idFiliere}/niveau/{niveau}")
+    public ResponseEntity<List<UEDTO>> obtenirParFiliereEtNiveau(
+            @PathVariable String idFiliere,
+            @PathVariable String niveau) {
+        return ResponseEntity.ok(ueService.obtenirParFiliereEtNiveau(idFiliere, niveau));
+    }
+
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATEUR')")
-    public ResponseEntity<Map<String, String>> supprimer(@PathVariable String idUE) {
-        ueService.supprimer(idUE);
+    public ResponseEntity<UEDTO> mettreAJour(@PathVariable Long id, @Valid @RequestBody UEDTO dto) {
+        return ResponseEntity.ok(ueService.mettreAJour(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATEUR')")
+    public ResponseEntity<Map<String, String>> supprimer(@PathVariable Long id) {
+        ueService.supprimer(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "UE supprimée avec succès");
         return ResponseEntity.ok(response);

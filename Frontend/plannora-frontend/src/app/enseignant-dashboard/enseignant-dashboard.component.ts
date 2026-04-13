@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { PlanningService, EmploiDuTempsDTO, DisponibiliteDTO } from '../services/planning.service';
 import { NotificationService } from '../services/notification.service';
+import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
 
 interface UserInfo {
   nom: string;
@@ -53,7 +54,7 @@ interface EdtSlot {
 @Component({
   selector: 'app-enseignant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GestionDisponibilitesComponent],
   templateUrl: './enseignant-dashboard.component.html',
   styleUrls: ['./enseignant-dashboard.component.css']
 })

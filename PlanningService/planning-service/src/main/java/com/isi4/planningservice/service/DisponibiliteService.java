@@ -1,16 +1,15 @@
 package com.isi4.planningservice.service;
 
-import com.isi4.planningservice.model.Disponibilite;
+import com.isi4.planningservice.dto.DisponibiliteDTO;
+import com.isi4.planningservice.entity.Disponibilite;
 import com.isi4.planningservice.repository.DisponibiliteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,151 +17,93 @@ import java.util.List;
 public class DisponibiliteService {
 
     private final DisponibiliteRepository disponibiliteRepository;
-    
-    // Business rules constants
-    private static final LocalTime BUSINESS_START = LocalTime.of(8, 0);  // 8:00 AM
-    private static final LocalTime BUSINESS_END = LocalTime.of(17, 0);   // 5:00 PM
-    private static final int MIN_DURATION_MINUTES = 60; // Minimum 1 hour
 
-    public List<Disponibilite> getDisponibilitesByEnseignant(String enseignantId) {
-        return disponibiliteRepository.findByEnseignantIdOrderByDateHeureDebutAsc(enseignantId);
+    public List<DisponibiliteDTO> getDisponibilitesByEnseignant(String enseignantId) {
+        log.info("Fetching disponibilites for teacher: {}", enseignantId);
+        return disponibiliteRepository.findByEnseignantIdOrderByDateHeureDebutAsc(enseignantId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<DisponibiliteDTO> getDisponibilitesByEnseignantAndDateRange(String enseignantId, LocalDateTime start, LocalDateTime end) {
+        log.info("Fetching disponibilites for teacher {} between {} and {}", enseignantId, start, end);
+        return disponibiliteRepository.findByEnseignantIdAndDateHeureDebutBetween(enseignantId, start, end)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Disponibilite addDisponibilite(String enseignantId, LocalDateTime debut, LocalDateTime fin,
-            String commentaire) {
-        
-        log.info("Adding availability for teacher {} from {} to {}", enseignantId, debut, fin);
-        
-        // Apply business logic validation
-        validateAvailabilityBusinessRules(debut, fin);
-        
-        // Check for overlapping availabilities
-        validateNoOverlap(enseignantId, debut, fin);
+    public DisponibiliteDTO addDisponibilite(DisponibiliteDTO dto) {
+        log.info("Adding disponibilite for teacher {} from {} to {}", 
+                dto.getEnseignantId(), dto.getDateHeureDebut(), dto.getDateHeureFin());
 
-        Disponibilite dispo = new Disponibilite();
-        dispo.setEnseignantId(enseignantId);
-        dispo.setDateHeureDebut(debut);
-        dispo.setDateHeureFin(fin);
-        dispo.setCommentaire(commentaire);
+        validateDisponibilite(dto);
 
-        Disponibilite saved = disponibiliteRepository.save(dispo);
-        log.info("Availability added successfully with ID: {}", saved.getId());
-        
-        return saved;
-    }
+        Disponibilite disponibilite = new Disponibilite();
+        disponibilite.setEnseignantId(dto.getEnseignantId());
+        disponibilite.setDateHeureDebut(dto.getDateHeureDebut());
+        disponibilite.setDateHeureFin(dto.getDateHeureFin());
+        disponibilite.setCommentaire(dto.getCommentaire());
 
-    /**
-     * Validates business rules for availability:
-     * 1. No past dates
-     * 2. Monday to Saturday only (no Sunday)
-     * 3. Business hours only (8:00 AM to 5:00 PM)
-     * 4. Minimum duration of 1 hour
-     * 5. Start time before end time
-     */
-    private void validateAvailabilityBusinessRules(LocalDateTime debut, LocalDateTime fin) {
-        // Rule 1: No past dates
-        if (debut.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Les disponibilités ne peuvent pas être ajoutées pour des dates passées");
-        }
-        
-        // Rule 2: Start time must be before end time
-        if (debut.isAfter(fin) || debut.isEqual(fin)) {
-            throw new IllegalArgumentException("L'heure de début doit être avant l'heure de fin");
-        }
-        
-        // Rule 3: Monday to Saturday only (no Sunday)
-        DayOfWeek dayOfWeek = debut.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SUNDAY) {
-            throw new IllegalArgumentException("Les disponibilités ne peuvent pas être ajoutées le dimanche");
-        }
-        
-        // Rule 4: Business hours only (8:00 AM to 5:00 PM)
-        LocalTime startTime = debut.toLocalTime();
-        LocalTime endTime = fin.toLocalTime();
-        
-        if (startTime.isBefore(BUSINESS_START) || startTime.isAfter(BUSINESS_END)) {
-            throw new IllegalArgumentException("L'heure de début doit être entre 8h00 et 17h00");
-        }
-        
-        if (endTime.isBefore(BUSINESS_START) || endTime.isAfter(BUSINESS_END)) {
-            throw new IllegalArgumentException("L'heure de fin doit être entre 8h00 et 17h00");
-        }
-        
-        // Rule 5: Minimum duration of 1 hour
-        long durationMinutes = java.time.Duration.between(debut, fin).toMinutes();
-        if (durationMinutes < MIN_DURATION_MINUTES) {
-            throw new IllegalArgumentException("La durée minimale d'une disponibilité est de 1 heure");
-        }
-        
-        // Rule 6: Same day validation (start and end must be on the same day)
-        if (!debut.toLocalDate().equals(fin.toLocalDate())) {
-            throw new IllegalArgumentException("Les heures de début et fin doivent être le même jour");
-        }
-        
-        log.debug("Business rules validation passed for availability from {} to {}", debut, fin);
-    }
-    
-    /**
-     * Validates that the new availability doesn't overlap with existing ones
-     */
-    private void validateNoOverlap(String enseignantId, LocalDateTime debut, LocalDateTime fin) {
-        List<Disponibilite> overlapping = disponibiliteRepository
-            .findOverlappingAvailabilities(enseignantId, debut, fin);
-        
-        if (!overlapping.isEmpty()) {
-            Disponibilite existing = overlapping.get(0);
-            throw new IllegalArgumentException(
-                String.format("Conflit détecté avec une disponibilité existante (%s - %s)", 
-                    existing.getDateHeureDebut().toLocalTime(), 
-                    existing.getDateHeureFin().toLocalTime()));
-        }
-    }
-    
-    /**
-     * Checks if two time ranges overlap
-     */
-    private boolean hasTimeOverlap(LocalDateTime start1, LocalDateTime end1, 
-                                  LocalDateTime start2, LocalDateTime end2) {
-        return start1.isBefore(end2) && start2.isBefore(end1);
+        Disponibilite saved = disponibiliteRepository.save(disponibilite);
+        log.info("Disponibilite saved with ID: {}", saved.getId());
+        return toDTO(saved);
     }
 
     @Transactional
     public void deleteDisponibilite(Long id) {
+        log.info("Deleting disponibilite with ID: {}", id);
         if (!disponibiliteRepository.existsById(id)) {
-            throw new RuntimeException("Disponibilité introuvable");
+            throw new IllegalArgumentException("Disponibilite not found with ID: " + id);
         }
         disponibiliteRepository.deleteById(id);
-        log.info("Availability deleted with ID: {}", id);
+        log.info("Disponibilite deleted successfully");
     }
-    
-    /**
-     * Get business rules information for frontend validation
-     */
-    public BusinessRulesInfo getBusinessRules() {
-        return new BusinessRulesInfo(
-            BUSINESS_START,
-            BUSINESS_END,
-            MIN_DURATION_MINUTES,
-            List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
+
+    @Transactional
+    public void deleteAllByEnseignant(String enseignantId) {
+        log.info("Deleting all disponibilites for teacher: {}", enseignantId);
+        disponibiliteRepository.deleteByEnseignantId(enseignantId);
+    }
+
+    private void validateDisponibilite(DisponibiliteDTO dto) {
+        if (dto.getEnseignantId() == null || dto.getEnseignantId().isBlank()) {
+            throw new IllegalArgumentException("enseignantId is required");
+        }
+        if (dto.getDateHeureDebut() == null) {
+            throw new IllegalArgumentException("dateHeureDebut is required");
+        }
+        if (dto.getDateHeureFin() == null) {
+            throw new IllegalArgumentException("dateHeureFin is required");
+        }
+        if (dto.getDateHeureDebut().isAfter(dto.getDateHeureFin())) {
+            throw new IllegalArgumentException("dateHeureDebut must be before dateHeureFin");
+        }
+        if (dto.getDateHeureDebut().equals(dto.getDateHeureFin())) {
+            throw new IllegalArgumentException("dateHeureDebut and dateHeureFin cannot be the same");
+        }
+        if (!dto.getDateHeureDebut().toLocalDate().equals(dto.getDateHeureFin().toLocalDate())) {
+            throw new IllegalArgumentException("dateHeureDebut and dateHeureFin must be on the same day");
+        }
+    }
+
+    private DisponibiliteDTO toDTO(Disponibilite disponibilite) {
+        return new DisponibiliteDTO(
+                disponibilite.getId(),
+                disponibilite.getEnseignantId(),
+                disponibilite.getDateHeureDebut(),
+                disponibilite.getDateHeureFin(),
+                disponibilite.getCommentaire()
         );
     }
-    
-    /**
-     * Business rules information DTO
-     */
-    public static class BusinessRulesInfo {
-        public final LocalTime businessStart;
-        public final LocalTime businessEnd;
-        public final int minDurationMinutes;
-        public final List<String> allowedDays;
-        
-        public BusinessRulesInfo(LocalTime businessStart, LocalTime businessEnd, 
-                               int minDurationMinutes, List<String> allowedDays) {
-            this.businessStart = businessStart;
-            this.businessEnd = businessEnd;
-            this.minDurationMinutes = minDurationMinutes;
-            this.allowedDays = allowedDays;
-        }
+
+    public List<String> getEnseignantsAvecDisponibilites() {
+        return disponibiliteRepository.findAll()
+                .stream()
+                .map(Disponibilite::getEnseignantId)
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

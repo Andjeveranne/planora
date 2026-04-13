@@ -82,18 +82,16 @@ export class PlanningService {
         });
     }
 
-    // Génération intelligente d'emploi du temps via UserService
+    // Génération intelligente d'emploi du temps
     genererEdtIntelligent(enseignantId: string, nombreSemaines: number = 4): Observable<any> {
-        const userServiceUrl = 'http://localhost:8081/api/emplois-du-temps';
-        return this.http.post<any>(`${userServiceUrl}/generer-intelligent/${enseignantId}?nombreSemaines=${nombreSemaines}`, {}, {
+        return this.http.post<any>(`${this.baseUrl}/emplois-du-temps/generer-intelligent/${enseignantId}?nombreSemaines=${nombreSemaines}`, {}, {
             headers: this.getHeaders()
         });
     }
 
-    // Récupérer l'emploi du temps depuis UserService
+    // Récupérer l'emploi du temps depuis PlanningService
     getEdtFromUserService(enseignantId: string): Observable<EmploiDuTempsDTO[]> {
-        const userServiceUrl = 'http://localhost:8081/api/emplois-du-temps';
-        return this.http.get<EmploiDuTempsDTO[]>(`${userServiceUrl}/enseignant/${enseignantId}`, {
+        return this.http.get<EmploiDuTempsDTO[]>(`${this.baseUrl}/emplois-du-temps/enseignant/${enseignantId}`, {
             headers: this.getHeaders()
         });
     }
