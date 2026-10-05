@@ -10,6 +10,7 @@ interface EnseignantDispo {
   prenom?: string;
   email?: string;
   departement?: string;
+  specialite?: string;
   nombreDisponibilites: number;
 }
 
@@ -35,6 +36,8 @@ export class GenerationEmploisComponent implements OnInit {
 
   ecoles: EcoleDTO[] = [];
   selectedEcoleId: string = '';
+  selectedDepartement = '';
+  selectedSpecialite = '';
   enseignantsDispo: EnseignantDispo[] = [];
 
   isLoadingEcoles = false;
@@ -76,6 +79,7 @@ export class GenerationEmploisComponent implements OnInit {
           this.selectedEcoleId = ecoles[0].idEcole ?? '';
         }
         this.isLoadingEcoles = false;
+        this.loadEnseignantsDispo();
       },
       error: () => {
         this.messages.error = 'Impossible de charger les écoles.';
@@ -86,7 +90,10 @@ export class GenerationEmploisComponent implements OnInit {
 
   loadEnseignantsDispo(): void {
     this.isLoadingEnseignants = true;
-    this.emploiDuTempsService.getEnseignantsAvecDisponibilites().subscribe({
+    this.emploiDuTempsService.getEnseignantsAvecDisponibilites(
+      this.selectedEcoleId || undefined,
+      this.selectedDepartement || undefined
+    ).subscribe({
       next: (data: any[]) => {
         this.enseignantsDispo = data.map(d => ({
           enseignantId: d.enseignantId ?? d.idUser,
@@ -94,6 +101,7 @@ export class GenerationEmploisComponent implements OnInit {
           prenom: d.prenom ?? d.prenomUser,
           email: d.email,
           departement: d.departement,
+          specialite: d.specialite,
           nombreDisponibilites: d.nombreDisponibilites ?? 0
         }));
         this.isLoadingEnseignants = false;
@@ -105,11 +113,43 @@ export class GenerationEmploisComponent implements OnInit {
     });
   }
 
+  onSchoolChange(): void {
+    this.selectedDepartement = '';
+    this.selectedSpecialite = '';
+    this.loadEnseignantsDispo();
+  }
+
+  onDepartmentChange(): void {
+    this.selectedSpecialite = '';
+    this.loadEnseignantsDispo();
+  }
+
+  get departements(): string[] {
+    return [...new Set(this.enseignantsDispo.map(teacher => teacher.departement).filter((value): value is string => !!value))].sort();
+  }
+
+  get specialites(): string[] {
+    return [...new Set(this.enseignantsDispo.map(teacher => teacher.specialite).filter((value): value is string => !!value))].sort();
+  }
+
   generer(): void {
     this.isGenerating = true;
     this.messages = { success: '', error: '' };
-    this.emploiDuTempsService.genererEmploisDuTemps(this.selectedEcoleId || undefined).subscribe({
+    this.emploiDuTempsService.genererEmploisDuTemps(
+      this.selectedEcoleId || undefined,
+      this.selectedDepartement || undefined,
+      this.selectedSpecialite || undefined
+    ).subscribe({
       next: (emplois) => {
+        const cours = emplois.filter(emploi => emploi.typeCours !== 'TPE');
+        if (cours.length === 0) {
+          this.emploisGeneres = [];
+          this.grille = {};
+          this.classesIds = [];
+          this.isGenerating = false;
+          this.messages.error = 'Aucun cours n’a pu être planifié. Vérifiez les UE, les affectations des enseignants, leurs disponibilités et les salles de cette école.';
+          return;
+        }
         this.emploisGeneres = emplois;
         this.buildGrille(emplois);
         this.isGenerating = false;
@@ -121,6 +161,14 @@ export class GenerationEmploisComponent implements OnInit {
         this.isGenerating = false;
       }
     });
+  }
+
+  exporterPdf(): void {
+    if (!this.emploisGeneres.length) {
+      this.messages.error = 'Générez d’abord un emploi du temps avant l’export PDF.';
+      return;
+    }
+    window.print();
   }
 
   private buildGrille(emplois: EmploiDuTempsDTO[]): void {

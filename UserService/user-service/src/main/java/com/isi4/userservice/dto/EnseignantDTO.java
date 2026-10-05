@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -12,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class EnseignantDTO extends UtilisateurDTO {
     private String specialite;
     private String departement;
+    private String idEcole;
+    private Set<String> idEcoles;
 }

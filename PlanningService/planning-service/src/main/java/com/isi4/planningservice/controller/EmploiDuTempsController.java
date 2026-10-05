@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/planning/emplois-du-temps")
@@ -24,43 +25,45 @@ public class EmploiDuTempsController {
 
     @PostMapping("/generer")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<EmploiDuTempsDTO>> genererEmploisDuTemps(
-            @RequestParam(required = false) String idEcole) {
-        log.info("Génération des emplois du temps (semaine à venir) pour l'école {}", idEcole);
+    public ResponseEntity<?> genererEmploisDuTemps(
+            @RequestParam(required = false) String idEcole,
+            @RequestParam(required = false) String departement,
+            @RequestParam(required = false) String specialite) {
+        log.info("Génération EDT école={}, département={}, spécialité={}", idEcole, departement, specialite);
         try {
-            List<EmploiDuTempsDTO> emplois = emploiDuTempsService.genererEmploisDuTemps(1, idEcole);
+            List<EmploiDuTempsDTO> emplois = emploiDuTempsServiceV2.genererEmploisDuTemps(idEcole, departement, specialite);
             log.info("Génération réussie: {} créneaux planifiés", emplois.size());
             return ResponseEntity.ok(emplois);
         } catch (Exception e) {
             log.error("Erreur génération", e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
         }
     }
 
     @PostMapping("/generer-v2")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<EmploiDuTempsDTO>> genererEmploisDuTempsV2(@RequestBody Map<String, String> request) {
-        String idEcole = request.get("idEcole");
-        if (idEcole == null || idEcole.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        
+    public ResponseEntity<?> genererEmploisDuTempsV2(@RequestBody(required = false) Map<String, String> request) {
+        String idEcole = request == null ? null : request.get("idEcole");
+        String departement = request == null ? null : request.get("departement");
+        String specialite = request == null ? null : request.get("specialite");
         log.info("Génération V2 des emplois du temps pour l'école {}", idEcole);
         try {
-            List<EmploiDuTempsDTO> emplois = emploiDuTempsServiceV2.genererEmploisDuTemps(idEcole);
+            List<EmploiDuTempsDTO> emplois = emploiDuTempsServiceV2.genererEmploisDuTemps(idEcole, departement, specialite);
             log.info("Génération V2 réussie: {} créneaux planifiés", emplois.size());
             return ResponseEntity.ok(emplois);
         } catch (Exception e) {
             log.error("Erreur lors de la génération V2 des emplois du temps", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
         }
     }
 
     @GetMapping("/enseignants-disponibles")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getEnseignantsAvecDisponibilites() {
+    public ResponseEntity<List<Map<String, Object>>> getEnseignantsAvecDisponibilites(
+            @RequestParam(required = false) String idEcole,
+            @RequestParam(required = false) String departement) {
         try {
-            List<Map<String, Object>> enseignants = emploiDuTempsServiceV2.getEnseignantsAvecDisponibilitesDetailles();
+            List<Map<String, Object>> enseignants = emploiDuTempsServiceV2.getEnseignantsAvecDisponibilitesDetailles(idEcole, departement);
             return ResponseEntity.ok(enseignants);
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des enseignants avec disponibilités", e);

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class DisponibiliteDTO {
     private Long id;
     private String enseignantId;
+    private String idEcole;
     private LocalDateTime dateHeureDebut;
     private LocalDateTime dateHeureFin;
     private String commentaire;

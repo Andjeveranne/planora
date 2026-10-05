@@ -11,6 +11,8 @@ export interface Enseignant {
   role: string;
   specialite?: string;
   departement?: string;
+  idEcole?: string;
+  idEcoles?: string[];
 }
 
 export interface EnseignantRequest {
@@ -22,6 +24,8 @@ export interface EnseignantRequest {
   role: string;
   specialite: string;
   departement: string;
+  idEcole: string;
+  idEcoles: string[];
 }
 
 export interface DisponibiliteRequest {

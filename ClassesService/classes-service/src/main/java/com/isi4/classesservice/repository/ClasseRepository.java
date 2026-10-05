@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface ClasseRepository extends JpaRepository<Classe, String> {
     List<Classe> findByFiliereIdFiliere(String idFiliere);
+
+    List<Classe> findByFiliereIdEcole(String idEcole);
     List<Classe> findByNiveau(String niveau);
     boolean existsByNomClasse(String nomClasse);
 }

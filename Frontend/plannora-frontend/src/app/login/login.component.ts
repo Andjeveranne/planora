@@ -61,7 +61,7 @@ export class LoginComponent implements OnInit {
     }
 
     const email = control.value.toLowerCase();
-    const allowedDomain = '@saintjeaningenieur.org';
+    const allowedDomain = '@ictuniversity.org';
     
     if (!email.endsWith(allowedDomain)) {
       return { 
@@ -84,8 +84,8 @@ export class LoginComponent implements OnInit {
     if (!/^[a-z]+\.[a-z]+$/.test(localPart)) {
       return { 
         institutionalEmailFormat: { 
-          message: 'Format attendu: prenom.nom@saintjeaningenieur.org',
-          example: 'jean.dupont@saintjeaningenieur.org'
+          message: 'Format attendu: prenom.nom@ictuniversity.org',
+          example: 'jean.dupont@ictuniversity.org'
         } 
       };
     }
@@ -105,8 +105,8 @@ export class LoginComponent implements OnInit {
         console.warn('Could not load domain validation info:', error);
         // Set default values if backend is not available
         this.domainInfo = {
-          allowedDomain: '@saintjeaningenieur.org',
-          exampleFormat: 'prenom.nom@saintjeaningenieur.org',
+          allowedDomain: '@ictuniversity.org',
+          exampleFormat: 'prenom.nom@ictuniversity.org',
           message: 'Seules les adresses email institutionnelles sont autorisées'
         };
       }
@@ -140,7 +140,7 @@ export class LoginComponent implements OnInit {
           console.error('Erreur de connexion:', error);
           
           // Handle specific domain validation errors
-          if (error.error?.message?.includes('saintjeaningenieur.org')) {
+          if (error.error?.message?.includes('ictuniversity.org')) {
             this.errorMessage = error.error.message;
           } else {
             this.errorMessage = error.error?.message || 'Email ou mot de passe incorrect';

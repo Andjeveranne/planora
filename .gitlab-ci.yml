@@ -19,7 +19,7 @@ cache:
 # Build Eureka Service
 build:eureka:
   stage: build
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - cd EurekaService/eureka/eureka
     - mvn $MAVEN_CLI_OPTS clean install -DskipTests
@@ -31,7 +31,7 @@ build:eureka:
 # Build Gateway Service
 build:gateway:
   stage: build
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - cd GatewayService/gateway/gateway
     - mvn $MAVEN_CLI_OPTS clean install -DskipTests
@@ -43,7 +43,7 @@ build:gateway:
 # Build Authentification Service
 build:auth:
   stage: build
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - cd AuthentificationService/Authentification/authentification
     - mvn $MAVEN_CLI_OPTS clean install -DskipTests
@@ -55,7 +55,7 @@ build:auth:
 # Build User Service
 build:user:
   stage: build
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - cd UserService/user-service
     - mvn $MAVEN_CLI_OPTS clean install -DskipTests
@@ -80,7 +80,7 @@ build:frontend:
 # Test Backend Services
 test:backend:
   stage: test
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - cd UserService/user-service
     - mvn $MAVEN_CLI_OPTS test
@@ -99,7 +99,7 @@ test:frontend:
 # Code Quality Analysis
 quality:sonarqube:
   stage: quality
-  image: maven:3.8-openjdk-17
+  image: maven:3.9-eclipse-temurin-25
   script:
     - echo "SonarQube analysis would run here"
     # - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN

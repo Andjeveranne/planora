@@ -6,9 +6,9 @@ import java.util.regex.Pattern;
 
 public class InstitutionalEmailValidator implements ConstraintValidator<ValidInstitutionalEmail, String> {
     
-    // Pattern pour valider le format prenom.nom@saintjeaningenieur.org
+    // Pattern pour valider le format prenom.nom@ictuniversity.org
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-z]+\\.[a-z]+@saintjeaningenieur\\.org$",
+        "^[a-z]+\\.[a-z]+@ictuniversity\\.org$",
         Pattern.CASE_INSENSITIVE
     );
     

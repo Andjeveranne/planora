@@ -5,18 +5,13 @@ Application Angular pour le système de gestion de réservation de salles Planno
 ## Prérequis
 
 - Node.js 18+ et npm
-- Angular CLI 17+
+- Angular CLI 20+
 
 ## Installation
 
 ```bash
-# Installer Angular CLI globalement
-npm install -g @angular/cli
-
-# Créer le projet Angular
-ng new plannora-frontend --routing --style=css
-
-# Copier les fichiers créés dans le projet
+# Installer les dépendances locales
+npm install
 ```
 
 ## Structure du projet
@@ -46,18 +41,18 @@ Frontend/
 
 ## Configuration
 
-L'API backend est configurée pour pointer vers `http://localhost:8082/api/auth`.
+L'API backend est configurée pour pointer vers la Gateway sur `http://localhost:8081`.
 
-Si votre backend tourne sur un autre port, modifiez `apiUrl` dans `auth.service.ts`.
+Si votre backend tourne sur un autre port, modifiez les URLs des services dans `src/app/services`.
 
 ## Démarrage
 
 ```bash
 # Développement
-ng serve
+npm start
 
 # Production
-ng build --prod
+npm run build
 ```
 
 L'application sera accessible sur `http://localhost:4200`

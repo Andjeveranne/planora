@@ -45,4 +45,8 @@ public interface EmploiDuTempsRepository extends JpaRepository<EmploiDuTemps, Lo
     @Modifying
     @Query("DELETE FROM EmploiDuTemps e WHERE e.semaine = :semaine")
     int deleteBySemaine(@Param("semaine") Integer semaine);
+
+       @Modifying
+       @Query("DELETE FROM EmploiDuTemps e WHERE e.semaine = :semaine AND e.classeId IN :classeIds")
+       int deleteBySemaineAndClasseIds(@Param("semaine") Integer semaine, @Param("classeIds") List<String> classeIds);
 }

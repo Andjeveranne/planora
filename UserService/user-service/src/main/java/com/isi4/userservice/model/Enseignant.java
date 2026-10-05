@@ -6,6 +6,8 @@ import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "enseignants")
@@ -18,6 +20,14 @@ public class Enseignant extends Utilisateur {
     
     @Column(name = "departement")
     private String departement;
+
+    @Column(name = "id_ecole", length = 100)
+    private String idEcole;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "enseignant_ecoles", joinColumns = @JoinColumn(name = "enseignant_id"))
+    @Column(name = "id_ecole", nullable = false, length = 100)
+    private Set<String> idEcoles = new HashSet<>();
     
     /**
      * Relation One-to-Many avec Disponibilite

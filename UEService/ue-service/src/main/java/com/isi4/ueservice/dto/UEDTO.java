@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -35,6 +36,9 @@ public class UEDTO {
 
     /** Heures de travaux pratiques */
     private Integer heuresTP;
+
+    private LocalTime heureDebut;
+    private LocalTime heureFin;
 
     /** Niveau ciblé : ING1, ING2, ING3, L1, L2, M1, M2... */
     private String niveau;

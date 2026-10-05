@@ -15,7 +15,7 @@
 	<description>Service de gestion des salles</description>
 	
 	<properties>
-		<java.version>17</java.version>
+		<java.version>25</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 	</properties>
 	

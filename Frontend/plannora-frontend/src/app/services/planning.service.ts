@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface DisponibiliteDTO {
     id?: number;
     enseignantId: string;
+    idEcole: string;
     dateHeureDebut: string; // ISO String
     dateHeureFin: string;   // ISO String
     commentaire?: string;
@@ -13,14 +14,26 @@ export interface DisponibiliteDTO {
 export interface EmploiDuTempsDTO {
     id?: number;
     enseignantId: string;
-    dateJour: string; // ISO Date (YYYY-MM-DD)
-    jour: string;
-    heureDebut: number;
-    heureFin: number;
-    ue: string;
-    classe: string;
-    salle: string;
+    dateHeureDebut?: string;
+    dateHeureFin?: string;
+    dateJour?: string;
+    jour?: string;
+    heureDebut?: number;
+    heureFin?: number;
+    ue?: string;
+    classe?: string;
+    salle?: string;
+    classeId?: string;
+    nomClasse?: string;
+    ueId?: number;
+    codeUE?: string;
+    nomUE?: string;
+    salleId?: string;
+    nomSalle?: string;
     typeCours: string;
+    semaine?: number;
+    jourSemaine?: number;
+    creneau?: string;
 }
 
 @Injectable({
@@ -70,9 +83,10 @@ export class PlanningService {
     }
 
     getEdtByEnseignantAndWeek(enseignantId: string, dateDebut: string, dateFin: string): Observable<EmploiDuTempsDTO[]> {
-        return this.http.get<EmploiDuTempsDTO[]>(
-            `${this.edtUrl}/enseignant/${enseignantId}/semaine?dateDebut=${dateDebut}&dateFin=${dateFin}`, {
-            headers: this.getHeaders()
+        const week = this.isoWeekNumber(new Date(`${dateDebut}T12:00:00`));
+        return this.http.get<EmploiDuTempsDTO[]>(`${this.baseUrl}/emplois-du-temps/enseignant/${enseignantId}`, {
+            headers: this.getHeaders(),
+            params: { semaine: week }
         });
     }
 
@@ -94,6 +108,14 @@ export class PlanningService {
         return this.http.get<EmploiDuTempsDTO[]>(`${this.baseUrl}/emplois-du-temps/enseignant/${enseignantId}`, {
             headers: this.getHeaders()
         });
+    }
+
+    private isoWeekNumber(date: Date): number {
+        const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const day = utcDate.getUTCDay() || 7;
+        utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+        const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+        return Math.ceil((((utcDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     }
 
     deleteEdtByEnseignant(enseignantId: string): Observable<void> {

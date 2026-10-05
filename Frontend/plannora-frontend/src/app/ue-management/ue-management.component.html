@@ -111,6 +111,16 @@
             </div>
             <div class="form-row">
               <div class="form-group">
+                <label>Début d'enseignement</label>
+                <input type="time" [(ngModel)]="newUE.heureDebut" name="heureDebut" min="08:00" max="18:00">
+              </div>
+              <div class="form-group">
+                <label>Fin d'enseignement</label>
+                <input type="time" [(ngModel)]="newUE.heureFin" name="heureFin" min="08:00" max="18:00">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label>Filière</label>
                 <select [(ngModel)]="newUE.idFiliere" name="idFiliere" class="form-input" (change)="onFiliereChange(newUE)">
                   <option value="">-- Choisir --</option>
@@ -191,6 +201,16 @@
                   <option value="">-- Choisir --</option>
                   @for (n of niveaux; track n) { <option [value]="n">{{ n }}</option> }
                 </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Début d'enseignement</label>
+                <input type="time" [(ngModel)]="editingUE.heureDebut" name="editHeureDebut" min="08:00" max="18:00">
+              </div>
+              <div class="form-group">
+                <label>Fin d'enseignement</label>
+                <input type="time" [(ngModel)]="editingUE.heureFin" name="editHeureFin" min="08:00" max="18:00">
               </div>
             </div>
             <div class="form-group">

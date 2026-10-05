@@ -175,7 +175,35 @@
       <!-- Mes Cours -->
       @if (activeSection === 'courses') {
         <div class="section">
-          <div class="placeholder-content"><p>📚 Liste de vos cours à venir...</p></div>
+          <div class="week-navigation">
+            <h2>Mes cours assignés</h2>
+            <button class="btn-today" (click)="loadAssignedCourses()" [disabled]="isLoadingCourses">Actualiser</button>
+          </div>
+          @if (isLoadingCourses) {
+            <div class="loading-indicator"><div class="spinner"></div><span>Chargement des cours...</span></div>
+          } @else if (assignedCourses.length === 0) {
+            <div class="no-edt-message">
+              <h3>Aucun cours assigné</h3>
+              <p>Les cours attribués par l’administration apparaîtront ici.</p>
+            </div>
+          } @else {
+            <div class="table-container">
+              <table class="edt-table">
+                <thead><tr><th>Code UE</th><th>Unité d’enseignement</th><th>CM</th><th>TD</th><th>TP</th></tr></thead>
+                <tbody>
+                  @for (course of assignedCourses; track course.id ?? course.ueId) {
+                    <tr>
+                      <td>{{ course.codeUE || course.ueId }}</td>
+                      <td>{{ course.nomUE || 'UE assignée' }}</td>
+                      <td>{{ course.peutCM ? 'Oui' : 'Non' }}</td>
+                      <td>{{ course.peutTD ? 'Oui' : 'Non' }}</td>
+                      <td>{{ course.peutTP ? 'Oui' : 'Non' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
       }
 
@@ -196,7 +224,32 @@
       <!-- Notifications -->
       @if (activeSection === 'notifications') {
         <div class="section">
-          <div class="placeholder-content"><p>🔔 Vos notifications à venir...</p></div>
+          <div class="week-navigation">
+            <h2>Notifications</h2>
+            <button class="btn-nav" (click)="loadTeacherNotifications()" [disabled]="isLoadingNotifications">Actualiser</button>
+            <button class="btn-today" (click)="markAllTeacherNotificationsRead()">Tout marquer comme lu</button>
+          </div>
+          @if (isLoadingNotifications) {
+            <div class="loading-indicator"><div class="spinner"></div><span>Chargement...</span></div>
+          } @else if (teacherNotifications.length === 0) {
+            <div class="no-edt-message">
+              <h3>Aucune notification</h3>
+              <p>Les rappels de cours apparaîtront ici 15 minutes avant le début.</p>
+            </div>
+          } @else {
+            <div class="course-list">
+              @for (notice of teacherNotifications; track notice.id) {
+                <button class="course-item notification-item" [class.notification-unread]="notice.statut === 'NON_LU'" (click)="markTeacherNotificationRead(notice)">
+                  <div class="course-day">{{ notice.dateEnvoi | date:'dd/MM HH:mm' }}</div>
+                  <div class="course-info">
+                    <div class="course-name">{{ notice.sujet }}</div>
+                    <div class="course-meta">{{ notice.message }}</div>
+                  </div>
+                  <span>{{ notice.statut === 'NON_LU' ? 'Non lu' : 'Lu' }}</span>
+                </button>
+              }
+            </div>
+          }
         </div>
       }
 

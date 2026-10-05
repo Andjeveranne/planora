@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClassesService, ClasseDTO, FiliereDTO } from '../../services/classes.service';
+import { EcoleDTO, EcoleService } from '../../services/ecole.service';
 import { NotificationService } from '../../services/notification.service';
 
 @Component({
@@ -16,6 +17,7 @@ export class GestionClassesComponent implements OnInit {
   // Data
   classes: ClasseDTO[] = [];
   filieres: FiliereDTO[] = [];
+  ecoles: EcoleDTO[] = [];
 
   // UI state
   isLoading = false;
@@ -44,11 +46,16 @@ export class GestionClassesComponent implements OnInit {
 
   constructor(
     private classesService: ClassesService,
+    private ecoleService: EcoleService,
     private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.loadAll();
+    this.ecoleService.obtenirToutes().subscribe({
+      next: (ecoles) => this.ecoles = ecoles,
+      error: () => this.errorMessage = 'Erreur chargement écoles'
+    });
   }
 
   loadAll(): void {
@@ -152,7 +159,10 @@ export class GestionClassesComponent implements OnInit {
   }
 
   saveFiliere(): void {
-    if (!this.filiereForm.nom) { this.errorMessage = 'Le nom est obligatoire.'; return; }
+    if (!this.filiereForm.nom || !this.filiereForm.idEcole) {
+      this.errorMessage = 'Le nom et l’école sont obligatoires.';
+      return;
+    }
     this.isLoading = true;
     const op = this.isEditFiliere
       ? this.classesService.updateFiliere(this.editingFiliereId!, this.filiereForm)
@@ -196,6 +206,10 @@ export class GestionClassesComponent implements OnInit {
     return this.classes.filter(c => c.idFiliere === idFiliere).length;
   }
 
+  getEcoleName(idEcole?: string): string {
+    return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? 'Non associée';
+  }
+
   clearMessages(): void { this.errorMessage = ''; this.successMessage = ''; }
 
   private emptyClasse(): ClasseDTO {
@@ -203,6 +217,6 @@ export class GestionClassesComponent implements OnInit {
   }
 
   private emptyFiliere(): FiliereDTO {
-    return { nom: '', description: '' };
+    return { nom: '', description: '', idEcole: '' };
   }
 }

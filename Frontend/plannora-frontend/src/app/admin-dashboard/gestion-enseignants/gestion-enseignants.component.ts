@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService, Enseignant, EnseignantRequest } from '../../services/user.service';
+import { EcoleDTO, EcoleService } from '../../services/ecole.service';
 import { PlanningService, DisponibiliteDTO, EmploiDuTempsDTO } from '../../services/planning.service';
 import { EmploiDuTempsService, UEEnseignantDTO } from '../../services/emploi-du-temps.service';
 import { UEService, UEDTO } from '../../services/ue.service';
@@ -39,6 +40,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   enseignants: Enseignant[] = [];
+  ecoles: EcoleDTO[] = [];
   selectedEnseignant: Enseignant | null = null;
   disponibilitesEnseignant: DisponibiliteDTO[] = [];
   showAddEnseignantForm: boolean = false;
@@ -91,7 +93,9 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     telephone: '',
     role: 'ENSEIGNANT',
     specialite: '',
-    departement: ''
+    departement: '',
+    idEcole: '',
+    idEcoles: []
   };
 
   // Pagination
@@ -116,6 +120,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   showUEAssignmentModal: boolean = false;
   selectedUEForAssignment: UEDTO | null = null;
   assignmentForm = {
+    idEcole: '',
     peutCM: false,
     peutTD: false,
     peutTP: false,
@@ -134,6 +139,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     private emploiDuTempsService: EmploiDuTempsService,
     private ueService: UEService,
     private notification: NotificationService,
+    private ecoleService: EcoleService,
     private cdr: ChangeDetectorRef
   ) {
     this.initTimeSlots();
@@ -142,6 +148,10 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.setWeekToCurrent();
     this.loadEnseignants();
+    this.ecoleService.obtenirToutes().subscribe({
+      next: ecoles => this.ecoles = ecoles,
+      error: () => this.errorMessage = 'Impossible de charger les écoles.'
+    });
     
     // Fermer le dropdown quand on clique ailleurs
     document.addEventListener('click', this.handleClickOutside.bind(this));
@@ -277,7 +287,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
     // Filtre par école
     if (this.filterEcole !== 'all') {
-      // Note: Le champ école n'existe pas encore dans l'entité
+      filtered = filtered.filter(enseignant => enseignant.idEcole === this.filterEcole);
     }
 
     return filtered;
@@ -297,6 +307,10 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  getSchoolName(idEcole?: string): string {
+    return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? 'Non associée';
+  }
+
   toggleAddEnseignantForm(): void {
     this.showAddEnseignantForm = !this.showAddEnseignantForm;
     if (!this.showAddEnseignantForm) {
@@ -308,7 +322,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.newEnseignant = {
       email: '', mdp: '', nomUser: '', prenomUser: '',
-      telephone: '', role: 'ENSEIGNANT', specialite: '', departement: ''
+      telephone: '', role: 'ENSEIGNANT', specialite: '', departement: '', idEcole: '', idEcoles: []
     };
     this.errorMessage = '';
     this.successMessage = '';
@@ -345,8 +359,8 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
   validateForm(): boolean {
     if (!this.newEnseignant.email || !this.newEnseignant.mdp ||
-      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser) {
-      this.errorMessage = 'Tous les champs obligatoires doivent être remplis';
+      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser || !this.newEnseignant.idEcoles?.length) {
+      this.errorMessage = 'Tous les champs obligatoires, y compris l’école, doivent être remplis';
       return false;
     }
 
@@ -491,8 +505,10 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     this.planningService.getEdtFromUserService(enseignant.idUser).subscribe({
       next: (edtData: EmploiDuTempsDTO[]) => {
         const filteredData = edtData.filter(edt => {
-          const edtDate = new Date(edt.dateJour);
-          return edtDate >= this.currentWeekStart && edtDate <= weekEnd;
+          const dateJour = edt.dateJour ?? '';
+          if (!dateJour) return false;
+          const edtDate = new Date(dateJour);
+          return !isNaN(edtDate.getTime()) && edtDate >= this.currentWeekStart && edtDate <= weekEnd;
         });
         
         if (filteredData.length > 0) {
@@ -525,13 +541,13 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     edtData.forEach(edt => {
       const dateKey = `${edt.dateJour}_${edt.heureDebut}h`;
       const slot: EdtSlot = {
-        jour: edt.jour,
-        heureDebut: `${edt.heureDebut}h`,
-        heureFin: `${edt.heureFin}h`,
-        ue: edt.ue,
-        classe: edt.classe,
-        salle: edt.salle,
-        type: edt.typeCours,
+        jour: edt.jour ?? '',
+        heureDebut: `${edt.heureDebut ?? ''}h`,
+        heureFin: `${edt.heureFin ?? ''}h`,
+        ue: edt.ue ?? '',
+        classe: edt.classe ?? '',
+        salle: edt.salle ?? '',
+        type: edt.typeCours ?? '',
         dateKey: dateKey
       };
       this.edtMap.set(dateKey, slot);
@@ -1147,6 +1163,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
           const existingUE = ues.find(u => u.ueId === ue.id);
           if (existingUE) {
             this.assignmentForm = {
+              idEcole: existingUE.idEcole || this.selectedEnseignant?.idEcoles?.[0] || this.selectedEnseignant?.idEcole || '',
               peutCM: existingUE.peutCM || false,
               peutTD: existingUE.peutTD || false,
               peutTP: existingUE.peutTP || false,
@@ -1165,6 +1182,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
   resetAssignmentForm(): void {
     this.assignmentForm = {
+      idEcole: this.selectedEnseignant?.idEcoles?.[0] || this.selectedEnseignant?.idEcole || '',
       peutCM: false,
       peutTD: false,
       peutTP: false,
@@ -1183,9 +1201,14 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
       this.notification.error('Sélectionnez au moins un type de cours (CM, TD ou TP)');
       return;
     }
+    if (!this.assignmentForm.idEcole) {
+      this.notification.error('Sélectionnez l’école de cette assignation.');
+      return;
+    }
 
     const assignment: UEEnseignantDTO = {
       enseignantId: this.selectedEnseignant.idUser!,
+      idEcole: this.assignmentForm.idEcole,
       ueId: this.selectedUEForAssignment.id!,
       codeUE: this.selectedUEForAssignment.codeUE,
       nomUE: this.selectedUEForAssignment.nomUE,
@@ -1239,7 +1262,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const headers = ['Nom', 'Prénom', 'Email', 'Téléphone', 'Spécialité', 'Département', 'Rôle'];
+    const headers = ['Nom', 'Prénom', 'Email', 'Téléphone', 'Spécialité', 'Département', 'Rôle', 'ID École'];
     const csvContent = [
       headers.join(';'),
       ...this.enseignants.map(e => [
@@ -1249,7 +1272,8 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
         e.telephone || '',
         e.specialite || '',
         e.departement || '',
-        e.role || 'ENSEIGNANT'
+        e.role || 'ENSEIGNANT',
+        e.idEcole || ''
       ].join(';'))
     ].join('\n');
 
@@ -1312,10 +1336,10 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
             return;
           }
 
-          const [nom, prenom, email, telephone, specialite, departement, role] = values;
+          const [nom, prenom, email, telephone, specialite, departement, role, idEcole] = values;
 
-          if (!nom || !prenom || !email) {
-            errors.push(`Ligne ${index + 2}: Nom, prénom et email sont obligatoires`);
+          if (!nom || !prenom || !email || !idEcole) {
+            errors.push(`Ligne ${index + 2}: Nom, prénom, email et ID école sont obligatoires`);
             return;
           }
 
@@ -1333,7 +1357,9 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
             specialite: specialite || '',
             departement: departement || '',
             role: role || 'ENSEIGNANT',
-            mdp: this.generateRandomPassword()
+            mdp: this.generateRandomPassword(),
+            idEcole,
+            idEcoles: idEcole ? [idEcole] : []
           });
         });
 
@@ -1416,6 +1442,8 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   editEnseignant(enseignant: Enseignant): void {
     this.editingEnseignant = enseignant;
     this.editForm = {
+      idEcole: enseignant.idEcole,
+      idEcoles: enseignant.idEcoles ?? (enseignant.idEcole ? [enseignant.idEcole] : []),
       email: enseignant.email || '',
       nomUser: enseignant.nomUser || '',
       prenomUser: enseignant.prenomUser || '',
@@ -1438,8 +1466,8 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   saveEditEnseignant(): void {
     if (!this.editingEnseignant?.idUser) return;
 
-    if (!this.editForm.nomUser || !this.editForm.prenomUser || !this.editForm.email) {
-      this.errorMessage = 'Nom, prénom et email sont obligatoires';
+    if (!this.editForm.nomUser || !this.editForm.prenomUser || !this.editForm.email || !this.editForm.idEcoles?.length) {
+      this.errorMessage = 'Nom, prénom, email et école sont obligatoires';
       return;
     }
 
@@ -1464,6 +1492,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
             telephone: this.editForm.telephone || this.enseignants[index].telephone,
             specialite: this.editForm.specialite ?? this.enseignants[index].specialite,
             departement: this.editForm.departement ?? this.enseignants[index].departement,
+            idEcole: this.editForm.idEcole ?? this.enseignants[index].idEcole,
           };
           this.enseignants = [...this.enseignants]; // force la détection de changement
         }

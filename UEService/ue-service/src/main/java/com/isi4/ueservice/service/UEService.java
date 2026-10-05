@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class UEService {
     private final UERepository ueRepository;
 
     public UEDTO creer(UEDTO dto) {
+        validateTeachingWindow(dto);
         if (ueRepository.existsByCodeUE(dto.getCodeUE())) {
             throw new ValidationException("Une UE avec le code " + dto.getCodeUE() + " existe déjà");
         }
@@ -55,6 +57,7 @@ public class UEService {
     }
 
     public UEDTO mettreAJour(Long id, UEDTO dto) {
+        validateTeachingWindow(dto);
         UE ue = ueRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("UE non trouvée avec l'ID: " + id));
         if (!ue.getCodeUE().equals(dto.getCodeUE()) && ueRepository.existsByCodeUE(dto.getCodeUE())) {
@@ -68,6 +71,8 @@ public class UEService {
         ue.setHeuresCM(dto.getHeuresCM());
         ue.setHeuresTD(dto.getHeuresTD());
         ue.setHeuresTP(dto.getHeuresTP());
+        ue.setHeureDebut(dto.getHeureDebut());
+        ue.setHeureFin(dto.getHeureFin());
         ue.setNiveau(dto.getNiveau());
         ue.setIdFiliere(dto.getIdFiliere());
         ue.setNomFiliere(dto.getNomFiliere());
@@ -92,6 +97,8 @@ public class UEService {
         u.setHeuresCM(dto.getHeuresCM());
         u.setHeuresTD(dto.getHeuresTD());
         u.setHeuresTP(dto.getHeuresTP());
+        u.setHeureDebut(dto.getHeureDebut());
+        u.setHeureFin(dto.getHeureFin());
         u.setNiveau(dto.getNiveau());
         u.setIdFiliere(dto.getIdFiliere());
         u.setNomFiliere(dto.getNomFiliere());
@@ -110,9 +117,21 @@ public class UEService {
         dto.setHeuresCM(u.getHeuresCM());
         dto.setHeuresTD(u.getHeuresTD());
         dto.setHeuresTP(u.getHeuresTP());
+        dto.setHeureDebut(u.getHeureDebut());
+        dto.setHeureFin(u.getHeureFin());
         dto.setNiveau(u.getNiveau());
         dto.setIdFiliere(u.getIdFiliere());
         dto.setNomFiliere(u.getNomFiliere());
         return dto;
+    }
+
+    private void validateTeachingWindow(UEDTO dto) {
+        LocalTime start = dto.getHeureDebut() == null ? LocalTime.of(8, 0) : dto.getHeureDebut();
+        LocalTime end = dto.getHeureFin() == null ? LocalTime.of(18, 0) : dto.getHeureFin();
+        if (start.isBefore(LocalTime.of(8, 0)) || end.isAfter(LocalTime.of(18, 0)) || !start.isBefore(end)) {
+            throw new ValidationException("La période d'enseignement doit être comprise entre 08:00 et 18:00, avec un début avant la fin.");
+        }
+        dto.setHeureDebut(start);
+        dto.setHeureFin(end);
     }
 }

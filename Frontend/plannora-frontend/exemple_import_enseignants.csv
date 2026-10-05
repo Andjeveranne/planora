@@ -1,6 +1,6 @@
-Nom;Prénom;Email;Téléphone;Spécialité;Département;Rôle
-Dupont;Jean;jean.dupont@example.com;0612345678;Informatique;Sciences;ENSEIGNANT
-Martin;Marie;marie.martin@example.com;0623456789;Mathématiques;Sciences;ENSEIGNANT
-Bernard;Pierre;pierre.bernard@example.com;0634567890;Physique;Sciences;ENSEIGNANT
-Dubois;Sophie;sophie.dubois@example.com;0645678901;Chimie;Sciences;ENSEIGNANT
-Moreau;Luc;luc.moreau@example.com;0656789012;Génie Civil;Ingénierie;ENSEIGNANT
+Nom;Prénom;Email;Téléphone;Spécialité;Département;Rôle;ID École
+Dupont;Jean;jean.dupont@ictuniversity.org;0612345678;Informatique;Sciences;ENSEIGNANT;SAINT_JEAN_INGENIEUR
+Martin;Marie;marie.martin@ictuniversity.org;0623456789;Mathématiques;Sciences;ENSEIGNANT;SAINT_JEAN_INGENIEUR
+Bernard;Pierre;pierre.bernard@ictuniversity.org;0634567890;Physique;Sciences;ENSEIGNANT;SAINT_JEAN_INGENIEUR
+Dubois;Sophie;sophie.dubois@ictuniversity.org;0645678901;Chimie;Sciences;ENSEIGNANT;SAINT_JEAN_INGENIEUR
+Moreau;Luc;luc.moreau@ictuniversity.org;0656789012;Génie Civil;Ingénierie;ENSEIGNANT;SAINT_JEAN_INGENIEUR

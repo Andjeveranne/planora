@@ -27,4 +27,6 @@ public class ClasseDTO {
     private String idFiliere;
 
     private String nomFiliere;
+
+    private String idEcole;
 }

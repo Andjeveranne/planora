@@ -26,6 +26,11 @@ public class DisponibiliteService {
                 .collect(Collectors.toList());
     }
 
+    public List<DisponibiliteDTO> getDisponibilitesByEnseignantAndSchool(String enseignantId, String idEcole) {
+        return disponibiliteRepository.findByEnseignantIdAndIdEcoleOrderByDateHeureDebutAsc(enseignantId, idEcole)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public List<DisponibiliteDTO> getDisponibilitesByEnseignantAndDateRange(String enseignantId, LocalDateTime start, LocalDateTime end) {
         log.info("Fetching disponibilites for teacher {} between {} and {}", enseignantId, start, end);
         return disponibiliteRepository.findByEnseignantIdAndDateHeureDebutBetween(enseignantId, start, end)
@@ -41,8 +46,14 @@ public class DisponibiliteService {
 
         validateDisponibilite(dto);
 
+        if (disponibiliteRepository.existsByEnseignantIdAndDateHeureDebutLessThanAndDateHeureFinGreaterThan(
+                dto.getEnseignantId(), dto.getDateHeureFin(), dto.getDateHeureDebut())) {
+            throw new IllegalArgumentException("Cet enseignant est déjà disponible dans une autre école sur ce créneau.");
+        }
+
         Disponibilite disponibilite = new Disponibilite();
         disponibilite.setEnseignantId(dto.getEnseignantId());
+        disponibilite.setIdEcole(dto.getIdEcole());
         disponibilite.setDateHeureDebut(dto.getDateHeureDebut());
         disponibilite.setDateHeureFin(dto.getDateHeureFin());
         disponibilite.setCommentaire(dto.getCommentaire());
@@ -72,6 +83,9 @@ public class DisponibiliteService {
         if (dto.getEnseignantId() == null || dto.getEnseignantId().isBlank()) {
             throw new IllegalArgumentException("enseignantId is required");
         }
+        if (dto.getIdEcole() == null || dto.getIdEcole().isBlank()) {
+            throw new IllegalArgumentException("idEcole is required");
+        }
         if (dto.getDateHeureDebut() == null) {
             throw new IllegalArgumentException("dateHeureDebut is required");
         }
@@ -93,6 +107,7 @@ public class DisponibiliteService {
         return new DisponibiliteDTO(
                 disponibilite.getId(),
                 disponibilite.getEnseignantId(),
+                disponibilite.getIdEcole(),
                 disponibilite.getDateHeureDebut(),
                 disponibilite.getDateHeureFin(),
                 disponibilite.getCommentaire()

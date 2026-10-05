@@ -70,13 +70,33 @@
           @if (isLoadingEcoles) {
             <div class="loading-row"><div class="spinner-sm"></div> Chargement…</div>
           } @else {
-            <select class="form-select" [(ngModel)]="selectedEcoleId">
+            <select class="form-select" [(ngModel)]="selectedEcoleId" (change)="onSchoolChange()">
               <option value="">— Toutes les écoles —</option>
               @for (ecole of ecoles; track ecole.idEcole) {
                 <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
               }
             </select>
           }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Département</label>
+          <select class="form-select" [(ngModel)]="selectedDepartement" (change)="onDepartmentChange()" [disabled]="!enseignantsDispo.length">
+            <option value="">Tous les départements</option>
+            @for (departement of departements; track departement) {
+              <option [value]="departement">{{ departement }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Spécialité</label>
+          <select class="form-select" [(ngModel)]="selectedSpecialite" [disabled]="!selectedDepartement || !specialites.length">
+            <option value="">Toutes les spécialités</option>
+            @for (specialite of specialites; track specialite) {
+              <option [value]="specialite">{{ specialite }}</option>
+            }
+          </select>
         </div>
 
         <div class="info-box">
@@ -108,6 +128,7 @@
     <div class="results-section">
       <div class="results-header">
         <h2 class="panel-title">Emplois du temps générés</h2>
+          <button class="btn-export-pdf" (click)="exporterPdf()" title="Imprimer ou enregistrer en PDF">Exporter PDF</button>
         <div class="legend">
           <span class="legend-item slot-cm">CM</span>
           <span class="legend-item slot-td">TD</span>

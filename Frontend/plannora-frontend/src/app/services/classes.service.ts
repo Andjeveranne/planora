@@ -6,6 +6,7 @@ export interface FiliereDTO {
   idFiliere?: string;
   nom: string;
   description?: string;
+  idEcole?: string;
   classes?: ClasseDTO[];
 }
 
@@ -16,6 +17,7 @@ export interface ClasseDTO {
   niveau: string;
   idFiliere: string;
   nomFiliere?: string;
+  idEcole?: string;
 }
 
 @Injectable({ providedIn: 'root' })

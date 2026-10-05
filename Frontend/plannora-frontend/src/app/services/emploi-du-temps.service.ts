@@ -7,6 +7,7 @@ export interface EmploiDuTempsDTO {
   classeId: string;
   nomClasse?: string;
   enseignantId: string;
+  idEcole: string;
   nomEnseignant?: string;
   ueId: number;
   codeUE?: string;
@@ -39,6 +40,7 @@ export interface UEEnseignantDTO {
   codeUE?: string;
   nomUE?: string;
   enseignantId: string;
+  idEcole?: string;
   peutCM: boolean;
   peutTD: boolean;
   peutTP: boolean;
@@ -55,9 +57,11 @@ export class EmploiDuTempsService {
   constructor(private http: HttpClient) {}
 
   // Génération d'emplois du temps pour la semaine à venir
-  genererEmploisDuTemps(idEcole?: string): Observable<EmploiDuTempsDTO[]> {
+  genererEmploisDuTemps(idEcole?: string, departement?: string, specialite?: string): Observable<EmploiDuTempsDTO[]> {
     let params = new HttpParams();
     if (idEcole) params = params.set('idEcole', idEcole);
+    if (departement) params = params.set('departement', departement);
+    if (specialite) params = params.set('specialite', specialite);
     return this.http.post<EmploiDuTempsDTO[]>(`${this.baseUrl}/emplois-du-temps/generer`, null, { params });
   }
 
@@ -67,8 +71,11 @@ export class EmploiDuTempsService {
   }
 
   // Enseignants ayant soumis des disponibilités
-  getEnseignantsAvecDisponibilites(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/emplois-du-temps/enseignants-disponibles`);
+  getEnseignantsAvecDisponibilites(idEcole?: string, departement?: string): Observable<any[]> {
+    let params = new HttpParams();
+    if (idEcole) params = params.set('idEcole', idEcole);
+    if (departement) params = params.set('departement', departement);
+    return this.http.get<any[]>(`${this.baseUrl}/emplois-du-temps/enseignants-disponibles`, { params });
   }
 
   // Récupérer les disponibilités d'un enseignant
@@ -142,11 +149,11 @@ export class EmploiDuTempsService {
   }
 
   getUEEnseignantsParEnseignant(enseignantId: string): Observable<UEEnseignantDTO[]> {
-    return this.http.get<UEEnseignantDTO[]>('http://localhost:8082/api/enseignant-ues/enseignant/' + enseignantId);
+    return this.http.get<UEEnseignantDTO[]>(`http://localhost:8081/api/enseignant-ues/enseignant/${enseignantId}`);
   }
 
   getUEEnseignantsParUE(ueId: number): Observable<UEEnseignantDTO[]> {
-    return this.http.get<UEEnseignantDTO[]>('http://localhost:8082/api/enseignant-ues/ue/' + ueId);
+    return this.http.get<UEEnseignantDTO[]>(`http://localhost:8081/api/enseignant-ues/ue/${ueId}`);
   }
 
   mettreAJourUEEnseignant(id: number, ueEnseignant: UEEnseignantDTO): Observable<UEEnseignantDTO> {
@@ -154,6 +161,6 @@ export class EmploiDuTempsService {
   }
 
   supprimerUEEnseignant(id: number): Observable<void> {
-    return this.http.delete<void>('http://localhost:8082/api/enseignant-ues/' + id);
+    return this.http.delete<void>(`http://localhost:8081/api/enseignant-ues/${id}`);
   }
 }

@@ -11,6 +11,7 @@ public class EnseignantUEDTO {
     private Long id;
     private String enseignantId;
     private Long ueId;
+    private String idEcole;
     private String codeUE;
     private String nomUE;
     private Boolean peutCM;

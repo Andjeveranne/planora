@@ -22,19 +22,20 @@ public class AuthService {
     private final EmailService emailService;
     
     // Email domain restriction constant
-    private static final String ALLOWED_EMAIL_DOMAIN = "@saintjeaningenieur.org";
-    private static final String DOMAIN_ERROR_MESSAGE = "Seules les adresses email du domaine @saintjeaningenieur.org sont autorisées";
+    private static final String ALLOWED_EMAIL_DOMAIN = "@ictuniversity.org";
+    private static final String DOMAIN_ERROR_MESSAGE = "Seules les adresses email du domaine @ictuniversity.org sont autorisées";
 
     public LoginResponse login(LoginRequest request) {
-        log.info("Tentative de connexion pour l'email: {}", request.getEmail());
+        String email = request.getEmail().trim();
+        log.info("Tentative de connexion pour l'email: {}", email);
         
         // Validate email domain before attempting authentication
-        if (!isValidEmailDomain(request.getEmail())) {
-            log.warn("Tentative de connexion avec un domaine email non autorisé: {}", request.getEmail());
+        if (!isValidEmailDomain(email)) {
+            log.warn("Tentative de connexion avec un domaine email non autorisé: {}", email);
             throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
         }
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("Tentative de connexion avec un email inexistant: {}", request.getEmail());
                     return new RuntimeException("Email ou mot de passe incorrect");
@@ -68,28 +69,29 @@ public class AuthService {
     }
 
     public User register(RegisterRequest request) {
-        log.info("Tentative d'inscription pour l'email: {}", request.getEmail());
+        String email = request.getEmail().trim();
+        log.info("Tentative d'inscription pour l'email: {}", email);
         
         // Validate email domain before registration
-        if (!isValidEmailDomain(request.getEmail())) {
-            log.warn("Tentative d'inscription avec un domaine email non autorisé: {}", request.getEmail());
+        if (!isValidEmailDomain(email)) {
+            log.warn("Tentative d'inscription avec un domaine email non autorisé: {}", email);
             throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
         }
         
-        if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Tentative d'inscription avec un email déjà existant: {}", request.getEmail());
+        if (userRepository.existsByEmail(email)) {
+            log.warn("Tentative d'inscription avec un email déjà existant: {}", email);
             throw new RuntimeException("Cet email est déjà utilisé");
         }
 
         // Additional validation for institutional email format
-        if (!isValidInstitutionalEmailFormat(request.getEmail())) {
-            log.warn("Format d'email institutionnel invalide: {}", request.getEmail());
-            throw new RuntimeException("Format d'email invalide. Utilisez le format: prenom.nom@saintjeaningenieur.org");
+        if (!isValidInstitutionalEmailFormat(email)) {
+            log.warn("Format d'email institutionnel invalide: {}", email);
+            throw new RuntimeException("Format d'email invalide. Utilisez le format: prenom.nom@ictuniversity.org");
         }
 
         User user = new User();
         user.setId(java.util.UUID.randomUUID().toString());
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNom(request.getNom());
         user.setPrenom(request.getPrenom());
@@ -107,17 +109,18 @@ public class AuthService {
     }
 
     public void forgotPassword(String email) {
-        log.info("Demande de réinitialisation de mot de passe pour: {}", email);
+        String normalizedEmail = email == null ? null : email.trim();
+        log.info("Demande de réinitialisation de mot de passe pour: {}", normalizedEmail);
         
         // Validate email domain before processing password reset
-        if (!isValidEmailDomain(email)) {
-            log.warn("Demande de réinitialisation avec un domaine email non autorisé: {}", email);
+        if (!isValidEmailDomain(normalizedEmail)) {
+            log.warn("Demande de réinitialisation avec un domaine email non autorisé: {}", normalizedEmail);
             throw new RuntimeException(DOMAIN_ERROR_MESSAGE);
         }
         
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> {
-                    log.warn("Demande de réinitialisation pour un email inexistant: {}", email);
+                log.warn("Demande de réinitialisation pour un email inexistant: {}", normalizedEmail);
                     return new RuntimeException("Utilisateur non trouvé avec cet email");
                 });
 
@@ -144,9 +147,9 @@ public class AuthService {
                             resetLink + "\n\n" +
                             "Ce lien est valide pour 30 minutes.\n\n" +
                             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
-            log.info("Email de réinitialisation envoyé à: {}", email);
+            log.info("Email de réinitialisation envoyé à: {}", normalizedEmail);
         } catch (Exception e) {
-            log.error("Erreur envoi email de réinitialisation pour {}: {}", email, e.getMessage());
+            log.error("Erreur envoi email de réinitialisation pour {}: {}", normalizedEmail, e.getMessage());
             // On continue même si l'email échoue (pour le développement)
         }
     }
@@ -190,7 +193,7 @@ public class AuthService {
     }
     
     /**
-     * Validates institutional email format: firstname.lastname@saintjeaningenieur.org
+    * Validates institutional email format: firstname.lastname@ictuniversity.org
      * Also allows admin.* and system.* patterns for administrative accounts
      */
     private boolean isValidInstitutionalEmailFormat(String email) {
@@ -216,7 +219,7 @@ public class AuthService {
     public DomainValidationInfo getDomainValidationInfo() {
         return new DomainValidationInfo(
             ALLOWED_EMAIL_DOMAIN,
-            "prenom.nom@saintjeaningenieur.org",
+            "prenom.nom@ictuniversity.org",
             "Seules les adresses email institutionnelles sont autorisées"
         );
     }

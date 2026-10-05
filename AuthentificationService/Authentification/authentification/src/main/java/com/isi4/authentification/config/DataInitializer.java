@@ -19,7 +19,7 @@ public class DataInitializer implements CommandLineRunner {
         // Toujours recréer les utilisateurs de test avec les bons mots de passe
         
         // Supprimer les anciens utilisateurs de test s'ils existent (sauf ceux avec des contraintes FK)
-        userRepository.findByEmail("admin.systeme@saintjeaningenieur.org").ifPresent(user -> {
+        userRepository.findByEmail("admin.systeme@ictuniversity.org").ifPresent(user -> {
             try {
                 userRepository.delete(user);
             } catch (Exception e) {
@@ -28,13 +28,13 @@ public class DataInitializer implements CommandLineRunner {
         });
         
         // Ne pas supprimer jean.dupont car il a des relations dans la table enseignants
-        // userRepository.findByEmail("jean.dupont@saintjeaningenieur.org").ifPresent(userRepository::delete);
+        // userRepository.findByEmail("jean.dupont@ictuniversity.org").ifPresent(userRepository::delete);
         
         // Créer l'admin seulement s'il n'existe pas déjà
-        if (!userRepository.existsByEmail("admin.systeme@saintjeaningenieur.org")) {
+        if (!userRepository.existsByEmail("admin.systeme@ictuniversity.org")) {
             User admin = new User();
             admin.setId("admin001");
-            admin.setEmail("admin.systeme@saintjeaningenieur.org");
+            admin.setEmail("admin.systeme@ictuniversity.org");
             admin.setPassword(passwordEncoder.encode("password123"));
             admin.setNom("Systeme");
             admin.setPrenom("Admin");
@@ -47,10 +47,10 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Créer l'enseignant seulement s'il n'existe pas déjà
-        if (!userRepository.existsByEmail("jean.dupont@saintjeaningenieur.org")) {
+        if (!userRepository.existsByEmail("nkiamboh.tanwi@ictuniversity.org")) {
             User enseignant = new User();
             enseignant.setId("ens001");
-            enseignant.setEmail("jean.dupont@saintjeaningenieur.org");
+            enseignant.setEmail("nkiamboh.tanwi@ictuniversity.org");
             enseignant.setPassword(passwordEncoder.encode("password123"));
             enseignant.setNom("Dupont");
             enseignant.setPrenom("Jean");
@@ -64,7 +64,7 @@ public class DataInitializer implements CommandLineRunner {
         
         System.out.println(" DataInitializer completed successfully!");
         System.out.println(" Available test accounts:");
-        System.out.println("   admin.systeme@saintjeaningenieur.org / password123");
-        System.out.println("   jean.dupont@saintjeaningenieur.org / password123");
+        System.out.println("   admin.systeme@ictuniversity.org / password123");
+        System.out.println("   nkiamboh.tanwi@ictuniversity.org / password123");
     }
 }

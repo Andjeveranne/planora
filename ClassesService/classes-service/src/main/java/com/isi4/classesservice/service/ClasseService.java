@@ -54,6 +54,11 @@ public class ClasseService {
         return classeRepository.findByFiliereIdFiliere(idFiliere).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ClasseDTO> obtenirParEcole(String idEcole) {
+        return classeRepository.findByFiliereIdEcole(idEcole).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public ClasseDTO mettreAJour(String id, ClasseDTO dto) {
         Classe c = classeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée : " + id));
@@ -85,6 +90,7 @@ public class ClasseService {
         if (c.getFiliere() != null) {
             dto.setIdFiliere(c.getFiliere().getIdFiliere());
             dto.setNomFiliere(c.getFiliere().getNom());
+            dto.setIdEcole(c.getFiliere().getIdEcole());
         }
         return dto;
     }

@@ -31,4 +31,7 @@ public class NotificationDTO {
 
     private StatutNotification statut;
     private LocalDateTime dateEnvoi;
+    private String destinataireEmail;
+    private LocalDateTime scheduledAt;
+    private String deduplicationKey;
 }

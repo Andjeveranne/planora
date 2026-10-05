@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,11 +17,14 @@ public class FordFulkersonScheduler {
     @Data
     public static class SchedulingRequest {
         private String classeId;
+        private String idEcole;
         private Long ueId;
         private String enseignantId;
         private String typeCours; // CM, TD, TP
         private Integer heuresRequises;
         private Integer effectifClasse;
+        private LocalTime heureDebut;
+        private LocalTime heureFin;
     }
 
     @Data
@@ -35,6 +39,7 @@ public class FordFulkersonScheduler {
     @Data
     public static class Salle {
         private String id;
+        private String idEcole;
         private String nom;
         private Integer capacite;
         private String type;
@@ -199,6 +204,8 @@ public class FordFulkersonScheduler {
             List<SchedulingResult> currentResults) {
 
         return availableSlots.stream()
+            .filter(slot -> request.getHeureDebut() == null || !slot.getDebut().toLocalTime().isBefore(request.getHeureDebut()))
+            .filter(slot -> request.getHeureFin() == null || !slot.getFin().toLocalTime().isAfter(request.getHeureFin()))
                 .filter(slot -> isEnseignantAvailable(request.getEnseignantId(), slot, disponibilites))
                 .filter(slot -> !isClasseOccupied(request.getClasseId(), slot, existingResults, currentResults))
                 .filter(slot -> !isEnseignantOccupied(request.getEnseignantId(), slot, existingResults, currentResults))
@@ -207,6 +214,8 @@ public class FordFulkersonScheduler {
 
     private List<Salle> filterValidSalles(SchedulingRequest request, List<Salle> salles) {
         return salles.stream()
+            .filter(salle -> request.getIdEcole() == null || request.getIdEcole().isBlank()
+                || request.getIdEcole().equals(salle.getIdEcole()))
                 .filter(salle -> salle.getCapacite() >= request.getEffectifClasse())
                 .filter(salle -> isTypeCompatible(salle.getType(), request.getTypeCours()))
                 .collect(Collectors.toList());

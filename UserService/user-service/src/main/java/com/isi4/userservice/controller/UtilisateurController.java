@@ -48,6 +48,21 @@ public class UtilisateurController {
         List<UtilisateurResponseDTO> enseignants = utilisateurService.getEnseignants();
         return ResponseEntity.ok(enseignants);
     }
+
+    @GetMapping("/enseignants/ecole/{idEcole}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENSEIGNANT')")
+    public ResponseEntity<List<UtilisateurResponseDTO>> getEnseignantsByEcole(@PathVariable String idEcole) {
+        return ResponseEntity.ok(utilisateurService.getEnseignantsByEcole(idEcole));
+    }
+
+    @GetMapping("/enseignants/recherche")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENSEIGNANT')")
+    public ResponseEntity<List<UtilisateurResponseDTO>> rechercherEnseignants(
+            @RequestParam(required = false) String idEcole,
+            @RequestParam(required = false) String departement,
+            @RequestParam(required = false) String specialite) {
+        return ResponseEntity.ok(utilisateurService.rechercherEnseignants(idEcole, departement, specialite));
+    }
     
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

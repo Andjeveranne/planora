@@ -19,6 +19,9 @@ public class Disponibilite {
     @Column(name = "enseignant_id", nullable = false)
     private String enseignantId;
 
+    @Column(name = "id_ecole", length = 100)
+    private String idEcole;
+
     @Column(name = "date_heure_debut", nullable = false)
     private LocalDateTime dateHeureDebut;
 

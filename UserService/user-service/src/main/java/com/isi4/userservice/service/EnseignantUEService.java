@@ -34,11 +34,18 @@ public class EnseignantUEService {
 
     @Transactional
     public EnseignantUEDTO ajouterCompetence(EnseignantUEDTO dto) {
+        if (dto.getIdEcole() == null || dto.getIdEcole().isBlank()) {
+            throw new IllegalArgumentException("L'école de l'assignation est obligatoire.");
+        }
         // Vérifier si la compétence existe déjà
         var existing = enseignantUERepository.findByEnseignantIdAndUeId(dto.getEnseignantId(), dto.getUeId());
+        var owner = enseignantUERepository.findByUeIdAndIdEcole(dto.getUeId(), dto.getIdEcole());
+        if (owner.isPresent() && !owner.get().getEnseignantId().equals(dto.getEnseignantId())) {
+            throw new IllegalArgumentException("Cette UE est déjà assignée à un autre enseignant dans cette école.");
+        }
         
         EnseignantUE entity;
-        if (existing.isPresent()) {
+        if (existing.isPresent() && dto.getIdEcole().equals(existing.get().getIdEcole())) {
             entity = existing.get();
             // Mettre à jour les compétences
             entity.setPeutCM(dto.getPeutCM());
@@ -92,6 +99,7 @@ public class EnseignantUEService {
         dto.setId(entity.getId());
         dto.setEnseignantId(entity.getEnseignantId());
         dto.setUeId(entity.getUeId());
+        dto.setIdEcole(entity.getIdEcole());
         dto.setCodeUE(entity.getCodeUE());
         dto.setNomUE(entity.getNomUE());
         dto.setPeutCM(entity.getPeutCM());
@@ -107,6 +115,7 @@ public class EnseignantUEService {
         entity.setId(dto.getId());
         entity.setEnseignantId(dto.getEnseignantId());
         entity.setUeId(dto.getUeId());
+        entity.setIdEcole(dto.getIdEcole());
         entity.setCodeUE(dto.getCodeUE());
         entity.setNomUE(dto.getNomUE());
         entity.setPeutCM(dto.getPeutCM());

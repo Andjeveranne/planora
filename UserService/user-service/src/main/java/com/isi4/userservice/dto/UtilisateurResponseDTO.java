@@ -3,6 +3,7 @@ package com.isi4.userservice.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -16,5 +17,7 @@ public class UtilisateurResponseDTO {
     private String role;
     private String specialite;
     private String departement;
+    private String idEcole;
+    private Set<String> idEcoles;
     // Pas de mot de passe dans la réponse
 }

@@ -1,0 +1,81 @@
+npm notice run plannora-frontend@0.0.0 build
+npm notice run ng build --configuration production
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [13.555 seconds] - 2026-10-05T08:08:31.228Z
+
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2741: Property 'idEcole' is missing in type '{ peutCM: boolean; peutTD: boolean; peutTP: boolean; preference: number; commentaire: string; }' but required in type '{ idEcole: string; peutCM: boolean; peutTD: boolean; peutTP: boolean; preference: number; commentaire: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/admin-dashboard/gestion-enseignants/gestion-enseignants.component.ts:1165:12:
+[37m      1165 │             [32mthis.assignmentForm[37m = {
+           ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  'idEcole' is declared here.
+
+    src/app/admin-dashboard/gestion-enseignants/gestion-enseignants.component.ts:123:4:
+[37m      123 │     [32midEcole: ''[37m,
+          ╵     [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'idEcole' does not exist in type 'UEEnseignantDTO'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/admin-dashboard/gestion-enseignants/gestion-enseignants.component.ts:1210:6:
+[37m      1210 │       [32midEcole[37m: this.assignmentForm.idEcole,
+           ╵       [32m~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '{ nomUser: string; prenomUser: string; email: string; telephone: string; specialite: string; departement: string; role: string; mdp: string; idEcole: string; }' is not assignable to parameter of type 'EnseignantRequest'.
+  Property 'idEcoles' is missing in type '{ nomUser: string; prenomUser: string; email: string; telephone: string; specialite: string; departement: string; role: string; mdp: string; idEcole: string; }' but required in type 'EnseignantRequest'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/admin-dashboard/gestion-enseignants/gestion-enseignants.component.ts:1351:35:
+[37m      1351 │           enseignantsToImport.push([32m{[37m
+           ╵                                    [32m^[0m
+
+  'idEcoles' is declared here.
+
+    src/app/services/user.service.ts:28:2:
+[37m      28 │   [32midEcoles[37m: string[];
+         ╵   [32m~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'select'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/enseignant-dashboard/gestion-disponibilites/gestion-disponibilites.component.html:32:39:
+[37m      32 │ ...lability-school" [32m[(ngModel)]="selectedEcoleId"[37m [disabled]="savi...
+         ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component GestionDisponibilitesComponent.
+
+    src/app/enseignant-dashboard/gestion-disponibilites/gestion-disponibilites.component.ts:23:17:
+[37m      23 │     templateUrl: [32m'./gestion-disponibilites.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'heureDebut'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/services/ue.service.ts:16:2:
+[37m      16 │   [32mheureDebut[37m?: string;
+         ╵   [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'heureFin'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/services/ue.service.ts:17:2:
+[37m      17 │   [32mheureFin[37m?: string;
+         ╵   [32m~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'heureDebut'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/services/ue.service.ts:18:2:
+[37m      18 │   [32mheureDebut[37m?: string;
+         ╵   [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'heureFin'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/services/ue.service.ts:19:2:
+[37m      19 │   [32mheureFin[37m?: string;
+         ╵   [32m~~~~~~~~[0m
+
+[39m[22m

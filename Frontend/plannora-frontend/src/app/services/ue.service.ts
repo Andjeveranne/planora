@@ -13,6 +13,8 @@ export interface UEDTO {
   heuresCM?: number;
   heuresTD?: number;
   heuresTP?: number;
+  heureDebut?: string;
+  heureFin?: string;
   /** Niveau ciblé : ING1, ING2, ING3, L1, L2, M1, M2... */
   niveau?: string;
   /** Identifiant de la filière (ClassesService) */

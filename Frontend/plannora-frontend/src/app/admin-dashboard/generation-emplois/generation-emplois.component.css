@@ -1,3 +1,24 @@
+.btn-export-pdf {
+  margin-left: auto;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  padding: .55rem .85rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media print {
+  :host, .gen-container { background: #fff !important; }
+  .page-header, .top-grid, .alert, .btn-export-pdf, .legend, .results-stats { display: none !important; }
+  .results-section { display: block !important; padding: 0 !important; }
+  .timetable-block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 18px; }
+  .timetable-scroll { overflow: visible !important; }
+  .timetable { width: 100% !important; font-size: 10pt; border-collapse: collapse; }
+  .timetable th, .timetable td { border: 1px solid #555 !important; color: #111 !important; }
+  .slot { min-height: 42px; color: #111 !important; background: #fff !important; }
+  @page { size: A4 landscape; margin: 10mm; }
+}
 .gen-container {
   padding: 24px;
   max-width: 1400px;

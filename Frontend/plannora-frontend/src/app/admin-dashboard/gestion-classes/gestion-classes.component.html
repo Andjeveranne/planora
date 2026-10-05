@@ -107,6 +107,7 @@
             <thead>
               <tr>
                 <th>Nom de la filière</th>
+                <th>École</th>
                 <th>Description</th>
                 <th>Nb classes</th>
                 <th>Actions</th>
@@ -114,13 +115,14 @@
             </thead>
             <tbody>
               @if (isLoading) {
-                <tr><td colspan="4" class="loading-cell"><div class="spinner-border"></div></td></tr>
+                <tr><td colspan="5" class="loading-cell"><div class="spinner-border"></div></td></tr>
               } @else if (filieres.length === 0) {
-                <tr><td colspan="4" class="empty-cell"><p>Aucune filière.</p></td></tr>
+                <tr><td colspan="5" class="empty-cell"><p>Aucune filière.</p></td></tr>
               } @else {
                 @for (f of filieres; track f.idFiliere) {
                   <tr class="table-row">
                     <td class="name-cell">{{ f.nom }}</td>
+                    <td>{{ getEcoleName(f.idEcole) }}</td>
                     <td>{{ f.description || '—' }}</td>
                     <td>{{ getClassesCount(f.idFiliere!) }}</td>
                     <td class="actions-cell">
@@ -201,6 +203,15 @@
         <div class="form-group">
           <label>Nom *</label>
           <input type="text" [(ngModel)]="filiereForm.nom" class="form-input" placeholder="ex: ISI">
+        </div>
+        <div class="form-group">
+          <label>École *</label>
+          <select [(ngModel)]="filiereForm.idEcole" class="form-input">
+            <option value="">Choisir une école</option>
+            @for (ecole of ecoles; track ecole.idEcole) {
+              <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+            }
+          </select>
         </div>
         <div class="form-group">
           <label>Description</label>

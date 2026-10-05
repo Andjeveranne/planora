@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface EnseignantUERepository extends JpaRepository<EnseignantUE, Long> {
+    java.util.Optional<EnseignantUE> findByUeIdAndIdEcole(Long ueId, String idEcole);
     
     List<EnseignantUE> findByEnseignantId(String enseignantId);
     

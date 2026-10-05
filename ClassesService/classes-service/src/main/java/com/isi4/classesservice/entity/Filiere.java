@@ -26,6 +26,9 @@ public class Filiere {
     @Column(name = "description", length = 500)
     private String description;
 
+    @Column(name = "id_ecole", length = 100)
+    private String idEcole;
+
     @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

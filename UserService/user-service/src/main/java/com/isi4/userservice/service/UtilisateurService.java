@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +30,7 @@ public class UtilisateurService {
 
     @Transactional
     public UtilisateurResponseDTO creerUtilisateur(UtilisateurDTO dto) {
+        dto.setEmail(dto.getEmail().trim());
         if (utilisateurRepository.existsByEmail(dto.getEmail())) {
             throw new ValidationException("Un utilisateur avec cet email existe déjà.");
         }
@@ -51,6 +54,11 @@ public class UtilisateurService {
 
     @Transactional
     public UtilisateurResponseDTO creerEnseignant(EnseignantDTO dto) {
+        dto.setEmail(dto.getEmail().trim());
+        if ((dto.getIdEcole() == null || dto.getIdEcole().isBlank())
+            && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
+            throw new ValidationException("L'école de l'enseignant est obligatoire.");
+        }
         if (utilisateurRepository.existsByEmail(dto.getEmail())) {
             throw new ValidationException("Un utilisateur avec cet email existe déjà.");
         }
@@ -65,6 +73,10 @@ public class UtilisateurService {
         enseignant.setRole("ENSEIGNANT");
         enseignant.setSpecialite(dto.getSpecialite());
         enseignant.setDepartement(dto.getDepartement());
+        enseignant.setIdEcole(dto.getIdEcole());
+        Set<String> schoolIds = dto.getIdEcoles() == null ? new HashSet<>() : new HashSet<>(dto.getIdEcoles());
+        if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) schoolIds.add(dto.getIdEcole());
+        enseignant.setIdEcoles(schoolIds);
 
         enseignant = enseignantRepository.save(enseignant);
         return toResponse(enseignant);
@@ -87,6 +99,24 @@ public class UtilisateurService {
     }
 
     @Transactional(readOnly = true)
+    public List<UtilisateurResponseDTO> getEnseignantsByEcole(String idEcole) {
+        return enseignantRepository.findByIdEcole(idEcole).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UtilisateurResponseDTO> rechercherEnseignants(String idEcole, String departement, String specialite) {
+        return getEnseignants().stream()
+            .filter(enseignant -> idEcole == null || idEcole.isBlank()
+                || idEcole.equals(enseignant.getIdEcole())
+                || (enseignant.getIdEcoles() != null && enseignant.getIdEcoles().contains(idEcole)))
+                .filter(enseignant -> departement == null || departement.isBlank() || departement.equals(enseignant.getDepartement()))
+                .filter(enseignant -> specialite == null || specialite.isBlank() || specialite.equals(enseignant.getSpecialite()))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public UtilisateurResponseDTO getUtilisateurById(String id) {
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id: " + id));
@@ -95,6 +125,11 @@ public class UtilisateurService {
 
     @Transactional
     public UtilisateurResponseDTO updateUtilisateur(String id, EnseignantDTO dto) {
+        dto.setEmail(dto.getEmail().trim());
+        if ((dto.getIdEcole() == null || dto.getIdEcole().isBlank())
+            && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
+            throw new ValidationException("L'école de l'enseignant est obligatoire.");
+        }
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id: " + id));
 
@@ -114,6 +149,10 @@ public class UtilisateurService {
         if (utilisateur instanceof Enseignant enseignant) {
             enseignant.setSpecialite(dto.getSpecialite());
             enseignant.setDepartement(dto.getDepartement());
+            enseignant.setIdEcole(dto.getIdEcole());
+            Set<String> schoolIds = dto.getIdEcoles() == null ? new HashSet<>() : new HashSet<>(dto.getIdEcoles());
+            if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) schoolIds.add(dto.getIdEcole());
+            enseignant.setIdEcoles(schoolIds);
         }
 
         utilisateur = utilisateurRepository.save(utilisateur);
@@ -140,6 +179,8 @@ public class UtilisateurService {
         if (utilisateur instanceof Enseignant enseignant) {
             dto.setSpecialite(enseignant.getSpecialite());
             dto.setDepartement(enseignant.getDepartement());
+            dto.setIdEcole(enseignant.getIdEcole());
+            dto.setIdEcoles(enseignant.getIdEcoles());
         }
 
         return dto;

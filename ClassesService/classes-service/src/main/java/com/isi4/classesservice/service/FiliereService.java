@@ -29,6 +29,7 @@ public class FiliereService {
         f.setIdFiliere(dto.getIdFiliere() != null ? dto.getIdFiliere() : UUID.randomUUID().toString());
         f.setNom(dto.getNom());
         f.setDescription(dto.getDescription());
+        f.setIdEcole(dto.getIdEcole());
         return toDTO(filiereRepository.save(f));
     }
 
@@ -51,6 +52,7 @@ public class FiliereService {
         }
         f.setNom(dto.getNom());
         f.setDescription(dto.getDescription());
+        f.setIdEcole(dto.getIdEcole());
         return toDTO(filiereRepository.save(f));
     }
 
@@ -66,6 +68,7 @@ public class FiliereService {
         dto.setIdFiliere(f.getIdFiliere());
         dto.setNom(f.getNom());
         dto.setDescription(f.getDescription());
+        dto.setIdEcole(f.getIdEcole());
         if (f.getClasses() != null) {
             dto.setClasses(f.getClasses().stream().map(c -> {
                 ClasseDTO cd = new ClasseDTO();
@@ -75,6 +78,7 @@ public class FiliereService {
                 cd.setNiveau(c.getNiveau());
                 cd.setIdFiliere(f.getIdFiliere());
                 cd.setNomFiliere(f.getNom());
+                cd.setIdEcole(f.getIdEcole());
                 return cd;
             }).collect(Collectors.toList()));
         }

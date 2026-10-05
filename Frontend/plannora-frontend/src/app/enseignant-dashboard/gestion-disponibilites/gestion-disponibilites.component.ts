@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { PlanningService, DisponibiliteDTO } from '../../services/planning.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { EcoleDTO, EcoleService } from '../../services/ecole.service';
 
 interface TimeSlot {
     time: string;
@@ -18,11 +20,13 @@ interface Day {
 @Component({
     selector: 'app-gestion-disponibilites',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './gestion-disponibilites.component.html',
     styleUrl: './gestion-disponibilites.component.css'
 })
 export class GestionDisponibilitesComponent implements OnInit {
+    ecoles: EcoleDTO[] = [];
+    selectedEcoleId = '';
 
     weekDays: Day[] = [];
     timeSlots: TimeSlot[] = [];
@@ -46,7 +50,8 @@ export class GestionDisponibilitesComponent implements OnInit {
     constructor(
         private planningService: PlanningService,
         private authService: AuthService,
-        private notification: NotificationService
+        private notification: NotificationService,
+        private ecoleService: EcoleService
     ) {
         this.initTimeSlots();
     }
@@ -58,6 +63,10 @@ export class GestionDisponibilitesComponent implements OnInit {
         }
 
         this.setWeekToCurrent();
+        this.ecoleService.obtenirToutes().subscribe(ecoles => {
+            this.ecoles = ecoles;
+            if (!this.selectedEcoleId) this.selectedEcoleId = ecoles[0]?.idEcole ?? '';
+        });
         this.loadDisponibilites();
     }
 
@@ -268,6 +277,7 @@ export class GestionDisponibilitesComponent implements OnInit {
 
             const newDispo: DisponibiliteDTO = {
                 enseignantId: this.enseignantId,
+                idEcole: this.selectedEcoleId,
                 dateHeureDebut: dStart.toISOString(),
                 dateHeureFin: dEnd.toISOString()
             };

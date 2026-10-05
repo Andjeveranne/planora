@@ -90,8 +90,9 @@
           </label>
           <select class="filter-select" [(ngModel)]="filterEcole" (change)="applyFilters()">
             <option value="all">Toutes les écoles</option>
-            <option value="SAINT_JEAN_INGENIEUR">Saint Jean Ingénieur</option>
-            <option value="SAINT_JEAN_COMMERCE">Saint Jean Commerce</option>
+            @for (ecole of ecoles; track ecole.idEcole) {
+              <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+            }
           </select>
         </div>
 
@@ -154,7 +155,12 @@
                 </select>
               </div>
               <div class="form-group">
-                <!-- Espace vide pour l'alignement -->
+                <label for="ecole">Écoles *</label>
+                <select id="ecole" [(ngModel)]="newEnseignant.idEcoles" name="idEcoles" multiple required>
+                  @for (ecole of ecoles; track ecole.idEcole) {
+                    <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                  }
+                </select>
               </div>
             </div>
             <div class="form-actions">
@@ -184,13 +190,14 @@
               <th class="sortable">
                 Département
               </th>
+              <th>École</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             @if (isLoadingEnseignants) {
               <tr>
-                <td colspan="5" class="loading-cell">
+                <td colspan="6" class="loading-cell">
                   <div class="spinner-border" role="status">
                     <span class="visually-hidden">Chargement...</span>
                   </div>
@@ -199,7 +206,7 @@
             } @else {
               @if (filteredEnseignants.length === 0) {
                 <tr>
-                  <td colspan="5" class="empty-cell">
+                  <td colspan="6" class="empty-cell">
                     <div class="empty-state">
                       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" stroke-width="1">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -219,6 +226,7 @@
                     <td class="email-cell">{{ enseignant.email }}</td>
                     <td class="specialty-cell">{{ enseignant.specialite || 'Non définie' }}</td>
                     <td class="dept-cell">{{ enseignant.departement || 'Non défini' }}</td>
+                    <td>{{ getSchoolName(enseignant.idEcole) }}</td>
                     <td class="actions-cell">
                       <div class="dropdown-container">
                         <button class="action-menu-btn" (click)="toggleDropdown(enseignant.idUser || '', $event)" title="Actions">
@@ -758,6 +766,14 @@
                 <option value="Mathématiques">Mathématiques</option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="edit-ecole">Écoles *</label>
+              <select id="edit-ecole" [(ngModel)]="editForm.idEcoles" name="idEcoles" multiple required>
+                @for (ecole of ecoles; track ecole.idEcole) {
+                  <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                }
+              </select>
+            </div>
           </div>
         </form>
       </div>
@@ -817,6 +833,16 @@
               </div>
               
               <form class="assignment-form">
+                <div class="form-group">
+                  <label for="assignment-school">École de l'assignation</label>
+                  <select id="assignment-school" [(ngModel)]="assignmentForm.idEcole" name="assignmentSchool" class="form-control">
+                    @for (ecole of ecoles; track ecole.idEcole) {
+                      @if (selectedEnseignant.idEcoles?.includes(ecole.idEcole || '') || selectedEnseignant.idEcole === ecole.idEcole) {
+                        <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                      }
+                    }
+                  </select>
+                </div>
                 <div class="competences-section">
                   <h5>Types de cours autorisés</h5>
                   <div class="checkbox-group">

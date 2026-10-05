@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "ues")
@@ -52,6 +53,12 @@ public class UE {
     /** Heures de travaux pratiques */
     @Column(name = "heures_tp")
     private Integer heuresTP;
+
+    @Column(name = "heure_debut")
+    private LocalTime heureDebut;
+
+    @Column(name = "heure_fin")
+    private LocalTime heureFin;
 
     /** Niveau ciblé : ING1, ING2, ING3, ING4, ING5, L1, L2, L3, M1, M2... */
     @Column(name = "niveau", length = 50)

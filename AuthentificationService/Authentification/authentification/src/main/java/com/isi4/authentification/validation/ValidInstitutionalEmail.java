@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidInstitutionalEmail {
-    String message() default "L'email doit être au format prenom.nom@saintjeaningenieur.org";
+    String message() default "L'email doit être au format prenom.nom@ictuniversity.org";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

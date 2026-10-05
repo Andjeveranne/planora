@@ -124,7 +124,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     telephone: '',
     role: 'ENSEIGNANT',
     specialite: '',
-    departement: ''
+    departement: '',
+    idEcole: '',
+    idEcoles: []
   };
 
   constructor(
@@ -478,7 +480,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.newEnseignant = {
       email: '', mdp: '', nomUser: '', prenomUser: '',
-      telephone: '', role: 'ENSEIGNANT', specialite: '', departement: ''
+      telephone: '', role: 'ENSEIGNANT', specialite: '', departement: '',
+      idEcole: '', idEcoles: []
     };
     this.errorMessage = '';
     this.successMessage = '';
@@ -668,8 +671,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next: (edtData: EmploiDuTempsDTO[]) => {
         // Filtrer les données pour la semaine courante
         const filteredData = edtData.filter(edt => {
-          const edtDate = new Date(edt.dateJour);
-          return edtDate >= this.currentWeekStart && edtDate <= weekEnd;
+          const dateJour = edt.dateJour ?? '';
+          if (!dateJour) return false;
+          const edtDate = new Date(dateJour);
+          return !isNaN(edtDate.getTime()) && edtDate >= this.currentWeekStart && edtDate <= weekEnd;
         });
         
         if (filteredData.length > 0) {
@@ -703,13 +708,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     edtData.forEach(edt => {
       const dateKey = `${edt.dateJour}_${edt.heureDebut}h`;
       const slot: EdtSlot = {
-        jour: edt.jour,
-        heureDebut: `${edt.heureDebut}h`,
-        heureFin: `${edt.heureFin}h`,
-        ue: edt.ue,
-        classe: edt.classe,
-        salle: edt.salle,
-        type: edt.typeCours,
+        jour: edt.jour ?? '',
+        heureDebut: `${edt.heureDebut ?? ''}h`,
+        heureFin: `${edt.heureFin ?? ''}h`,
+        ue: edt.ue ?? '',
+        classe: edt.classe ?? '',
+        salle: edt.salle ?? '',
+        type: edt.typeCours ?? '',
         dateKey: dateKey
       };
       this.edtMap.set(dateKey, slot);
@@ -1399,7 +1404,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             specialite: specialite || '',
             departement: departement || '',
             role: role || 'ENSEIGNANT',
-            mdp: this.generateRandomPassword()
+            mdp: this.generateRandomPassword(),
+            idEcole: '',
+            idEcoles: []
           });
         });
 
@@ -1491,7 +1498,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       telephone: enseignant.telephone || '',
       role: 'ENSEIGNANT',
       specialite: enseignant.specialite || '',
-      departement: enseignant.departement || ''
+      departement: enseignant.departement || '',
+      idEcole: enseignant.idEcole || '',
+      idEcoles: enseignant.idEcoles ?? (enseignant.idEcole ? [enseignant.idEcole] : [])
     };
     this.showAddEnseignantForm = true;
     this.successMessage = `Modification de ${enseignant.prenomUser} ${enseignant.nomUser}`;

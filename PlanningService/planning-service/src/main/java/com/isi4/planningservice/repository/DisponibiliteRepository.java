@@ -9,6 +9,11 @@ import java.util.List;
 
 @Repository
 public interface DisponibiliteRepository extends JpaRepository<Disponibilite, Long> {
+
+    boolean existsByEnseignantIdAndDateHeureDebutLessThanAndDateHeureFinGreaterThan(
+            String enseignantId, java.time.LocalDateTime fin, java.time.LocalDateTime debut);
+
+    List<Disponibilite> findByEnseignantIdAndIdEcoleOrderByDateHeureDebutAsc(String enseignantId, String idEcole);
     List<Disponibilite> findByEnseignantIdOrderByDateHeureDebutAsc(String enseignantId);
     List<Disponibilite> findByEnseignantIdAndDateHeureDebutBetween(String enseignantId, LocalDateTime start, LocalDateTime end);
     void deleteByEnseignantId(String enseignantId);

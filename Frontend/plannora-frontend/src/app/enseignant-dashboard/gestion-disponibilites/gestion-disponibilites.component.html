@@ -27,6 +27,15 @@
             changements.</p>
     </div>
 
+    <div class="school-selection">
+      <label for="availability-school">École concernée</label>
+      <select id="availability-school" [(ngModel)]="selectedEcoleId" [disabled]="saving">
+        @for (ecole of ecoles; track ecole.idEcole) {
+          <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+        }
+      </select>
+    </div>
+
     <div class="calendar-container">
         <table class="calendar-table">
             <thead>

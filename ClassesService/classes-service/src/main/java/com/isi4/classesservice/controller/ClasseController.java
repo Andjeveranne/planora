@@ -40,6 +40,11 @@ public class ClasseController {
         return ResponseEntity.ok(classeService.obtenirParFiliere(idFiliere));
     }
 
+    @GetMapping("/ecole/{idEcole}")
+    public ResponseEntity<List<ClasseDTO>> obtenirParEcole(@PathVariable String idEcole) {
+        return ResponseEntity.ok(classeService.obtenirParEcole(idEcole));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClasseDTO> mettreAJour(@PathVariable String id, @Valid @RequestBody ClasseDTO dto) {

@@ -18,5 +18,7 @@ public class FiliereDTO {
 
     private String description;
 
+    private String idEcole;
+
     private List<ClasseDTO> classes;
 }

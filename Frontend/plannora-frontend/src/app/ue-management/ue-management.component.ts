@@ -214,6 +214,7 @@ export class UEManagementComponent implements OnInit {
       codeUE: '', nomUE: '', description: '',
       nombreCredit: undefined, nombreHeur: undefined,
       heuresCM: undefined, heuresTD: undefined, heuresTP: undefined,
+      heureDebut: '08:00', heureFin: '18:00',
       niveau: undefined, idFiliere: undefined, nomFiliere: undefined
     };
   }

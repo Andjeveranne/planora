@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { PlanningService, EmploiDuTempsDTO, DisponibiliteDTO } from '../services/planning.service';
+import { EmploiDuTempsService, UEEnseignantDTO } from '../services/emploi-du-temps.service';
 import { NotificationService } from '../services/notification.service';
+import { NotificationApiService, TeacherNotification } from '../services/notification-api.service';
 import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
 
 interface UserInfo {
@@ -58,7 +60,7 @@ interface EdtSlot {
   templateUrl: './enseignant-dashboard.component.html',
   styleUrls: ['./enseignant-dashboard.component.css']
 })
-export class EnseignantDashboardComponent implements OnInit {
+export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   userInfo: UserInfo | null = null;
   plannings: Planning[] = [];
   totalHeures: number = 0;
@@ -203,10 +205,17 @@ export class EnseignantDashboardComponent implements OnInit {
   edtMap: Map<string, EdtSlot> = new Map();
   hasEdt: boolean = false;
   isLoadingEdt: boolean = false;
+  assignedCourses: UEEnseignantDTO[] = [];
+  isLoadingCourses = false;
+  teacherNotifications: TeacherNotification[] = [];
+  isLoadingNotifications = false;
+  private notificationRefreshHandle?: number;
 
   constructor(
     private authService: AuthService,
     private planningService: PlanningService,
+    private emploiDuTempsService: EmploiDuTempsService,
+    private notificationApi: NotificationApiService,
     private notification: NotificationService
   ) {
     this.initTimeSlots();
@@ -219,12 +228,54 @@ export class EnseignantDashboardComponent implements OnInit {
     this.userInfo = this.authService.getCurrentUser();
     this.setWeekToCurrent();
     this.loadEdt();
+    this.loadAssignedCourses();
+    this.loadTeacherNotifications();
+    this.notificationRefreshHandle = window.setInterval(() => this.loadTeacherNotifications(), 60000);
     this.loadExistingDisponibilites(); // Load existing availabilities
 
     // Initialize empty plannings - no demo data
     this.plannings = [];
 
     this.calculerTotalHeures();
+  }
+
+  ngOnDestroy(): void {
+    if (this.notificationRefreshHandle !== undefined) window.clearInterval(this.notificationRefreshHandle);
+  }
+
+  loadTeacherNotifications(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user?.userId) return;
+    this.isLoadingNotifications = true;
+    this.notificationApi.getForTeacher(String(user.userId)).subscribe({
+      next: notifications => {
+        this.teacherNotifications = notifications;
+        this.isLoadingNotifications = false;
+      },
+      error: error => {
+        console.error('Erreur de chargement des notifications', error);
+        this.isLoadingNotifications = false;
+      }
+    });
+  }
+
+  markTeacherNotificationRead(notification: TeacherNotification): void {
+    if (notification.statut === 'LU') return;
+    this.notificationApi.markRead(notification.id).subscribe({
+      next: updated => {
+        this.teacherNotifications = this.teacherNotifications.map(item => item.id === updated.id ? updated : item);
+      },
+      error: error => console.error('Erreur de mise à jour de notification', error)
+    });
+  }
+
+  markAllTeacherNotificationsRead(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user?.userId) return;
+    this.notificationApi.markAllRead(String(user.userId)).subscribe({
+      next: () => this.loadTeacherNotifications(),
+      error: error => console.error('Erreur de mise à jour des notifications', error)
+    });
   }
 
   private clearCachedData(): void {
@@ -263,13 +314,10 @@ export class EnseignantDashboardComponent implements OnInit {
   }
 
   initTimeSlots(): void {
-    this.timeSlots = [];
-    for (let h = 8; h < 18; h++) {
-      this.timeSlots.push({
-        time: `${h}h - ${h + 1}h`,
-        startHour: h
-      });
-    }
+    this.timeSlots = [8, 10, 12, 14, 16].map(hour => ({
+      time: `${hour}h - ${hour + 2}h`,
+      startHour: hour
+    }));
   }
 
   setWeekToCurrent(): void {
@@ -319,26 +367,19 @@ export class EnseignantDashboardComponent implements OnInit {
     weekEnd.setDate(weekEnd.getDate() + 6);
     const dateFin = this.formatDate(weekEnd);
     
-    // Essayer d'abord de charger depuis UserService (données plus récentes)
-    this.planningService.getEdtFromUserService(userId).subscribe({
+    this.planningService.getEdtByEnseignantAndWeek(userId, dateDebut, dateFin).subscribe({
       next: (edtData: EmploiDuTempsDTO[]) => {
-        // Filtrer les données pour la semaine courante
-        const filteredData = edtData.filter(edt => {
-          const edtDate = new Date(edt.dateJour);
-          return edtDate >= this.currentWeekStart && edtDate <= weekEnd;
-        });
-        
-        if (filteredData.length > 0) {
-          console.log('EDT chargé depuis UserService:', filteredData);
-          this.processEdtDataTeacher(filteredData);
-        } else {
-          // Fallback vers PlanningService si aucune donnée dans UserService
-          this.loadEdtFromPlanningServiceTeacher(userId, dateDebut, dateFin);
-        }
+        const weekStart = this.currentWeekStart.getTime();
+        const weekEndTime = new Date(dateFin).getTime() + 86400000;
+        this.processEdtDataTeacher(edtData.filter(edt => {
+          const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut).getTime() : NaN;
+          return Number.isFinite(start) && start >= weekStart && start < weekEndTime;
+        }));
       },
       error: (error) => {
-        console.warn('Erreur lors du chargement depuis UserService, fallback vers PlanningService:', error);
-        this.loadEdtFromPlanningServiceTeacher(userId, dateDebut, dateFin);
+        console.error('Erreur chargement EDT:', error);
+        this.hasEdt = false;
+        this.isLoadingEdt = false;
       }
     });
   }
@@ -359,22 +400,68 @@ export class EnseignantDashboardComponent implements OnInit {
 
   private processEdtDataTeacher(edtData: EmploiDuTempsDTO[]): void {
     this.edtMap.clear();
+    this.plannings = [];
     edtData.forEach(edt => {
-      const dateKey = `${edt.dateJour}_${edt.heureDebut}h`;
+      const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut) : null;
+      const end = edt.dateHeureFin ? new Date(edt.dateHeureFin) : null;
+      const dateJour = start ? this.formatDate(start) : edt.dateJour;
+      const heureDebut = start?.getHours() ?? edt.heureDebut;
+      const heureFin = end?.getHours() ?? edt.heureFin;
+      if (!dateJour || heureDebut == null || heureFin == null) return;
+      const dateKey = `${dateJour}_${heureDebut}h`;
+      const ueLabel = edt.codeUE
+        ? `${edt.codeUE}${edt.nomUE ? ` - ${edt.nomUE}` : ''}`
+        : edt.ue ?? edt.typeCours;
+      const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
+      const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
+      const jourLabel = start
+        ? ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][start.getDay()]
+        : edt.jour ?? '';
       const slot: EdtSlot = {
-        jour: edt.jour,
-        heureDebut: `${edt.heureDebut}h`,
-        heureFin: `${edt.heureFin}h`,
-        ue: edt.ue,
-        classe: edt.classe,
-        salle: edt.salle,
+        jour: jourLabel,
+        heureDebut: `${heureDebut}h`,
+        heureFin: `${heureFin}h`,
+        ue: ueLabel,
+        classe: classeLabel,
+        salle: salleLabel,
         type: edt.typeCours,
-        dateKey: dateKey
+        dateKey
       };
       this.edtMap.set(dateKey, slot);
+      if (edt.typeCours !== 'TPE') {
+        this.plannings.push({
+          id: edt.id ?? 0,
+          cours: `${ueLabel} (${edt.typeCours}) - ${classeLabel}`,
+          salle: salleLabel,
+          jour: jourLabel,
+          heureDebut: `${heureDebut}h`,
+          heureFin: `${heureFin}h`
+        });
+      }
     });
     this.hasEdt = edtData.length > 0;
+    this.calculerTotalHeures();
     this.isLoadingEdt = false;
+  }
+
+  loadAssignedCourses(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user?.userId) {
+      this.assignedCourses = [];
+      return;
+    }
+    this.isLoadingCourses = true;
+    this.emploiDuTempsService.getUEEnseignantsParEnseignant(String(user.userId)).subscribe({
+      next: courses => {
+        this.assignedCourses = courses;
+        this.isLoadingCourses = false;
+      },
+      error: error => {
+        console.error('Erreur lors du chargement des cours assignés:', error);
+        this.assignedCourses = [];
+        this.isLoadingCourses = false;
+      }
+    });
   }
 
   formatDate(date: Date): string {
@@ -422,7 +509,7 @@ export class EnseignantDashboardComponent implements OnInit {
   }
 
   getTotalHeuresWeek(): number {
-    return this.getTotalCoursWeek(); // Chaque créneau = 1h
+    return this.getTotalCoursWeek() * 2;
   }
 
   // Vérifie si un jour est passé (avant aujourd'hui)
@@ -471,8 +558,8 @@ export class EnseignantDashboardComponent implements OnInit {
   }
 
   convertirHeureEnMinutes(heure: string): number {
-    const [h, m] = heure.split(':').map(Number);
-    return h * 60 + m;
+    const [hourText, minuteText = '0'] = heure.replace('h', '').split(':');
+    return Number(hourText) * 60 + Number(minuteText);
   }
 
   logout(): void {
@@ -660,6 +747,7 @@ export class EnseignantDashboardComponent implements OnInit {
 
     return {
       enseignantId: enseignantId,
+      idEcole: (this.userInfo as any)?.idEcole || (this.userInfo as any)?.idEcoles?.[0] || '',
       dateHeureDebut: formatLocalDateTime(dateHeureDebut),
       dateHeureFin: formatLocalDateTime(dateHeureFin),
       commentaire: `Disponibilité pour le ${dispo.jour} ${dispo.date}`

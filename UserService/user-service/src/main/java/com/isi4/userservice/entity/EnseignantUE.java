@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "enseignant_ues")
+@Table(name = "enseignant_ues", uniqueConstraints = @UniqueConstraint(name = "uk_ue_school_assignment", columnNames = {"ue_id", "id_ecole"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,6 +20,9 @@ public class EnseignantUE {
     
     @Column(nullable = false)
     private Long ueId;
+
+    @Column(name = "id_ecole", length = 100)
+    private String idEcole;
     
     @Column(nullable = false)
     private String codeUE;

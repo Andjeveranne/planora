@@ -39,9 +39,9 @@ planning-service/
 ### Base de données
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/planning_db
-spring.datasource.username=postgres
-spring.datasource.password=postgres
+spring.datasource.url=jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:plannoradb}
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:}
 ```
 
 ### JWT

@@ -43,9 +43,17 @@ public class DataInitializer implements CommandLineRunner {
                 "  id_filiere  VARCHAR(100) NOT NULL," +
                 "  nom         VARCHAR(100) NOT NULL," +
                 "  description VARCHAR(255)," +
+                "  id_ecole    VARCHAR(100)," +
                 "  PRIMARY KEY (id_filiere)" +
                 ")"
             );
+            Integer schoolColumnCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS " +
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'filieres' AND COLUMN_NAME = 'id_ecole'",
+                Integer.class);
+            if (schoolColumnCount == null || schoolColumnCount == 0) {
+                jdbcTemplate.execute("ALTER TABLE filieres ADD COLUMN id_ecole VARCHAR(100) NULL");
+            }
             log.info("Table 'filieres' vérifiée/créée.");
         } catch (Exception e) {
             log.error("Erreur création table 'filieres': {}", e.getMessage());
@@ -109,6 +117,10 @@ public class DataInitializer implements CommandLineRunner {
         boolean classesExist  = classeRepository.count() > 0;
 
         if (filieresExist && classesExist) {
+            assignDefaultSchool(filiereRepository.findById("fil-isi").orElse(null));
+            assignDefaultSchool(filiereRepository.findById("fil-srt").orElse(null));
+            assignDefaultSchool(filiereRepository.findById("fil-ge").orElse(null));
+            assignDefaultSchool(filiereRepository.findById("fil-gc").orElse(null));
             log.info("Données déjà initialisées ({} filieres, {} classes).",
                      filiereRepository.count(), classeRepository.count());
             return;
@@ -121,16 +133,20 @@ public class DataInitializer implements CommandLineRunner {
         if (!filieresExist) {
             isi = filiereRepository.save(Filiere.builder()
                     .idFiliere("fil-isi").nom("ISI")
-                    .description("Informatique et Systèmes d'Information").build());
+                    .description("Informatique et Systèmes d'Information")
+                    .idEcole("SAINT_JEAN_INGENIEUR").build());
             srt = filiereRepository.save(Filiere.builder()
                     .idFiliere("fil-srt").nom("SRT")
-                    .description("Systèmes, Réseaux et Télécoms").build());
+                    .description("Systèmes, Réseaux et Télécoms")
+                    .idEcole("SAINT_JEAN_INGENIEUR").build());
             ge  = filiereRepository.save(Filiere.builder()
                     .idFiliere("fil-ge").nom("Genie Electrique")
-                    .description("Filière Génie Électrique").build());
+                    .description("Filière Génie Électrique")
+                    .idEcole("SAINT_JEAN_INGENIEUR").build());
             gc  = filiereRepository.save(Filiere.builder()
                     .idFiliere("fil-gc").nom("Genie Civil")
-                    .description("Filière Génie Civil").build());
+                    .description("Filière Génie Civil")
+                    .idEcole("SAINT_JEAN_INGENIEUR").build());
             log.info("4 filières créées.");
         } else {
             // Filieres exist but classes might have been wiped by schema repair
@@ -138,6 +154,10 @@ public class DataInitializer implements CommandLineRunner {
             srt = filiereRepository.findById("fil-srt").orElse(null);
             ge  = filiereRepository.findById("fil-ge").orElse(null);
             gc  = filiereRepository.findById("fil-gc").orElse(null);
+            assignDefaultSchool(isi);
+            assignDefaultSchool(srt);
+            assignDefaultSchool(ge);
+            assignDefaultSchool(gc);
             log.info("Filières existantes récupérées.");
         }
 
@@ -161,5 +181,12 @@ public class DataInitializer implements CommandLineRunner {
                 .niveau(niveau)
                 .filiere(filiere)
                 .build();
+    }
+
+    private void assignDefaultSchool(Filiere filiere) {
+        if (filiere != null && filiere.getIdEcole() == null) {
+            filiere.setIdEcole("SAINT_JEAN_INGENIEUR");
+            filiereRepository.save(filiere);
+        }
     }
 }
