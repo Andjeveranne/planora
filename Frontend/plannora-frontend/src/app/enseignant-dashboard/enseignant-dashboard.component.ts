@@ -7,6 +7,7 @@ import { EmploiDuTempsService, UEEnseignantDTO } from '../services/emploi-du-tem
 import { NotificationService } from '../services/notification.service';
 import { NotificationApiService, TeacherNotification } from '../services/notification-api.service';
 import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
+import { EcoleService } from '../services/ecole.service';
 
 interface UserInfo {
   nom: string;
@@ -20,6 +21,7 @@ interface Planning {
   id: number;
   cours: string;
   salle: string;
+  ecole: string;
   jour: string;
   heureDebut: string;
   heureFin: string;
@@ -49,6 +51,7 @@ interface EdtSlot {
   ue: string;
   classe: string;
   salle: string;
+  ecole: string;
   type: string;
   dateKey?: string; // Clé avec date complète pour filtrage par semaine
 }
@@ -205,6 +208,8 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   edtMap: Map<string, EdtSlot> = new Map();
   hasEdt: boolean = false;
   isLoadingEdt: boolean = false;
+  private ecolesById = new Map<string, string>();
+  private lastTeacherEdtData: EmploiDuTempsDTO[] = [];
   assignedCourses: UEEnseignantDTO[] = [];
   isLoadingCourses = false;
   teacherNotifications: TeacherNotification[] = [];
@@ -216,7 +221,8 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     private planningService: PlanningService,
     private emploiDuTempsService: EmploiDuTempsService,
     private notificationApi: NotificationApiService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private ecoleService: EcoleService
   ) {
     this.initTimeSlots();
   }
@@ -228,6 +234,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     this.userInfo = this.authService.getCurrentUser();
     this.setWeekToCurrent();
     this.loadEdt();
+    this.loadEcoles();
     this.loadAssignedCourses();
     this.loadTeacherNotifications();
     this.notificationRefreshHandle = window.setInterval(() => this.loadTeacherNotifications(), 60000);
@@ -347,6 +354,22 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadEcoles(): void {
+    this.ecoleService.obtenirToutes().subscribe({
+      next: ecoles => {
+        this.ecolesById = new Map(
+          ecoles
+            .filter(ecole => !!ecole.idEcole)
+            .map(ecole => [ecole.idEcole!, ecole.nomEcole] as const)
+        );
+        if (this.lastTeacherEdtData.length) {
+          this.processEdtDataTeacher(this.lastTeacherEdtData);
+        }
+      },
+      error: error => console.error('Erreur lors du chargement des écoles:', error)
+    });
+  }
+
   loadEdt(): void {
     // Charger l'EDT depuis l'API (généré par l'admin)
     const user = this.authService.getCurrentUser();
@@ -357,7 +380,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
       console.warn('Utilisateur non connecté ou sans ID');
       return;
     }
-    
+
     const userId = (user as any).userId;
     this.isLoadingEdt = true;
     
@@ -399,6 +422,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private processEdtDataTeacher(edtData: EmploiDuTempsDTO[]): void {
+    this.lastTeacherEdtData = edtData;
     this.edtMap.clear();
     this.plannings = [];
     edtData.forEach(edt => {
@@ -414,6 +438,9 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
         : edt.ue ?? edt.typeCours;
       const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
       const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
+      const ecoleLabel = edt.idEcole
+        ? this.ecolesById.get(edt.idEcole) ?? edt.idEcole
+        : 'École non renseignée';
       const jourLabel = start
         ? ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][start.getDay()]
         : edt.jour ?? '';
@@ -424,6 +451,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
         ue: ueLabel,
         classe: classeLabel,
         salle: salleLabel,
+        ecole: ecoleLabel,
         type: edt.typeCours,
         dateKey
       };
@@ -433,6 +461,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
           id: edt.id ?? 0,
           cours: `${ueLabel} (${edt.typeCours}) - ${classeLabel}`,
           salle: salleLabel,
+          ecole: ecoleLabel,
           jour: jourLabel,
           heureDebut: `${heureDebut}h`,
           heureFin: `${heureFin}h`

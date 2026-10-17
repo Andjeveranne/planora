@@ -82,7 +82,7 @@
                       <div class="course-day">{{ planning.jour }}</div>
                       <div class="course-info">
                         <div class="course-name">{{ planning.cours }}</div>
-                        <div class="course-meta">{{ planning.heureDebut }} - {{ planning.heureFin }} • Salle {{ planning.salle }}</div>
+                        <div class="course-meta">{{ planning.heureDebut }} - {{ planning.heureFin }} • Salle {{ planning.salle }} • {{ planning.ecole }}</div>
                       </div>
                     </div>
                   }
@@ -147,11 +147,13 @@
                           @if (edtSlot) {
                             <div class="course-card" [class]="'type-' + edtSlot.type.toLowerCase()">
                               <div class="course-ue">{{ edtSlot.ue }}</div>
+                              <div class="course-time">{{ edtSlot.heureDebut }} - {{ edtSlot.heureFin }}</div>
                               <div class="course-meta">
                                 <span class="course-type">{{ edtSlot.type }}</span>
                                 <span class="course-classe">{{ edtSlot.classe }}</span>
                               </div>
                               <div class="course-salle">📍 {{ edtSlot.salle }}</div>
+                              <div class="course-school">🏫 {{ edtSlot.ecole }}</div>
                             </div>
                           }
                         </td>

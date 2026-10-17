@@ -16,6 +16,9 @@ public interface EnseignantUERepository extends JpaRepository<EnseignantUE, Long
     List<EnseignantUE> findByUeId(Long ueId);
     
     Optional<EnseignantUE> findByEnseignantIdAndUeId(String enseignantId, Long ueId);
+
+    Optional<EnseignantUE> findByEnseignantIdAndUeIdAndIdEcole(
+            String enseignantId, Long ueId, String idEcole);
     
     List<EnseignantUE> findByEnseignantIdAndPeutCMTrue(String enseignantId);
     

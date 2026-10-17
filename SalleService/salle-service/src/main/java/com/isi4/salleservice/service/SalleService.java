@@ -23,6 +23,7 @@ public class SalleService {
     
     // Créer une nouvelle salle
     public SalleDTO creerSalle(SalleDTO salleDTO) {
+        validerClasseAssociee(salleDTO);
         // Vérifier si une salle avec le même nom existe déjà dans cette école
         if (salleRepository.existsByNomSalleAndIdEcole(salleDTO.getNomSalle(), salleDTO.getIdEcole())) {
             throw new ValidationException("Une salle avec ce nom existe déjà dans cette école");
@@ -85,6 +86,7 @@ public class SalleService {
     
     // Mettre à jour une salle
     public SalleDTO mettreAJourSalle(String idSalle, SalleDTO salleDTO) {
+        validerClasseAssociee(salleDTO);
         Salle salleExistante = salleRepository.findById(idSalle)
                 .orElseThrow(() -> new ResourceNotFoundException("Salle non trouvée avec l'ID: " + idSalle));
         
@@ -101,6 +103,7 @@ public class SalleService {
         salleExistante.setCapacite(salleDTO.getCapacite());
         salleExistante.setCapaciteExam(salleDTO.getCapaciteExam());
         salleExistante.setIdEcole(salleDTO.getIdEcole());
+        salleExistante.setIdClasse(salleDTO.getIdClasse());
         salleExistante.setStatut(salleDTO.getStatut());
         
         Salle salleMiseAJour = salleRepository.save(salleExistante);
@@ -135,8 +138,16 @@ public class SalleService {
         salle.setCapacite(dto.getCapacite());
         salle.setCapaciteExam(dto.getCapaciteExam());
         salle.setIdEcole(dto.getIdEcole());
+        salle.setIdClasse(dto.getIdClasse());
         salle.setStatut(dto.getStatut());
         return salle;
+    }
+
+    private void validerClasseAssociee(SalleDTO dto) {
+        if (dto.getType() == TypeSalle.SALLE_COURS
+                && (dto.getIdClasse() == null || dto.getIdClasse().isBlank())) {
+            throw new ValidationException("Une salle de cours doit être attribuée à une classe.");
+        }
     }
     
     private SalleDTO convertirEntityVersDTO(Salle salle) {
@@ -148,6 +159,7 @@ public class SalleService {
         dto.setCapacite(salle.getCapacite());
         dto.setCapaciteExam(salle.getCapaciteExam());
         dto.setIdEcole(salle.getIdEcole());
+        dto.setIdClasse(salle.getIdClasse());
         dto.setStatut(salle.getStatut());
         return dto;
     }

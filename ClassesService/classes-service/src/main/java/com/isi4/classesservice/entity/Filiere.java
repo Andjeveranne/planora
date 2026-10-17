@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "filieres")
+@Table(name = "filieres", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_filieres_nom_ecole", columnNames = {"nom", "id_ecole"})
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,7 +22,7 @@ public class Filiere {
     private String idFiliere;
 
     @NotBlank
-    @Column(name = "nom", nullable = false, unique = true, length = 100)
+    @Column(name = "nom", nullable = false, length = 100)
     private String nom;
 
     @Column(name = "description", length = 500)

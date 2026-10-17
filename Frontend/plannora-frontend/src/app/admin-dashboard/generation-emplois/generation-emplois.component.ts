@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EmploiDuTempsService, EmploiDuTempsDTO } from '../../services/emploi-du-temps.service';
 import { EcoleService, EcoleDTO } from '../../services/ecole.service';
+import { ClassesService, FiliereDTO, SpecialiteDTO } from '../../services/classes.service';
 
 interface EnseignantDispo {
   enseignantId: string;
@@ -35,6 +36,8 @@ interface SlotGrid {
 export class GenerationEmploisComponent implements OnInit {
 
   ecoles: EcoleDTO[] = [];
+  filieres: FiliereDTO[] = [];
+  specialitesDisponibles: SpecialiteDTO[] = [];
   selectedEcoleId: string = '';
   selectedDepartement = '';
   selectedSpecialite = '';
@@ -62,11 +65,20 @@ export class GenerationEmploisComponent implements OnInit {
 
   constructor(
     private emploiDuTempsService: EmploiDuTempsService,
-    private ecoleService: EcoleService
+    private ecoleService: EcoleService,
+    private classesService: ClassesService
   ) {}
 
   ngOnInit(): void {
     this.loadEcoles();
+    this.classesService.getFilieres().subscribe({
+      next: (filieres) => this.filieres = filieres,
+      error: () => this.messages.error = 'Impossible de charger les départements.'
+    });
+    this.classesService.getSpecialites().subscribe({
+      next: (specialites) => this.specialitesDisponibles = specialites,
+      error: () => this.messages.error = 'Impossible de charger les spécialités.'
+    });
     this.loadEnseignantsDispo();
   }
 
@@ -125,11 +137,21 @@ export class GenerationEmploisComponent implements OnInit {
   }
 
   get departements(): string[] {
-    return [...new Set(this.enseignantsDispo.map(teacher => teacher.departement).filter((value): value is string => !!value))].sort();
+    return this.filieres
+      .filter(filiere => !this.selectedEcoleId || filiere.idEcole === this.selectedEcoleId)
+      .map(filiere => filiere.nom)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   get specialites(): string[] {
-    return [...new Set(this.enseignantsDispo.map(teacher => teacher.specialite).filter((value): value is string => !!value))].sort();
+    const department = this.filieres.find(filiere =>
+      filiere.nom === this.selectedDepartement &&
+      (!this.selectedEcoleId || filiere.idEcole === this.selectedEcoleId)
+    );
+    return this.specialitesDisponibles
+      .filter(specialite => specialite.idFiliere === department?.idFiliere)
+      .map(specialite => specialite.nom)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   generer(): void {

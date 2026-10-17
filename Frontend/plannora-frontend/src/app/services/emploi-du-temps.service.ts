@@ -137,11 +137,11 @@ export class EmploiDuTempsService {
 
   // Gestion UE-Enseignant
   creerUEEnseignant(ueEnseignant: UEEnseignantDTO): Observable<UEEnseignantDTO> {
-    return this.http.post<UEEnseignantDTO>(`${this.baseUrl}/ue-enseignants`, ueEnseignant);
+    return this.http.post<UEEnseignantDTO>('http://localhost:8081/api/enseignant-ues', ueEnseignant);
   }
 
   ajouterUEEnseignant(ueEnseignant: UEEnseignantDTO): Observable<UEEnseignantDTO> {
-    return this.http.post<UEEnseignantDTO>(`${this.baseUrl}/ue-enseignants`, ueEnseignant);
+    return this.creerUEEnseignant(ueEnseignant);
   }
 
   getUEEnseignants(): Observable<UEEnseignantDTO[]> {
@@ -157,7 +157,7 @@ export class EmploiDuTempsService {
   }
 
   mettreAJourUEEnseignant(id: number, ueEnseignant: UEEnseignantDTO): Observable<UEEnseignantDTO> {
-    return this.http.put<UEEnseignantDTO>(`${this.baseUrl}/ue-enseignants/${id}`, ueEnseignant);
+    return this.http.put<UEEnseignantDTO>(`http://localhost:8081/api/enseignant-ues/${id}`, ueEnseignant);
   }
 
   supprimerUEEnseignant(id: number): Observable<void> {

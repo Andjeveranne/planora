@@ -40,6 +40,7 @@ public class FordFulkersonScheduler {
     public static class Salle {
         private String id;
         private String idEcole;
+        private String idClasse;
         private String nom;
         private Integer capacite;
         private String type;
@@ -216,6 +217,8 @@ public class FordFulkersonScheduler {
         return salles.stream()
             .filter(salle -> request.getIdEcole() == null || request.getIdEcole().isBlank()
                 || request.getIdEcole().equals(salle.getIdEcole()))
+                .filter(salle -> salle.getIdClasse() == null || salle.getIdClasse().isBlank()
+                    || request.getClasseId().equals(salle.getIdClasse()))
                 .filter(salle -> salle.getCapacite() >= request.getEffectifClasse())
                 .filter(salle -> isTypeCompatible(salle.getType(), request.getTypeCours()))
                 .collect(Collectors.toList());

@@ -42,6 +42,12 @@ public class EnseignantUEController {
         return ResponseEntity.ok(result);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<EnseignantUEDTO> mettreAJourCompetence(
+            @PathVariable Long id, @RequestBody EnseignantUEDTO dto) {
+        return ResponseEntity.ok(enseignantUEService.mettreAJourCompetence(id, dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimerCompetence(@PathVariable Long id) {
         enseignantUEService.supprimerCompetence(id);

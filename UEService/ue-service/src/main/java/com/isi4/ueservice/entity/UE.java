@@ -71,4 +71,13 @@ public class UE {
     /** Nom de la filière (dénormalisé pour affichage) */
     @Column(name = "nom_filiere", length = 100)
     private String nomFiliere;
+
+    @Column(name = "id_ecole", length = 100)
+    private String idEcole;
+
+    @Column(name = "id_specialite", length = 100)
+    private String idSpecialite;
+
+    @Column(name = "specialite", length = 100)
+    private String specialite;
 }

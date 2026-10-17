@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClassesService, ClasseDTO, FiliereDTO } from '../../services/classes.service';
+import { ClassesService, ClasseDTO, FiliereDTO, SpecialiteDTO } from '../../services/classes.service';
 import { EcoleDTO, EcoleService } from '../../services/ecole.service';
 import { NotificationService } from '../../services/notification.service';
 
@@ -17,17 +17,18 @@ export class GestionClassesComponent implements OnInit {
   // Data
   classes: ClasseDTO[] = [];
   filieres: FiliereDTO[] = [];
+  specialites: SpecialiteDTO[] = [];
   ecoles: EcoleDTO[] = [];
 
   // UI state
   isLoading = false;
-  activeTab: 'classes' | 'filieres' = 'classes';
+  activeTab: 'classes' | 'departements' | 'specialites' = 'classes';
   errorMessage = '';
   successMessage = '';
 
-  // Filtres classes
+  // Class filters
   filtreRecherche = '';
-  filtreFiliere = '';
+  filtreDepartement = '';
   filtreNiveau = '';
 
   // Modal classe
@@ -35,14 +36,21 @@ export class GestionClassesComponent implements OnInit {
   isEditClasse = false;
   editingClasseId: string | null = null;
   classeForm: ClasseDTO = this.emptyClasse();
+  selectedEcoleId = '';
 
-  // Modal filière
+  // Department modal (the API still uses the legacy Filiere DTO)
   showFiliereModal = false;
   isEditFiliere = false;
   editingFiliereId: string | null = null;
   filiereForm: FiliereDTO = this.emptyFiliere();
 
-  readonly niveaux = ['ING1', 'ING2', 'ING3', 'ING4', 'ING5'];
+  showSpecialiteModal = false;
+  isEditSpecialite = false;
+  editingSpecialiteId: string | null = null;
+  specialiteForm: SpecialiteDTO = this.emptySpecialite();
+  selectedSpecialiteEcoleId = '';
+
+  readonly niveaux = ['L1', 'L2', 'L3', 'L4', 'L5', 'Master1', 'Master2'];
 
   constructor(
     private classesService: ClassesService,
@@ -63,12 +71,18 @@ export class GestionClassesComponent implements OnInit {
     this.classesService.getFilieres().subscribe({
       next: (f) => {
         this.filieres = f;
-        this.classesService.getClasses().subscribe({
-          next: (c) => { this.classes = c; this.isLoading = false; },
-          error: () => { this.errorMessage = 'Erreur chargement classes'; this.isLoading = false; }
+        this.classesService.getSpecialites().subscribe({
+          next: (specialites) => {
+            this.specialites = specialites;
+            this.classesService.getClasses().subscribe({
+              next: (c) => { this.classes = c; this.isLoading = false; },
+              error: () => { this.errorMessage = 'Erreur chargement classes'; this.isLoading = false; }
+            });
+          },
+          error: () => { this.errorMessage = 'Erreur chargement spécialités'; this.isLoading = false; }
         });
       },
-      error: () => { this.errorMessage = 'Erreur chargement filières'; this.isLoading = false; }
+      error: () => { this.errorMessage = 'Erreur chargement des départements'; this.isLoading = false; }
     });
   }
 
@@ -76,7 +90,7 @@ export class GestionClassesComponent implements OnInit {
     const term = this.filtreRecherche.toLowerCase();
     return this.classes.filter(c =>
       (!term || c.nomClasse.toLowerCase().includes(term) || (c.nomFiliere || '').toLowerCase().includes(term)) &&
-      (!this.filtreFiliere || c.idFiliere === this.filtreFiliere) &&
+      (!this.filtreDepartement || c.idFiliere === this.filtreDepartement) &&
       (!this.filtreNiveau || c.niveau === this.filtreNiveau)
     );
   }
@@ -84,6 +98,7 @@ export class GestionClassesComponent implements OnInit {
   // ===== CLASSES =====
   openAddClasse(): void {
     this.classeForm = this.emptyClasse();
+    this.selectedEcoleId = '';
     this.isEditClasse = false;
     this.editingClasseId = null;
     this.showClasseModal = true;
@@ -92,6 +107,8 @@ export class GestionClassesComponent implements OnInit {
 
   openEditClasse(c: ClasseDTO): void {
     this.classeForm = { ...c };
+    const filiere = this.filieres.find(item => item.idFiliere === c.idFiliere);
+    this.selectedEcoleId = c.idEcole || filiere?.idEcole || '';
     this.isEditClasse = true;
     this.editingClasseId = c.idClasse!;
     this.showClasseModal = true;
@@ -99,11 +116,13 @@ export class GestionClassesComponent implements OnInit {
   }
 
   saveClasse(): void {
-    if (!this.classeForm.nomClasse || !this.classeForm.niveau || !this.classeForm.idFiliere) {
-      this.errorMessage = 'Nom, niveau et filière sont obligatoires.';
+    if (!this.classeForm.nomClasse || !this.classeForm.niveau || !this.selectedEcoleId ||
+        !this.classeForm.idFiliere || !this.classeForm.specialite || !this.classeForm.effectifs) {
+      this.errorMessage = 'Le nom, le niveau, l’école, le département, la spécialité et l’effectif sont obligatoires.';
       return;
     }
     this.isLoading = true;
+    this.classeForm.idEcole = this.selectedEcoleId;
     const op = this.isEditClasse
       ? this.classesService.updateClasse(this.editingClasseId!, this.classeForm)
       : this.classesService.createClasse(this.classeForm);
@@ -141,7 +160,7 @@ export class GestionClassesComponent implements OnInit {
     });
   }
 
-  // ===== FILIERES =====
+  // ===== DEPARTMENTS (stored as filieres for backend compatibility) =====
   openAddFiliere(): void {
     this.filiereForm = this.emptyFiliere();
     this.isEditFiliere = false;
@@ -176,7 +195,7 @@ export class GestionClassesComponent implements OnInit {
         } else {
           this.filieres.push(saved);
         }
-        this.successMessage = `Filière ${this.isEditFiliere ? 'modifiée' : 'créée'} avec succès.`;
+        this.successMessage = `Département ${this.isEditFiliere ? 'modifié' : 'créé'} avec succès.`;
         this.showFiliereModal = false;
         this.isLoading = false;
         setTimeout(() => this.successMessage = '', 3000);
@@ -189,12 +208,12 @@ export class GestionClassesComponent implements OnInit {
   }
 
   deleteFiliere(f: FiliereDTO): void {
-    this.notification.confirm(`Supprimer la filière "${f.nom}" et toutes ses classes ?`, 'Confirmation', () => {
+    this.notification.confirm(`Supprimer le département "${f.nom}" et toutes ses classes ?`, 'Confirmation', () => {
       this.classesService.deleteFiliere(f.idFiliere!).subscribe({
         next: () => {
           this.filieres = this.filieres.filter(x => x.idFiliere !== f.idFiliere);
           this.classes = this.classes.filter(c => c.idFiliere !== f.idFiliere);
-          this.successMessage = 'Filière supprimée.';
+          this.successMessage = 'Département supprimé.';
           setTimeout(() => this.successMessage = '', 3000);
         },
         error: (err) => { this.errorMessage = err.error?.message || 'Erreur suppression.'; }
@@ -210,13 +229,121 @@ export class GestionClassesComponent implements OnInit {
     return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? 'Non associée';
   }
 
+  get departmentsForSelectedSchool(): FiliereDTO[] {
+    return this.filieres.filter(filiere => filiere.idEcole === this.selectedEcoleId);
+  }
+
+  get specialtiesForSelectedDepartment(): string[] {
+    return this.specialites
+      .filter(specialite => specialite.idFiliere === this.classeForm.idFiliere)
+      .map(specialite => specialite.nom)
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  onClasseSchoolChange(): void {
+    this.classeForm.idFiliere = '';
+    this.classeForm.specialite = '';
+  }
+
+  onClasseDepartmentChange(): void {
+    this.classeForm.specialite = '';
+  }
+
+  get specialitesByDepartment(): SpecialiteDTO[] {
+    return this.specialites.filter(specialite =>
+      !this.filtreDepartement || specialite.idFiliere === this.filtreDepartement
+    );
+  }
+
+  openAddSpecialite(): void {
+    this.specialiteForm = this.emptySpecialite();
+    this.selectedSpecialiteEcoleId = '';
+    this.isEditSpecialite = false;
+    this.editingSpecialiteId = null;
+    this.showSpecialiteModal = true;
+    this.clearMessages();
+  }
+
+  openEditSpecialite(specialite: SpecialiteDTO): void {
+    this.specialiteForm = { ...specialite };
+    this.selectedSpecialiteEcoleId = specialite.idEcole ?? '';
+    this.isEditSpecialite = true;
+    this.editingSpecialiteId = specialite.idSpecialite!;
+    this.showSpecialiteModal = true;
+    this.clearMessages();
+  }
+
+  saveSpecialite(): void {
+    if (!this.specialiteForm.nom.trim() || !this.specialiteForm.idFiliere) {
+      this.errorMessage = 'Le nom et le département de la spécialité sont obligatoires.';
+      return;
+    }
+    this.isLoading = true;
+    const operation = this.isEditSpecialite
+      ? this.classesService.updateSpecialite(this.editingSpecialiteId!, this.specialiteForm)
+      : this.classesService.createSpecialite(this.specialiteForm);
+
+    operation.subscribe({
+      next: (saved) => {
+        if (this.isEditSpecialite) {
+          const index = this.specialites.findIndex(item => item.idSpecialite === this.editingSpecialiteId);
+          if (index !== -1) this.specialites[index] = saved;
+        } else {
+          this.specialites.push(saved);
+        }
+        this.successMessage = `Spécialité ${this.isEditSpecialite ? 'modifiée' : 'créée'} avec succès.`;
+        this.showSpecialiteModal = false;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        const responseError = err.error;
+        const serverMessage = typeof responseError === 'string'
+          ? responseError
+          : responseError?.detail || responseError?.message || responseError?.error;
+        this.errorMessage = serverMessage ||
+          `Erreur lors de l’enregistrement de la spécialité (HTTP ${err.status}).`;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  deleteSpecialite(specialite: SpecialiteDTO): void {
+    this.notification.confirm(`Supprimer la spécialité "${specialite.nom}" ?`, 'Confirmation', () => {
+      this.classesService.deleteSpecialite(specialite.idSpecialite!).subscribe({
+        next: () => {
+          this.specialites = this.specialites.filter(item => item.idSpecialite !== specialite.idSpecialite);
+          this.successMessage = 'Spécialité supprimée.';
+        },
+        error: (err) => { this.errorMessage = err.error?.message || 'Erreur suppression.'; }
+      });
+    });
+  }
+
+  getDepartmentName(idFiliere: string): string {
+    return this.filieres.find(filiere => filiere.idFiliere === idFiliere)?.nom ?? 'Département inconnu';
+  }
+
+  get departmentsForSpecialiteSchool(): FiliereDTO[] {
+    return this.filieres.filter(filiere => filiere.idEcole === this.selectedSpecialiteEcoleId);
+  }
+
+  onSpecialiteSchoolChange(): void {
+    if (!this.departmentsForSpecialiteSchool.some(filiere => filiere.idFiliere === this.specialiteForm.idFiliere)) {
+      this.specialiteForm.idFiliere = '';
+    }
+  }
+
   clearMessages(): void { this.errorMessage = ''; this.successMessage = ''; }
 
   private emptyClasse(): ClasseDTO {
-    return { nomClasse: '', effectifs: 30, niveau: '', idFiliere: '' };
+    return { nomClasse: '', effectifs: 30, niveau: '', idFiliere: '', specialite: '' };
   }
 
   private emptyFiliere(): FiliereDTO {
     return { nom: '', description: '', idEcole: '' };
+  }
+
+  private emptySpecialite(): SpecialiteDTO {
+    return { nom: '', description: '', idFiliere: '' };
   }
 }

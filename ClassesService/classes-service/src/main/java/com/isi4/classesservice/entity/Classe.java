@@ -31,6 +31,9 @@ public class Classe {
     @Column(name = "niveau", nullable = false, length = 50)
     private String niveau;
 
+    @Column(name = "specialite", length = 100)
+    private String specialite;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_filiere", nullable = false)
     private Filiere filiere;

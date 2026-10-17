@@ -21,6 +21,9 @@ export interface UEDTO {
   idFiliere?: string;
   /** Nom de la filière (dénormalisé) */
   nomFiliere?: string;
+  idEcole?: string;
+  idSpecialite?: string;
+  specialite?: string;
 }
 
 export interface UEStatistics {

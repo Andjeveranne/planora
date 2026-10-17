@@ -76,6 +76,9 @@ public class UEService {
         ue.setNiveau(dto.getNiveau());
         ue.setIdFiliere(dto.getIdFiliere());
         ue.setNomFiliere(dto.getNomFiliere());
+        ue.setIdEcole(dto.getIdEcole());
+        ue.setIdSpecialite(dto.getIdSpecialite());
+        ue.setSpecialite(dto.getSpecialite());
         return toDTO(ueRepository.save(ue));
     }
 
@@ -102,6 +105,9 @@ public class UEService {
         u.setNiveau(dto.getNiveau());
         u.setIdFiliere(dto.getIdFiliere());
         u.setNomFiliere(dto.getNomFiliere());
+        u.setIdEcole(dto.getIdEcole());
+        u.setIdSpecialite(dto.getIdSpecialite());
+        u.setSpecialite(dto.getSpecialite());
         return u;
     }
 
@@ -122,6 +128,9 @@ public class UEService {
         dto.setNiveau(u.getNiveau());
         dto.setIdFiliere(u.getIdFiliere());
         dto.setNomFiliere(u.getNomFiliere());
+        dto.setIdEcole(u.getIdEcole());
+        dto.setIdSpecialite(u.getIdSpecialite());
+        dto.setSpecialite(u.getSpecialite());
         return dto;
     }
 

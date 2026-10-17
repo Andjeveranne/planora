@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService, Enseignant, EnseignantRequest } from '../../services/user.service';
 import { EcoleDTO, EcoleService } from '../../services/ecole.service';
+import { ClassesService, FiliereDTO, SpecialiteDTO } from '../../services/classes.service';
 import { PlanningService, DisponibiliteDTO, EmploiDuTempsDTO } from '../../services/planning.service';
 import { EmploiDuTempsService, UEEnseignantDTO } from '../../services/emploi-du-temps.service';
 import { UEService, UEDTO } from '../../services/ue.service';
@@ -41,6 +42,8 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
   enseignants: Enseignant[] = [];
   ecoles: EcoleDTO[] = [];
+  departements: FiliereDTO[] = [];
+  specialites: SpecialiteDTO[] = [];
   selectedEnseignant: Enseignant | null = null;
   disponibilitesEnseignant: DisponibiliteDTO[] = [];
   showAddEnseignantForm: boolean = false;
@@ -138,6 +141,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     private planningService: PlanningService,
     private emploiDuTempsService: EmploiDuTempsService,
     private ueService: UEService,
+    private classesService: ClassesService,
     private notification: NotificationService,
     private ecoleService: EcoleService,
     private cdr: ChangeDetectorRef
@@ -151,6 +155,14 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     this.ecoleService.obtenirToutes().subscribe({
       next: ecoles => this.ecoles = ecoles,
       error: () => this.errorMessage = 'Impossible de charger les écoles.'
+    });
+    this.classesService.getFilieres().subscribe({
+      next: departements => this.departements = departements,
+      error: () => this.errorMessage = 'Impossible de charger les départements.'
+    });
+    this.classesService.getSpecialites().subscribe({
+      next: specialites => this.specialites = specialites,
+      error: () => this.errorMessage = 'Impossible de charger les spécialités.'
     });
     
     // Fermer le dropdown quand on clique ailleurs
@@ -311,6 +323,66 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? 'Non associée';
   }
 
+  get departmentsForSelectedTeacherSchools(): FiliereDTO[] {
+    const selectedSchools = this.newEnseignant.idEcoles ?? [];
+    return this.departements.filter(departement =>
+      !!departement.idEcole && selectedSchools.includes(departement.idEcole)
+    );
+  }
+
+  get departmentsForEditedTeacherSchools(): FiliereDTO[] {
+    const selectedSchools = this.editForm.idEcoles ?? [];
+    return this.departements.filter(departement =>
+      !!departement.idEcole && selectedSchools.includes(departement.idEcole)
+    );
+  }
+
+  get specialtiesForSelectedTeacherDepartment(): SpecialiteDTO[] {
+    const selectedSchools = this.newEnseignant.idEcoles ?? [];
+    const departmentIds = this.departements
+      .filter(departement => selectedSchools.includes(departement.idEcole ?? '') &&
+        departement.nom === this.newEnseignant.departement)
+      .map(departement => departement.idFiliere);
+    return this.specialites.filter(specialite => departmentIds.includes(specialite.idFiliere));
+  }
+
+  get specialtiesForEditedTeacherDepartment(): SpecialiteDTO[] {
+    const selectedSchools = this.editForm.idEcoles ?? [];
+    const departmentIds = this.departements
+      .filter(departement => selectedSchools.includes(departement.idEcole ?? '') &&
+        departement.nom === this.editForm.departement)
+      .map(departement => departement.idFiliere);
+    return this.specialites.filter(specialite => departmentIds.includes(specialite.idFiliere));
+  }
+
+  onNewTeacherSchoolsChange(): void {
+    this.newEnseignant.idEcole = this.newEnseignant.idEcoles[0] ?? '';
+    if (!this.departmentsForSelectedTeacherSchools.some(department =>
+      department.nom === this.newEnseignant.departement
+    )) {
+      this.newEnseignant.departement = '';
+    }
+    this.newEnseignant.specialite = '';
+  }
+
+  onEditedTeacherSchoolsChange(): void {
+    this.editForm.idEcole = this.editForm.idEcoles?.[0] ?? '';
+    if (!this.departmentsForEditedTeacherSchools.some(department =>
+      department.nom === this.editForm.departement
+    )) {
+      this.editForm.departement = '';
+    }
+    this.editForm.specialite = '';
+  }
+
+  onNewTeacherDepartmentChange(): void {
+    this.newEnseignant.specialite = '';
+  }
+
+  onEditedTeacherDepartmentChange(): void {
+    this.editForm.specialite = '';
+  }
+
   toggleAddEnseignantForm(): void {
     this.showAddEnseignantForm = !this.showAddEnseignantForm;
     if (!this.showAddEnseignantForm) {
@@ -333,6 +405,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     this.successMessage = '';
 
     if (!this.validateForm()) return;
+    this.newEnseignant.idEcole = this.newEnseignant.idEcoles[0] ?? '';
 
     this.userService.creerEnseignant(this.newEnseignant).subscribe({
       next: (enseignant) => {
@@ -359,8 +432,9 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
 
   validateForm(): boolean {
     if (!this.newEnseignant.email || !this.newEnseignant.mdp ||
-      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser || !this.newEnseignant.idEcoles?.length) {
-      this.errorMessage = 'Tous les champs obligatoires, y compris l’école, doivent être remplis';
+      !this.newEnseignant.nomUser || !this.newEnseignant.prenomUser || !this.newEnseignant.idEcoles?.length ||
+      !this.newEnseignant.departement || !this.newEnseignant.specialite) {
+      this.errorMessage = 'Tous les champs obligatoires, y compris l’école, le département et la spécialité, doivent être remplis';
       return false;
     }
 
@@ -1470,6 +1544,11 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Nom, prénom, email et école sont obligatoires';
       return;
     }
+    if (!this.editForm.departement || !this.editForm.specialite ||
+      !this.departmentsForEditedTeacherSchools.some(department => department.nom === this.editForm.departement)) {
+      this.errorMessage = 'Sélectionnez une école, un département associé et une spécialité.';
+      return;
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.editForm.email || '')) {
@@ -1550,4 +1629,3 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     });
   }
 }
-

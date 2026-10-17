@@ -44,8 +44,18 @@ public class UEDTO {
     private String niveau;
 
     /** Identifiant de la filière */
+    @NotBlank(message = "Le département de l'UE est obligatoire")
     private String idFiliere;
 
     /** Nom de la filière (dénormalisé pour affichage) */
     private String nomFiliere;
+
+    @NotBlank(message = "L'école de l'UE est obligatoire")
+    private String idEcole;
+
+    @NotBlank(message = "La spécialité de l'UE est obligatoire")
+    private String idSpecialite;
+
+    @NotBlank(message = "Le nom de la spécialité est obligatoire")
+    private String specialite;
 }

@@ -6,6 +6,8 @@ import { SalleService, SalleDTO, TypeSalle, StatutSalle } from '../../services/s
 import { AuthService } from '../../services/auth.service';
 import { TestAuthService } from '../../services/test-auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { ClassesService, ClasseDTO } from '../../services/classes.service';
+import { EcoleDTO, EcoleService } from '../../services/ecole.service';
 
 interface Activity {
   id: number;
@@ -22,6 +24,8 @@ interface Activity {
 })
 export class GestionSallesComponent implements OnInit {
   salles: SalleDTO[] = [];
+  classes: ClasseDTO[] = [];
+  ecoles: EcoleDTO[] = [];
   salleForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -34,7 +38,7 @@ export class GestionSallesComponent implements OnInit {
   filtreType: TypeSalle | '' = '';
   filtreStatut: StatutSalle | '' = '';
   filtreRecherche = '';
-  selectedSchool = 'SAINT_JEAN_INGENIEUR';
+  selectedSchool = '';
 
   // Pagination
   currentPage = 1;
@@ -62,7 +66,9 @@ export class GestionSallesComponent implements OnInit {
     private authService: AuthService,
     private fb: FormBuilder,
     private testAuthService: TestAuthService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private classesService: ClassesService,
+    private ecoleService: EcoleService
   ) {
     this.salleForm = this.fb.group({
       nomSalle: ['', [Validators.required, Validators.minLength(2)]],
@@ -70,7 +76,8 @@ export class GestionSallesComponent implements OnInit {
       localisation: ['', [Validators.required, Validators.minLength(2)]],
       capacite: ['', [Validators.required, Validators.min(1)]],
       capaciteExam: ['', [Validators.required, Validators.min(1)]],
-      idEcole: ['SAINT_JEAN_INGENIEUR', Validators.required],
+      idEcole: ['', Validators.required],
+      idClasse: [''],
       statut: [StatutSalle.DISPONIBLE, Validators.required]
     });
   }
@@ -93,6 +100,14 @@ export class GestionSallesComponent implements OnInit {
     });
 
     this.chargerSalles();
+    this.ecoleService.obtenirToutes().subscribe({
+      next: (ecoles) => this.ecoles = ecoles,
+      error: () => this.errorMessage = 'Erreur lors du chargement des écoles.'
+    });
+    this.classesService.getClasses().subscribe({
+      next: (classes) => this.classes = classes,
+      error: () => this.errorMessage = 'Erreur lors du chargement des classes.'
+    });
   }
 
   chargerSalles(): void {
@@ -115,11 +130,12 @@ export class GestionSallesComponent implements OnInit {
     let filtered = this.salles.filter(salle => {
       const matchType = !this.filtreType || salle.type === this.filtreType;
       const matchStatut = !this.filtreStatut || salle.statut === this.filtreStatut;
+      const matchSchool = !this.selectedSchool || salle.idEcole === this.selectedSchool;
       const matchRecherche = !this.filtreRecherche || 
         salle.nomSalle.toLowerCase().includes(this.filtreRecherche.toLowerCase()) ||
         salle.localisation.toLowerCase().includes(this.filtreRecherche.toLowerCase());
       
-      return matchType && matchStatut && matchRecherche;
+      return matchType && matchStatut && matchSchool && matchRecherche;
     });
 
     // Tri
@@ -218,13 +234,44 @@ export class GestionSallesComponent implements OnInit {
     if (salle) {
       this.currentSalleId = salle.idSalle!;
       this.salleForm.patchValue(salle);
+      this.onTypeChange();
     } else {
       this.salleForm.reset();
       this.salleForm.patchValue({
-        idEcole: 'SAINT_JEAN_INGENIEUR',
+        idEcole: '',
+        idClasse: '',
         statut: StatutSalle.DISPONIBLE
       });
+      this.onTypeChange();
     }
+  }
+
+  onSchoolChange(): void {
+    this.salleForm.patchValue({ idClasse: '' });
+  }
+
+  onTypeChange(): void {
+    const classControl = this.salleForm.get('idClasse');
+    if (this.salleForm.get('type')?.value === TypeSalle.SALLE_COURS) {
+      classControl?.setValidators(Validators.required);
+    } else {
+      classControl?.clearValidators();
+      classControl?.setValue('');
+    }
+    classControl?.updateValueAndValidity();
+  }
+
+  get classesForSelectedSchool(): ClasseDTO[] {
+    const schoolId = this.salleForm.get('idEcole')?.value;
+    return this.classes.filter(classe => classe.idEcole === schoolId);
+  }
+
+  getSchoolName(idEcole: string): string {
+    return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? idEcole;
+  }
+
+  getClassName(idClasse?: string | null): string {
+    return this.classes.find(classe => classe.idClasse === idClasse)?.nomClasse ?? 'Non attribuée';
   }
 
   fermerModal(): void {
@@ -236,7 +283,12 @@ export class GestionSallesComponent implements OnInit {
   onSubmit(): void {
     if (this.salleForm.valid) {
       this.isLoading = true;
-      const salleData: SalleDTO = this.salleForm.value;
+      const salleData: SalleDTO = {
+        ...this.salleForm.value,
+        idClasse: this.salleForm.value.type === TypeSalle.SALLE_COURS
+          ? this.salleForm.value.idClasse
+          : null
+      };
 
       const operation = this.isEditMode 
         ? this.salleService.mettreAJourSalle(this.currentSalleId, salleData)

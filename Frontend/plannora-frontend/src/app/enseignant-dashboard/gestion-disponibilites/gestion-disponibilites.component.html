@@ -5,7 +5,7 @@
             <button (click)="changeWeek(-1)">← Semaine précédente</button>
             <span class="week-label">Semaine du {{ currentWeekStart | date:'dd/MM/yyyy' }}</span>
             <button (click)="changeWeek(1)">Semaine suivante →</button>
-            <button (click)="setWeekToCurrent()" class="today-btn">Aujourd'hui</button>
+            <button (click)="setWeekToNext()" class="today-btn">Semaine de génération</button>
         </div>
     </div>
 

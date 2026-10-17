@@ -17,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.time.temporal.WeekFields;
 import java.time.temporal.TemporalAdjusters;
 import java.net.URI;
@@ -55,7 +56,7 @@ public class EmploiDuTempsServiceV2 {
             log.info("Génération pour la semaine {} (du {})", semaineProchaine, debutSemaineProchaine.toLocalDate());
 
             // 2. Récupérer toutes les données nécessaires
-            Map<String, Object> classesData = getClassesData(idEcole);
+            Map<String, Object> classesData = getClassesData(idEcole, departement, specialite);
             Map<String, Object> sallesData = getSallesData(idEcole);
             Map<String, Object> uesData = getUEsData();
             Map<String, Object> enseignantsData = getEnseignantsData(idEcole, departement, specialite);
@@ -63,7 +64,7 @@ public class EmploiDuTempsServiceV2 {
             if (classesData.isEmpty()) {
                 throw new IllegalStateException(idEcole == null || idEcole.isBlank()
                         ? "Aucune classe n'est configurée."
-                        : "Aucune classe n'est associée à cette école. Associez ses filières à l'école avant de générer.");
+                        : "Aucune classe ne correspond à cette école, ce département et cette spécialité.");
             }
             if (sallesData.isEmpty()) {
                 throw new IllegalStateException(idEcole == null || idEcole.isBlank()
@@ -79,7 +80,7 @@ public class EmploiDuTempsServiceV2 {
                     classesData, uesData, enseignantsData);
                 if (requests.isEmpty()) {
                 throw new IllegalStateException(
-                    "Aucun cours planifiable: vérifiez les UE correspondant au niveau et à la filière des classes, " +
+                    "Aucun cours planifiable: vérifiez les UE correspondant au niveau, au département et à la spécialité des classes, " +
                     "puis affectez au moins un enseignant qualifié à chaque UE.");
                 }
             
@@ -89,6 +90,12 @@ public class EmploiDuTempsServiceV2 {
             // 6. Récupérer les disponibilités des enseignants pour la semaine prochaine
             List<FordFulkersonScheduler.Disponibilite> disponibilites = getEnseignantDisponibilites(
                     enseignantsData, idEcole, debutSemaineProchaine);
+            log.info("Données de planification: {} classes, {} demandes, {} salles, {} disponibilités, {} enseignants",
+                    classesData.size(), requests.size(), salles.size(), disponibilites.size(), enseignantsData.size());
+            if (disponibilites.isEmpty()) {
+                throw new IllegalStateException("Aucune disponibilité n'est enregistrée pour la semaine du "
+                        + debutSemaineProchaine.toLocalDate() + ". Les enseignants doivent renseigner leurs créneaux pour cette semaine.");
+            }
             
             // 7. Générer l'emploi du temps avec Ford-Fulkerson
             List<FordFulkersonScheduler.SchedulingResult> results = scheduler.generateSchedule(
@@ -99,8 +106,8 @@ public class EmploiDuTempsServiceV2 {
                     .count();
                 if (coursPlanifies == 0) {
                 throw new IllegalStateException(
-                    "Aucun cours n'a pu être placé: vérifiez les disponibilités des enseignants pour la semaine " +
-                    "à venir, les capacités et les types de salles.");
+                    "Aucun cours n'a pu être placé: vérifiez les disponibilités des enseignants, les capacités et les types des salles, " +
+                    "ainsi que leur attribution aux classes sélectionnées.");
                 }
             
             // 8. Compléter avec TPE pour les créneaux vides
@@ -155,7 +162,7 @@ public class EmploiDuTempsServiceV2 {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getClassesData(String idEcole) {
+    private Map<String, Object> getClassesData(String idEcole, String departement, String specialite) {
         try {
             WebClient webClient = authorizedWebClient();
             WebClient.RequestHeadersSpec<?> request = idEcole == null || idEcole.isBlank()
@@ -167,13 +174,7 @@ public class EmploiDuTempsServiceV2 {
                     .block();
 
             return (classes == null ? Collections.<Map<String, Object>>emptyList() : classes).stream()
-                    .filter(classe -> {
-                        String classSchoolId = (String) classe.get("idEcole");
-                        if (classSchoolId == null || classSchoolId.isBlank()) {
-                            return false;
-                        }
-                        return idEcole == null || idEcole.isBlank() || idEcole.equals(classSchoolId);
-                    })
+                    .filter(classe -> matchesGenerationScope(classe, idEcole, departement, specialite))
                     .collect(Collectors.toMap(
                             classe -> (String) classe.get("idClasse"),
                             classe -> classe,
@@ -183,6 +184,23 @@ public class EmploiDuTempsServiceV2 {
             log.error("Erreur lors de la récupération des classes", e);
             throw new IllegalStateException("Impossible de récupérer les classes: " + e.getMessage(), e);
         }
+    }
+
+    static boolean matchesGenerationScope(
+            Map<String, Object> classe,
+            String idEcole,
+            String departement,
+            String specialite) {
+        String classSchoolId = (String) classe.get("idEcole");
+        if (classSchoolId == null || classSchoolId.isBlank()) {
+            return false;
+        }
+
+        String classDepartment = (String) classe.get("nomFiliere");
+        String classSpecialite = (String) classe.get("specialite");
+        return (idEcole == null || idEcole.isBlank() || idEcole.equals(classSchoolId))
+                && (departement == null || departement.isBlank() || departement.equals(classDepartment))
+                && (specialite == null || specialite.isBlank() || specialite.equals(classSpecialite));
     }
 
     @SuppressWarnings("unchecked")
@@ -287,10 +305,15 @@ public class EmploiDuTempsServiceV2 {
                 
                 String ueNiveau = (String) ueInfo.get("niveau");
                 String ueFiliere = (String) ueInfo.get("idFiliere");
+                String ueEcole = (String) ueInfo.get("idEcole");
+                String ueSpecialite = (String) ueInfo.get("specialite");
                     java.time.LocalTime heureDebut = parseTime(ueInfo.get("heureDebut"), java.time.LocalTime.of(8, 0));
                     java.time.LocalTime heureFin = parseTime(ueInfo.get("heureFin"), java.time.LocalTime.of(18, 0));
                 if (ueNiveau != null && ueFiliere != null
-                    && niveau.equals(ueNiveau) && filiereId.equals(ueFiliere)) {
+                    && niveauxCompatibles(niveau, ueNiveau) && filiereId.equals(ueFiliere)
+                    && (ueEcole == null || ueEcole.isBlank() || ueEcole.equals(ecoleId))
+                    && (ueSpecialite == null || ueSpecialite.isBlank()
+                        || ueSpecialite.equals(classeInfo.get("specialite")))) {
                     Long ueId = Long.valueOf(ueEntry.getKey());
                     
                     // Récupérer les enseignants compétents pour cette UE
@@ -303,6 +326,25 @@ public class EmploiDuTempsServiceV2 {
         }
         
         return requests;
+    }
+
+    static boolean niveauxCompatibles(String niveauClasse, String niveauUE) {
+        return niveauClasse != null && niveauUE != null
+                && normaliserNiveau(niveauClasse).equals(normaliserNiveau(niveauUE));
+    }
+
+    private static String normaliserNiveau(String niveau) {
+        String normalized = niveau.trim().toUpperCase(Locale.ROOT);
+        if (normalized.matches("L[1-5]")) {
+            return "ING" + normalized.substring(1);
+        }
+        if (normalized.matches("ING[1-5]")) {
+            return normalized;
+        }
+        if (normalized.matches("MASTER[12]")) {
+            return "M" + normalized.substring("MASTER".length());
+        }
+        return normalized;
     }
 
     @SuppressWarnings("unchecked")
@@ -413,6 +455,7 @@ public class EmploiDuTempsServiceV2 {
                     FordFulkersonScheduler.Salle s = new FordFulkersonScheduler.Salle();
                     s.setId((String) salle.get("idSalle"));
                     s.setIdEcole((String) salle.get("idEcole"));
+                    s.setIdClasse((String) salle.get("idClasse"));
                     s.setNom((String) salle.get("nomSalle"));
                     s.setCapacite((Integer) salle.get("capacite"));
                     s.setType((String) salle.get("type"));
@@ -434,13 +477,13 @@ public class EmploiDuTempsServiceV2 {
                                 ? (String) ((Map<String, Object>) enseignantsData.get(enseignantId)).get("idEcole")
                                 : idEcole)
                         .stream()
-                        .filter(dispo -> {
+                                .filter(dispo -> {
                             // Filtrer les disponibilités pour la semaine prochaine
                             LocalDateTime debut = dispo.getDateHeureDebut();
                             return !debut.isBefore(debutSemaine) &&
                                    debut.isBefore(debutSemaine.plusWeeks(1));
                         })
-                        .forEach(dispo -> {
+                                .forEach(dispo -> {
                             FordFulkersonScheduler.Disponibilite d = new FordFulkersonScheduler.Disponibilite();
                             d.setEnseignantId(enseignantId);
                             d.setDebut(dispo.getDateHeureDebut());
@@ -448,7 +491,10 @@ public class EmploiDuTempsServiceV2 {
                             disponibilites.add(d);
                         });
             } catch (Exception e) {
-                log.warn("Erreur lors de la récupération des disponibilités pour l'enseignant {}", enseignantId);
+                log.error("Impossible de récupérer les disponibilités de l'enseignant {} pour l'école {}",
+                        enseignantId, idEcole, e);
+                throw new IllegalStateException(
+                        "Impossible de récupérer les disponibilités de l'enseignant " + enseignantId + ": " + e.getMessage(), e);
             }
         }
         
@@ -475,9 +521,9 @@ public class EmploiDuTempsServiceV2 {
                     // Créer un TPE pour ce créneau
                     FordFulkersonScheduler.SchedulingResult tpe = new FordFulkersonScheduler.SchedulingResult();
                     tpe.setClasseId(classeId);
-                    tpe.setEnseignantId("TPE");
-                    tpe.setUeId(0L); // ID spécial pour TPE
-                    tpe.setSalleId("TPE");
+                    tpe.setEnseignantId(null);
+                    tpe.setUeId(null);
+                    tpe.setSalleId(null);
                     tpe.setDateHeureDebut(slot.getDebut());
                     tpe.setDateHeureFin(slot.getFin());
                     tpe.setTypeCours("TPE");
@@ -493,16 +539,24 @@ public class EmploiDuTempsServiceV2 {
         return completResults;
     }
 
-    private List<EmploiDuTemps> saveSchedulingResults(List<FordFulkersonScheduler.SchedulingResult> results) {
+    List<EmploiDuTemps> saveSchedulingResults(List<FordFulkersonScheduler.SchedulingResult> results) {
         List<EmploiDuTemps> emplois = results.stream()
                 .map(result -> {
                     EmploiDuTemps emploi = new EmploiDuTemps();
                     emploi.setClasseId(result.getClasseId());
+                    emploi.setClasse(result.getClasseId());
                     emploi.setEnseignantId(result.getEnseignantId());
                     emploi.setUeId(result.getUeId());
+                    emploi.setUe(result.getUeId() == null ? result.getTypeCours() : result.getUeId().toString());
                     emploi.setSalleId(result.getSalleId());
+                    emploi.setSalle(result.getSalleId() == null ? result.getTypeCours() : result.getSalleId());
                     emploi.setDateHeureDebut(result.getDateHeureDebut());
                     emploi.setDateHeureFin(result.getDateHeureFin());
+                    emploi.setDateJour(result.getDateHeureDebut().toLocalDate());
+                    emploi.setJour(result.getDateHeureDebut().getDayOfWeek()
+                            .getDisplayName(TextStyle.FULL, Locale.FRENCH));
+                    emploi.setHeureDebut(result.getDateHeureDebut().getHour());
+                    emploi.setHeureFin(result.getDateHeureFin().getHour());
                     emploi.setTypeCours(result.getTypeCours());
                     emploi.setSemaine(result.getSemaine());
                     emploi.setJourSemaine(result.getJourSemaine());
@@ -542,6 +596,7 @@ public class EmploiDuTempsServiceV2 {
                         Map<String, Object> classeInfo = (Map<String, Object>) classesData.get(emploi.getClasseId());
                         if (classeInfo != null) {
                             dto.setNomClasse((String) classeInfo.get("nomClasse"));
+                            dto.setIdEcole((String) classeInfo.get("idEcole"));
                         }
                         
                         @SuppressWarnings("unchecked")

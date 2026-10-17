@@ -350,7 +350,10 @@ public class EmploiDuTempsService {
             dto.setCreneau(e.getCreneau());
 
             Optional.ofNullable(classesMap.get(e.getClasseId()))
-                    .ifPresent(c -> dto.setNomClasse((String) c.get("nomClasse")));
+                    .ifPresent(c -> {
+                        dto.setNomClasse((String) c.get("nomClasse"));
+                        dto.setIdEcole((String) c.get("idEcole"));
+                    });
             if (e.getSalleId() != null)
                 Optional.ofNullable(sallesMap.get(e.getSalleId()))
                         .ifPresent(s -> dto.setNomSalle((String) s.get("nomSalle")));

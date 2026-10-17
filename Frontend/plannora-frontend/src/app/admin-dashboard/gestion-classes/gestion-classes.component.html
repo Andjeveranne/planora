@@ -21,8 +21,11 @@
         <button class="tab-btn" [class.active]="activeTab === 'classes'" (click)="activeTab = 'classes'">
           Classes ({{ classes.length }})
         </button>
-        <button class="tab-btn" [class.active]="activeTab === 'filieres'" (click)="activeTab = 'filieres'">
-          Filières ({{ filieres.length }})
+        <button class="tab-btn" [class.active]="activeTab === 'departements'" (click)="activeTab = 'departements'">
+          Départements ({{ filieres.length }})
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'specialites'" (click)="activeTab = 'specialites'">
+          Spécialités ({{ specialites.length }})
         </button>
       </div>
 
@@ -35,8 +38,8 @@
             </div>
           </div>
           <div class="header-filters">
-            <select class="filter-select" [(ngModel)]="filtreFiliere">
-              <option value="">Toutes les filières</option>
+            <select class="filter-select" [(ngModel)]="filtreDepartement">
+              <option value="">Tous les départements</option>
               @for (f of filieres; track f.idFiliere) {
                 <option [value]="f.idFiliere">{{ f.nom }}</option>
               }
@@ -59,17 +62,19 @@
               <tr>
                 <th>Nom de la classe</th>
                 <th>Niveau</th>
-                <th>Filière</th>
+                <th>École</th>
+                <th>Département</th>
+                <th>Spécialité</th>
                 <th>Effectifs</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               @if (isLoading) {
-                <tr><td colspan="5" class="loading-cell"><div class="spinner-border"></div></td></tr>
+                <tr><td colspan="7" class="loading-cell"><div class="spinner-border"></div></td></tr>
               } @else if (filteredClasses.length === 0) {
                 <tr>
-                  <td colspan="5" class="empty-cell">
+                  <td colspan="7" class="empty-cell">
                     <div class="empty-state">
                       <p>Aucune classe trouvée.</p>
                     </div>
@@ -80,7 +85,9 @@
                   <tr class="table-row">
                     <td class="name-cell">{{ c.nomClasse }}</td>
                     <td><span class="badge-niveau">{{ c.niveau }}</span></td>
+                    <td>{{ getEcoleName(c.idEcole) }}</td>
                     <td>{{ c.nomFiliere }}</td>
+                    <td>{{ c.specialite || '—' }}</td>
                     <td>{{ c.effectifs }}</td>
                     <td class="actions-cell">
                       <button class="action-btn edit-btn" (click)="openEditClasse(c)" title="Modifier">✏️</button>
@@ -94,11 +101,11 @@
         </div>
       }
 
-      <!-- ===== ONGLET FILIERES ===== -->
-      @if (activeTab === 'filieres') {
+      <!-- ===== ONGLET DEPARTEMENTS ===== -->
+      @if (activeTab === 'departements') {
         <div class="header-section">
           <div class="header-actions" style="margin-left: auto;">
-            <button class="btn-add" (click)="openAddFiliere()">+ Ajouter une filière</button>
+            <button class="btn-add" (click)="openAddFiliere()">+ Ajouter un département</button>
           </div>
         </div>
 
@@ -106,7 +113,7 @@
           <table class="classes-table">
             <thead>
               <tr>
-                <th>Nom de la filière</th>
+                <th>Département</th>
                 <th>École</th>
                 <th>Description</th>
                 <th>Nb classes</th>
@@ -117,7 +124,7 @@
               @if (isLoading) {
                 <tr><td colspan="5" class="loading-cell"><div class="spinner-border"></div></td></tr>
               } @else if (filieres.length === 0) {
-                <tr><td colspan="5" class="empty-cell"><p>Aucune filière.</p></td></tr>
+                <tr><td colspan="5" class="empty-cell"><p>Aucun département.</p></td></tr>
               } @else {
                 @for (f of filieres; track f.idFiliere) {
                   <tr class="table-row">
@@ -128,6 +135,57 @@
                     <td class="actions-cell">
                       <button class="action-btn edit-btn" (click)="openEditFiliere(f)" title="Modifier">✏️</button>
                       <button class="action-btn delete-btn" (click)="deleteFiliere(f)" title="Supprimer">🗑️</button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (activeTab === 'specialites') {
+        <div class="header-section">
+          <div class="header-filters">
+            <select class="filter-select" [(ngModel)]="filtreDepartement">
+              <option value="">Tous les départements</option>
+              @for (departement of filieres; track departement.idFiliere) {
+                <option [value]="departement.idFiliere">
+                  {{ getEcoleName(departement.idEcole) }} — {{ departement.nom }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="header-actions">
+            <button class="btn-add" (click)="openAddSpecialite()">+ Ajouter une spécialité</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="classes-table">
+            <thead>
+              <tr>
+                <th>Spécialité</th>
+                <th>Département</th>
+                <th>École</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (isLoading) {
+                <tr><td colspan="5" class="loading-cell"><div class="spinner-border"></div></td></tr>
+              } @else if (specialitesByDepartment.length === 0) {
+                <tr><td colspan="5" class="empty-cell"><p>Aucune spécialité trouvée.</p></td></tr>
+              } @else {
+                @for (specialite of specialitesByDepartment; track specialite.idSpecialite) {
+                  <tr class="table-row">
+                    <td class="name-cell">{{ specialite.nom }}</td>
+                    <td>{{ specialite.nomDepartement || getDepartmentName(specialite.idFiliere) }}</td>
+                    <td>{{ getEcoleName(specialite.idEcole) }}</td>
+                    <td>{{ specialite.description || '—' }}</td>
+                    <td class="actions-cell">
+                      <button class="action-btn edit-btn" (click)="openEditSpecialite(specialite)" title="Modifier">✏️</button>
+                      <button class="action-btn delete-btn" (click)="deleteSpecialite(specialite)" title="Supprimer">🗑️</button>
                     </td>
                   </tr>
                 }
@@ -167,13 +225,38 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Filière *</label>
-            <select [(ngModel)]="classeForm.idFiliere" class="form-input">
-              <option value="">Choisir une filière</option>
-              @for (f of filieres; track f.idFiliere) {
+            <label>École *</label>
+            <select [(ngModel)]="selectedEcoleId" (ngModelChange)="onClasseSchoolChange()" class="form-input">
+              <option value="">Choisir une école</option>
+              @for (ecole of ecoles; track ecole.idEcole) {
+                <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Département *</label>
+            <select [(ngModel)]="classeForm.idFiliere" (ngModelChange)="onClasseDepartmentChange()"
+              class="form-input" [disabled]="!selectedEcoleId">
+              <option value="">Choisir un département</option>
+              @for (f of departmentsForSelectedSchool; track f.idFiliere) {
                 <option [value]="f.idFiliere">{{ f.nom }}</option>
               }
             </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Spécialité *</label>
+            <select [(ngModel)]="classeForm.specialite" class="form-input"
+              [disabled]="!classeForm.idFiliere || specialtiesForSelectedDepartment.length === 0">
+              <option value="">Choisir une spécialité</option>
+              @for (specialite of specialtiesForSelectedDepartment; track specialite) {
+                <option [value]="specialite">{{ specialite }}</option>
+              }
+            </select>
+            @if (classeForm.idFiliere && specialtiesForSelectedDepartment.length === 0) {
+              <small class="form-hint">Aucune spécialité disponible pour ce département et cette école.</small>
+            }
           </div>
           <div class="form-group">
             <label>Effectifs *</label>
@@ -191,18 +274,18 @@
   </div>
 }
 
-<!-- Modal Filière -->
+<!-- Modal Département -->
 @if (showFiliereModal) {
   <div class="modal-overlay" (click)="showFiliereModal = false">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>{{ isEditFiliere ? 'Modifier la filière' : 'Nouvelle filière' }}</h2>
+        <h2>{{ isEditFiliere ? 'Modifier le département' : 'Nouveau département' }}</h2>
         <button class="btn-close" (click)="showFiliereModal = false">×</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Nom *</label>
-          <input type="text" [(ngModel)]="filiereForm.nom" class="form-input" placeholder="ex: ISI">
+          <label>Nom du département *</label>
+          <input type="text" [(ngModel)]="filiereForm.nom" class="form-input" placeholder="ex: Ingénierie">
         </div>
         <div class="form-group">
           <label>École *</label>
@@ -222,6 +305,54 @@
         <button class="btn btn-secondary" (click)="showFiliereModal = false">Annuler</button>
         <button class="btn btn-primary" (click)="saveFiliere()" [disabled]="isLoading">
           {{ isEditFiliere ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showSpecialiteModal) {
+  <div class="modal-overlay" (click)="showSpecialiteModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditSpecialite ? 'Modifier la spécialité' : 'Nouvelle spécialité' }}</h2>
+        <button class="btn-close" (click)="showSpecialiteModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>École *</label>
+            <select [(ngModel)]="selectedSpecialiteEcoleId" (ngModelChange)="onSpecialiteSchoolChange()" class="form-input">
+              <option value="">Choisir une école</option>
+              @for (ecole of ecoles; track ecole.idEcole) {
+                <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Département *</label>
+            <select [(ngModel)]="specialiteForm.idFiliere" class="form-input" [disabled]="!selectedSpecialiteEcoleId">
+              <option value="">Choisir un département</option>
+              @for (departement of departmentsForSpecialiteSchool; track departement.idFiliere) {
+                <option [value]="departement.idFiliere">{{ departement.nom }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nom de la spécialité *</label>
+          <input type="text" [(ngModel)]="specialiteForm.nom" class="form-input"
+            placeholder="ex: Génie logiciel">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea [(ngModel)]="specialiteForm.description" class="form-input" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showSpecialiteModal = false">Annuler</button>
+        <button class="btn btn-primary" (click)="saveSpecialite()" [disabled]="isLoading">
+          {{ isEditSpecialite ? 'Enregistrer' : 'Créer' }}
         </button>
       </div>
     </div>

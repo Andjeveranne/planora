@@ -26,6 +26,9 @@ public class ClasseDTO {
     @NotBlank(message = "L'identifiant de la filière est obligatoire")
     private String idFiliere;
 
+    @NotBlank(message = "La spécialité est obligatoire")
+    private String specialite;
+
     private String nomFiliere;
 
     private String idEcole;

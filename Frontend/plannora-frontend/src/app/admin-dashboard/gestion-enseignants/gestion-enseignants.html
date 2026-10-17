@@ -139,26 +139,35 @@
                 <input type="tel" id="telephone" [(ngModel)]="newEnseignant.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
               </div>
               <div class="form-group">
-                <label for="specialite">Spécialité</label>
-                <input type="text" id="specialite" [(ngModel)]="newEnseignant.specialite" name="specialite">
+                <label for="specialite">Spécialité *</label>
+                <select id="specialite" [(ngModel)]="newEnseignant.specialite" name="specialite" required
+                  [disabled]="!newEnseignant.departement || specialtiesForSelectedTeacherDepartment.length === 0">
+                  <option value="">Sélectionner une spécialité</option>
+                  @for (specialite of specialtiesForSelectedTeacherDepartment; track specialite.idSpecialite) {
+                    <option [value]="specialite.nom">{{ specialite.nom }}</option>
+                  }
+                </select>
+                <small class="form-hint">Cette spécialité sera disponible pour les classes de ce département.</small>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="departement">Département</label>
-                <select id="departement" [(ngModel)]="newEnseignant.departement" name="departement">
-                  <option value="">Sélectionner un département</option>
-                  <option value="Informatique">Informatique</option>
-                  <option value="Génie Civil">Génie Civil</option>
-                  <option value="Électronique">Électronique</option>
-                  <option value="Mathématiques">Mathématiques</option>
+                <label for="ecole">Écoles *</label>
+                <select id="ecole" [(ngModel)]="newEnseignant.idEcoles" (ngModelChange)="onNewTeacherSchoolsChange()"
+                  name="idEcoles" multiple required>
+                  @for (ecole of ecoles; track ecole.idEcole) {
+                    <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                  }
                 </select>
               </div>
               <div class="form-group">
-                <label for="ecole">Écoles *</label>
-                <select id="ecole" [(ngModel)]="newEnseignant.idEcoles" name="idEcoles" multiple required>
-                  @for (ecole of ecoles; track ecole.idEcole) {
-                    <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                <label for="departement">Département *</label>
+                <select id="departement" [(ngModel)]="newEnseignant.departement"
+                  (ngModelChange)="onNewTeacherDepartmentChange()" name="departement" required
+                  [disabled]="!newEnseignant.idEcoles.length">
+                  <option value="">Sélectionner un département</option>
+                  @for (departement of departmentsForSelectedTeacherSchools; track departement.idFiliere) {
+                    <option [value]="departement.nom">{{ departement.nom }}</option>
                   }
                 </select>
               </div>
@@ -754,21 +763,29 @@
           <div class="form-row">
             <div class="form-group">
               <label for="edit-specialite">Spécialité</label>
-              <input type="text" id="edit-specialite" [(ngModel)]="editForm.specialite" name="specialite">
+              <select id="edit-specialite" [(ngModel)]="editForm.specialite" name="specialite"
+                [disabled]="!editForm.departement || specialtiesForEditedTeacherDepartment.length === 0">
+                <option value="">Sélectionner une spécialité</option>
+                @for (specialite of specialtiesForEditedTeacherDepartment; track specialite.idSpecialite) {
+                  <option [value]="specialite.nom">{{ specialite.nom }}</option>
+                }
+              </select>
             </div>
             <div class="form-group">
               <label for="edit-departement">Département</label>
-              <select id="edit-departement" [(ngModel)]="editForm.departement" name="departement">
+              <select id="edit-departement" [(ngModel)]="editForm.departement"
+                (ngModelChange)="onEditedTeacherDepartmentChange()" name="departement"
+                [disabled]="!editForm.idEcoles?.length">
                 <option value="">Sélectionner un département</option>
-                <option value="Informatique">Informatique</option>
-                <option value="Génie Civil">Génie Civil</option>
-                <option value="Électronique">Électronique</option>
-                <option value="Mathématiques">Mathématiques</option>
+                @for (departement of departmentsForEditedTeacherSchools; track departement.idFiliere) {
+                  <option [value]="departement.nom">{{ departement.nom }}</option>
+                }
               </select>
             </div>
             <div class="form-group">
               <label for="edit-ecole">Écoles *</label>
-              <select id="edit-ecole" [(ngModel)]="editForm.idEcoles" name="idEcoles" multiple required>
+            <select id="edit-ecole" [(ngModel)]="editForm.idEcoles"
+              (ngModelChange)="onEditedTeacherSchoolsChange()" name="idEcoles" multiple required>
                 @for (ecole of ecoles; track ecole.idEcole) {
                   <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
                 }

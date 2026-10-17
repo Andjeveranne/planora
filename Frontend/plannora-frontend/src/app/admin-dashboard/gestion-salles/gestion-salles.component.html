@@ -40,7 +40,10 @@
             Ajouter une salle
           </button>
           <select class="school-select" [(ngModel)]="selectedSchool">
-            <option value="SAINT_JEAN_INGENIEUR">Saint Jean Ingénieur</option>
+            <option value="">Toutes les écoles</option>
+            @for (ecole of ecoles; track ecole.idEcole) {
+              <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+            }
           </select>
         </div>
       </div>
@@ -59,6 +62,8 @@
                 Localisation
                 <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
               </th>
+              <th>École</th>
+              <th>Classe attribuée</th>
               <th class="sortable" (click)="sortBy('statut')">
                 Statut
                 <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
@@ -69,7 +74,7 @@
           <tbody>
             @if (isLoading) {
               <tr>
-                <td colspan="4" class="loading-cell">
+                <td colspan="6" class="loading-cell">
                   <div class="spinner-border" role="status">
                     <span class="visually-hidden">Chargement...</span>
                   </div>
@@ -80,6 +85,8 @@
                 <tr class="table-row">
                   <td class="name-cell">{{ salle.nomSalle }}</td>
                   <td class="location-cell">{{ salle.localisation }}</td>
+                  <td>{{ getSchoolName(salle.idEcole) }}</td>
+                  <td>{{ getClassName(salle.idClasse) }}</td>
                   <td class="status-cell">
                     <span class="status-badge" [class]="getStatusClass(salle.statut)">
                       {{ getStatutLabel(salle.statut) }}
@@ -188,6 +195,7 @@ t
                   id="type"
                   class="form-select" 
                   formControlName="type"
+                  (change)="onTypeChange()"
                   [class.is-invalid]="type?.invalid && type?.touched">
                   <option value="">Sélectionner un type</option>
                   <option value="AMPHITHEATRE">{{ getTypeLabel(TypeSalle.AMPHITHEATRE) }}</option>
@@ -206,6 +214,24 @@ t
               </div>
             </div>
           </div>
+
+          @if (salleForm.get('type')?.value === TypeSalle.SALLE_COURS) {
+            <div class="mb-3">
+              <label for="idClasse" class="form-label">Classe attribuée *</label>
+              <select id="idClasse" class="form-select" formControlName="idClasse">
+                <option value="">Sélectionner une classe</option>
+                @for (classe of classesForSelectedSchool; track classe.idClasse) {
+                  <option [value]="classe.idClasse">{{ classe.nomClasse }} — {{ classe.specialite }} ({{ classe.niveau }})</option>
+                }
+              </select>
+              @if (!classesForSelectedSchool.length) {
+                <div class="text-muted">Aucune classe n'est enregistrée pour cette école.</div>
+              }
+              @if (salleForm.get('idClasse')?.invalid && salleForm.get('idClasse')?.touched) {
+                <div class="invalid-feedback d-block">Attribuez cette salle à une classe.</div>
+              }
+            </div>
+          }
 
           <div class="row">
             <div class="col-md-12">
@@ -283,12 +309,16 @@ t
             <div class="col-md-6">
               <div class="mb-3">
                 <label for="idEcole" class="form-label">École *</label>
-                <input 
-                  type="text" 
+                <select
                   id="idEcole"
-                  class="form-control" 
+                  class="form-select"
                   formControlName="idEcole"
-                  readonly>
+                  (change)="onSchoolChange()">
+                  <option value="">Sélectionner une école</option>
+                  @for (ecole of ecoles; track ecole.idEcole) {
+                    <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
+                  }
+                </select>
               </div>
             </div>
             <div class="col-md-6">

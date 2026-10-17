@@ -81,7 +81,7 @@
 
         <div class="form-group">
           <label class="form-label">Département</label>
-          <select class="form-select" [(ngModel)]="selectedDepartement" (change)="onDepartmentChange()" [disabled]="!enseignantsDispo.length">
+          <select class="form-select" [(ngModel)]="selectedDepartement" (change)="onDepartmentChange()" [disabled]="!departements.length">
             <option value="">Tous les départements</option>
             @for (departement of departements; track departement) {
               <option [value]="departement">{{ departement }}</option>

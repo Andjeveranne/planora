@@ -12,6 +12,7 @@ public class EmploiDuTempsDTO {
     private Long id;
     private String classeId;
     private String nomClasse;
+    private String idEcole;
     private String enseignantId;
     private String nomEnseignant;
     private Long ueId;

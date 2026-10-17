@@ -47,7 +47,7 @@ public class GatewayConfig {
 
             // Route pour le service des classes et filières
             .route("classes-service", r -> r
-                .path("/api/classes/**", "/api/filieres/**")
+                .path("/api/classes/**", "/api/filieres/**", "/api/specialites/**")
                 .uri("lb://classes-service"))
             
             // Route pour le service des écoles (CRUD)

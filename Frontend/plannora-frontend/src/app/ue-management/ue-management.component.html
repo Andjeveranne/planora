@@ -2,7 +2,7 @@
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Unités d'Enseignement</h1>
-      <p class="page-subtitle">Gérez les UEs : code, filière, niveau et volumes horaires</p>
+      <p class="page-subtitle">Gérez les UEs par école, département, spécialité, niveau et volumes horaires</p>
     </div>
     <div class="header-actions">
       @if (activeSection === 'list') {
@@ -30,7 +30,7 @@
           @for (n of niveaux; track n) { <option [value]="n">{{ n }}</option> }
         </select>
         <select [(ngModel)]="filterFiliere" (change)="applyFilters()" class="filter-select">
-          <option value="">Toutes les filières</option>
+          <option value="">Tous les départements</option>
           @for (f of filieres; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
         </select>
         <button class="btn btn-secondary" (click)="clearFilters()">Effacer</button>
@@ -45,6 +45,8 @@
               <div class="ue-badges">
                 @if (ue.niveau) { <span class="badge badge-niveau">{{ ue.niveau }}</span> }
                 @if (ue.nomFiliere) { <span class="badge badge-filiere">{{ ue.nomFiliere }}</span> }
+                @if (ue.specialite) { <span class="badge badge-filiere">{{ ue.specialite }}</span> }
+                @if (ue.idEcole) { <span class="badge badge-filiere">{{ getEcoleName(ue.idEcole) }}</span> }
               </div>
             </div>
             <div class="ue-card-body">
@@ -121,12 +123,28 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Filière</label>
-                <select [(ngModel)]="newUE.idFiliere" name="idFiliere" class="form-input" (change)="onFiliereChange(newUE)">
-                  <option value="">-- Choisir --</option>
-                  @for (f of filieres; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
+                <label>École *</label>
+                <select [(ngModel)]="newUE.idEcole" name="idEcole" class="form-input" (change)="onEcoleChange(newUE)">
+                  <option value="">-- Choisir une école --</option>
+                  @for (ecole of ecoles; track ecole.idEcole) { <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option> }
                 </select>
               </div>
+              <div class="form-group">
+                <label>Département *</label>
+                <select [(ngModel)]="newUE.idFiliere" name="idFiliere" class="form-input" (change)="onFiliereChange(newUE)" [disabled]="!newUE.idEcole">
+                  <option value="">-- Choisir un département --</option>
+                  @for (f of departmentsForNewUE; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Spécialité *</label>
+                <select [(ngModel)]="newUE.idSpecialite" name="idSpecialite" class="form-input" (change)="onSpecialiteChange(newUE)" [disabled]="!newUE.idFiliere">
+                  <option value="">-- Choisir une spécialité --</option>
+                  @for (specialite of specialitesForNewUE; track specialite.idSpecialite) { <option [value]="specialite.idSpecialite">{{ specialite.nom }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
               <div class="form-group">
                 <label>Niveau</label>
                 <select [(ngModel)]="newUE.niveau" name="niveau" class="form-input">
@@ -189,12 +207,28 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Filière</label>
-                <select [(ngModel)]="editingUE.idFiliere" name="idFiliere" class="form-input" (change)="onFiliereChange(editingUE)">
-                  <option value="">-- Choisir --</option>
-                  @for (f of filieres; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
+                <label>École *</label>
+                <select [(ngModel)]="editingUE.idEcole" name="editIdEcole" class="form-input" (change)="onEcoleChange(editingUE)">
+                  <option value="">-- Choisir une école --</option>
+                  @for (ecole of ecoles; track ecole.idEcole) { <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option> }
                 </select>
               </div>
+              <div class="form-group">
+                <label>Département *</label>
+                <select [(ngModel)]="editingUE.idFiliere" name="editIdFiliere" class="form-input" (change)="onFiliereChange(editingUE)" [disabled]="!editingUE.idEcole">
+                  <option value="">-- Choisir un département --</option>
+                  @for (f of departmentsForEditingUE; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Spécialité *</label>
+                <select [(ngModel)]="editingUE.idSpecialite" name="editIdSpecialite" class="form-input" (change)="onSpecialiteChange(editingUE)" [disabled]="!editingUE.idFiliere">
+                  <option value="">-- Choisir une spécialité --</option>
+                  @for (specialite of specialitesForEditingUE; track specialite.idSpecialite) { <option [value]="specialite.idSpecialite">{{ specialite.nom }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
               <div class="form-group">
                 <label>Niveau</label>
                 <select [(ngModel)]="editingUE.niveau" name="niveau" class="form-input">

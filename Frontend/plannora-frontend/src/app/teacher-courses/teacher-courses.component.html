@@ -37,7 +37,7 @@
       <select [(ngModel)]="selectedUEId" class="tc-select">
         <option [ngValue]="null" disabled>-- Choisir une UE --</option>
         @for (ue of uesDisponibles; track ue.id) {
-          <option [ngValue]="ue.id">{{ ue.codeUE }} – {{ ue.nomUE }}</option>
+          <option [ngValue]="ue.id">{{ getUEOptionLabel(ue) }}</option>
         }
       </select>
     </div>

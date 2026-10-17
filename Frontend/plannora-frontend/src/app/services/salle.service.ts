@@ -10,6 +10,7 @@ export interface SalleDTO {
   capacite: number;
   capaciteExam: number;
   idEcole: string;
+  idClasse?: string | null;
   statut: StatutSalle;
 }
 

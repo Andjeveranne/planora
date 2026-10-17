@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +20,9 @@ public class EmploiDuTemps {
     
     @Column(name = "classe_id", nullable = false)
     private String classeId;
+
+    @Column(name = "classe", nullable = false)
+    private String classe;
     
     /** Nullable pour les créneaux TPE (pas d'enseignant assigné) */
     @Column(name = "enseignant_id")
@@ -28,9 +32,27 @@ public class EmploiDuTemps {
     @Column(name = "ue_id")
     private Long ueId;
 
+    @Column(name = "ue", nullable = false)
+    private String ue;
+
     /** Nullable pour les créneaux TPE (pas de salle assignée) */
     @Column(name = "salle_id")
     private String salleId;
+
+    @Column(name = "salle", nullable = false)
+    private String salle;
+
+    @Column(name = "date_jour", nullable = false)
+    private LocalDate dateJour;
+
+    @Column(name = "jour", nullable = false)
+    private String jour;
+
+    @Column(name = "heure_debut", nullable = false)
+    private Integer heureDebut;
+
+    @Column(name = "heure_fin", nullable = false)
+    private Integer heureFin;
     
     @Column(name = "date_heure_debut", nullable = false)
     private LocalDateTime dateHeureDebut;

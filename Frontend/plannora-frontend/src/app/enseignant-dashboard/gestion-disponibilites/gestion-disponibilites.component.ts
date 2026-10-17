@@ -62,7 +62,7 @@ export class GestionDisponibilitesComponent implements OnInit {
             this.enseignantId = user.userId.toString();
         }
 
-        this.setWeekToCurrent();
+        this.setWeekToNext();
         this.ecoleService.obtenirToutes().subscribe(ecoles => {
             this.ecoles = ecoles;
             if (!this.selectedEcoleId) this.selectedEcoleId = ecoles[0]?.idEcole ?? '';
@@ -86,6 +86,15 @@ export class GestionDisponibilitesComponent implements OnInit {
         const day = now.getDay();
         const diff = now.getDate() - day + (day === 0 ? -6 : 1);
         this.currentWeekStart = new Date(now.setDate(diff));
+        this.currentWeekStart.setHours(0, 0, 0, 0);
+        this.updateWeekDays();
+    }
+
+    setWeekToNext() {
+        const now = new Date();
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        this.currentWeekStart = new Date(now.getFullYear(), now.getMonth(), diff + 7);
         this.currentWeekStart.setHours(0, 0, 0, 0);
         this.updateWeekDays();
     }

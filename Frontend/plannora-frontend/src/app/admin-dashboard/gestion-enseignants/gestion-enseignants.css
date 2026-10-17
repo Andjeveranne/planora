@@ -1675,6 +1675,13 @@ textarea.form-control {
   transform: scale(0.95);
 }
 
+.form-hint {
+  display: block;
+  margin-top: 0.4rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .assignment-container {

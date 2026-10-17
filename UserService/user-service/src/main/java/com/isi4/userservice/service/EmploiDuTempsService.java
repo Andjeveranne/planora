@@ -273,7 +273,7 @@ public class EmploiDuTempsService {
     private EmploiDuTempsDTO convertToDTO(EmploiDuTemps emploi) {
         EmploiDuTempsDTO dto = new EmploiDuTempsDTO();
         dto.setId(emploi.getId());
-        dto.setEnseignantId(emploi.getEnseignant().getIdUser());
+        dto.setEnseignantId(emploi.getEnseignant() != null ? emploi.getEnseignant().getIdUser() : null);
         dto.setDateJour(emploi.getDateJour());
         dto.setJour(emploi.getJour());
         dto.setHeureDebut(emploi.getHeureDebut());

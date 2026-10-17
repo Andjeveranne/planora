@@ -16,7 +16,17 @@ export interface ClasseDTO {
   effectifs: number;
   niveau: string;
   idFiliere: string;
+  specialite?: string;
   nomFiliere?: string;
+  idEcole?: string;
+}
+
+export interface SpecialiteDTO {
+  idSpecialite?: string;
+  nom: string;
+  description?: string;
+  idFiliere: string;
+  nomDepartement?: string;
   idEcole?: string;
 }
 
@@ -24,6 +34,7 @@ export interface ClasseDTO {
 export class ClassesService {
   private classesUrl = 'http://localhost:8081/api/classes';
   private filieresUrl = 'http://localhost:8081/api/filieres';
+  private specialitesUrl = 'http://localhost:8081/api/specialites';
 
   constructor(private http: HttpClient) {}
 
@@ -46,6 +57,22 @@ export class ClassesService {
 
   deleteFiliere(id: string): Observable<void> {
     return this.http.delete<void>(`${this.filieresUrl}/${id}`);
+  }
+
+  getSpecialites(): Observable<SpecialiteDTO[]> {
+    return this.http.get<SpecialiteDTO[]>(this.specialitesUrl);
+  }
+
+  createSpecialite(specialite: SpecialiteDTO): Observable<SpecialiteDTO> {
+    return this.http.post<SpecialiteDTO>(this.specialitesUrl, specialite);
+  }
+
+  updateSpecialite(id: string, specialite: SpecialiteDTO): Observable<SpecialiteDTO> {
+    return this.http.put<SpecialiteDTO>(`${this.specialitesUrl}/${id}`, specialite);
+  }
+
+  deleteSpecialite(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.specialitesUrl}/${id}`);
   }
 
   // Classes

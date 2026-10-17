@@ -2,6 +2,7 @@ package com.isi4.userservice.service;
 
 import com.isi4.userservice.dto.EnseignantUEDTO;
 import com.isi4.userservice.entity.EnseignantUE;
+import com.isi4.userservice.exception.ValidationException;
 import com.isi4.userservice.repository.EnseignantUERepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +36,14 @@ public class EnseignantUEService {
     @Transactional
     public EnseignantUEDTO ajouterCompetence(EnseignantUEDTO dto) {
         if (dto.getIdEcole() == null || dto.getIdEcole().isBlank()) {
-            throw new IllegalArgumentException("L'école de l'assignation est obligatoire.");
+            throw new ValidationException("L'école de l'assignation est obligatoire.");
         }
         // Vérifier si la compétence existe déjà
-        var existing = enseignantUERepository.findByEnseignantIdAndUeId(dto.getEnseignantId(), dto.getUeId());
+        var existing = enseignantUERepository.findByEnseignantIdAndUeIdAndIdEcole(
+                dto.getEnseignantId(), dto.getUeId(), dto.getIdEcole());
         var owner = enseignantUERepository.findByUeIdAndIdEcole(dto.getUeId(), dto.getIdEcole());
         if (owner.isPresent() && !owner.get().getEnseignantId().equals(dto.getEnseignantId())) {
-            throw new IllegalArgumentException("Cette UE est déjà assignée à un autre enseignant dans cette école.");
+            throw new ValidationException("Cette UE est déjà assignée à un autre enseignant dans cette école.");
         }
         
         EnseignantUE entity;
@@ -64,6 +66,18 @@ public class EnseignantUEService {
     @Transactional
     public void supprimerCompetence(Long id) {
         enseignantUERepository.deleteById(id);
+    }
+
+    @Transactional
+    public EnseignantUEDTO mettreAJourCompetence(Long id, EnseignantUEDTO dto) {
+        EnseignantUE entity = enseignantUERepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Affectation UE-enseignant introuvable : " + id));
+        entity.setPeutCM(Boolean.TRUE.equals(dto.getPeutCM()));
+        entity.setPeutTD(Boolean.TRUE.equals(dto.getPeutTD()));
+        entity.setPeutTP(Boolean.TRUE.equals(dto.getPeutTP()));
+        entity.setPreference(dto.getPreference());
+        entity.setCommentaire(dto.getCommentaire());
+        return convertToDTO(enseignantUERepository.save(entity));
     }
 
     public List<EnseignantUEDTO> getEnseignantsDisponiblesPourUE(Long ueId, String typeCours) {

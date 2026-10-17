@@ -33,6 +33,8 @@ public class SalleDTO {
     
     @NotBlank(message = "L'ID de l'école est obligatoire")
     private String idEcole;
+
+    private String idClasse;
     
     @NotNull(message = "Le statut est obligatoire")
     private StatutSalle statut;

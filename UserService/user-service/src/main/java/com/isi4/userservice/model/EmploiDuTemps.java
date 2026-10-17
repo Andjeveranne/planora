@@ -67,7 +67,7 @@ public class EmploiDuTemps {
      * Un enseignant peut avoir plusieurs cours dans son emploi du temps
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enseignant_id", referencedColumnName = "id_user", nullable = false)
+    @JoinColumn(name = "enseignant_id", referencedColumnName = "id_user")
     private Enseignant enseignant;
 
     /**

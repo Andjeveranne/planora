@@ -22,8 +22,9 @@ public class FiliereService {
     private final FiliereRepository filiereRepository;
 
     public FiliereDTO creer(FiliereDTO dto) {
-        if (filiereRepository.existsByNom(dto.getNom())) {
-            throw new ValidationException("Une filière avec le nom '" + dto.getNom() + "' existe déjà");
+        validerEcole(dto);
+        if (filiereRepository.existsByNomAndIdEcole(dto.getNom(), dto.getIdEcole())) {
+            throw new ValidationException("Un département avec le nom '" + dto.getNom() + "' existe déjà dans cette école");
         }
         Filiere f = new Filiere();
         f.setIdFiliere(dto.getIdFiliere() != null ? dto.getIdFiliere() : UUID.randomUUID().toString());
@@ -45,10 +46,11 @@ public class FiliereService {
     }
 
     public FiliereDTO mettreAJour(String id, FiliereDTO dto) {
+        validerEcole(dto);
         Filiere f = filiereRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Filière non trouvée : " + id));
-        if (!f.getNom().equals(dto.getNom()) && filiereRepository.existsByNom(dto.getNom())) {
-            throw new ValidationException("Une filière avec le nom '" + dto.getNom() + "' existe déjà");
+        if (filiereRepository.existsByNomAndIdEcoleAndIdFiliereNot(dto.getNom(), dto.getIdEcole(), id)) {
+            throw new ValidationException("Un département avec le nom '" + dto.getNom() + "' existe déjà dans cette école");
         }
         f.setNom(dto.getNom());
         f.setDescription(dto.getDescription());
@@ -77,11 +79,18 @@ public class FiliereService {
                 cd.setEffectifs(c.getEffectifs());
                 cd.setNiveau(c.getNiveau());
                 cd.setIdFiliere(f.getIdFiliere());
+                cd.setSpecialite(c.getSpecialite());
                 cd.setNomFiliere(f.getNom());
                 cd.setIdEcole(f.getIdEcole());
                 return cd;
             }).collect(Collectors.toList()));
         }
         return dto;
+    }
+
+    private void validerEcole(FiliereDTO dto) {
+        if (dto.getIdEcole() == null || dto.getIdEcole().isBlank()) {
+            throw new ValidationException("L'école du département est obligatoire");
+        }
     }
 }

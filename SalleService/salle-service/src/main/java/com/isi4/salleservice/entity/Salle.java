@@ -48,6 +48,9 @@ public class Salle {
     @NotBlank(message = "L'ID de l'école est obligatoire")
     @Column(name = "id_ecole", nullable = false)
     private String idEcole;
+
+    @Column(name = "id_classe", length = 100)
+    private String idClasse;
     
     @NotNull(message = "Le statut est obligatoire")
     @Enumerated(EnumType.STRING)

@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface FiliereRepository extends JpaRepository<Filiere, String> {
     Optional<Filiere> findByNom(String nom);
-    boolean existsByNom(String nom);
+    boolean existsByNomAndIdEcole(String nom, String idEcole);
+    boolean existsByNomAndIdEcoleAndIdFiliereNot(String nom, String idEcole, String idFiliere);
 }

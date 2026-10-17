@@ -7,6 +7,7 @@ import com.isi4.classesservice.exception.ResourceNotFoundException;
 import com.isi4.classesservice.exception.ValidationException;
 import com.isi4.classesservice.repository.ClasseRepository;
 import com.isi4.classesservice.repository.FiliereRepository;
+import com.isi4.classesservice.repository.SpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class ClasseService {
 
     private final ClasseRepository classeRepository;
     private final FiliereRepository filiereRepository;
+    private final SpecialiteRepository specialiteRepository;
 
     public ClasseDTO creer(ClasseDTO dto) {
         if (classeRepository.existsByNomClasse(dto.getNomClasse())) {
@@ -29,11 +31,13 @@ public class ClasseService {
         }
         Filiere filiere = filiereRepository.findById(dto.getIdFiliere())
                 .orElseThrow(() -> new ResourceNotFoundException("Filière non trouvée : " + dto.getIdFiliere()));
+        validerSpecialite(dto);
         Classe c = new Classe();
         c.setIdClasse(dto.getIdClasse() != null ? dto.getIdClasse() : UUID.randomUUID().toString());
         c.setNomClasse(dto.getNomClasse());
         c.setEffectifs(dto.getEffectifs());
         c.setNiveau(dto.getNiveau());
+        c.setSpecialite(dto.getSpecialite());
         c.setFiliere(filiere);
         return toDTO(classeRepository.save(c));
     }
@@ -67,9 +71,11 @@ public class ClasseService {
         }
         Filiere filiere = filiereRepository.findById(dto.getIdFiliere())
                 .orElseThrow(() -> new ResourceNotFoundException("Filière non trouvée : " + dto.getIdFiliere()));
+        validerSpecialite(dto);
         c.setNomClasse(dto.getNomClasse());
         c.setEffectifs(dto.getEffectifs());
         c.setNiveau(dto.getNiveau());
+        c.setSpecialite(dto.getSpecialite());
         c.setFiliere(filiere);
         return toDTO(classeRepository.save(c));
     }
@@ -87,11 +93,18 @@ public class ClasseService {
         dto.setNomClasse(c.getNomClasse());
         dto.setEffectifs(c.getEffectifs());
         dto.setNiveau(c.getNiveau());
+        dto.setSpecialite(c.getSpecialite());
         if (c.getFiliere() != null) {
             dto.setIdFiliere(c.getFiliere().getIdFiliere());
             dto.setNomFiliere(c.getFiliere().getNom());
             dto.setIdEcole(c.getFiliere().getIdEcole());
         }
         return dto;
+    }
+
+    private void validerSpecialite(ClasseDTO dto) {
+        if (!specialiteRepository.existsByNomAndIdFiliere(dto.getSpecialite(), dto.getIdFiliere())) {
+            throw new ValidationException("La spécialité sélectionnée n'appartient pas au département.");
+        }
     }
 }

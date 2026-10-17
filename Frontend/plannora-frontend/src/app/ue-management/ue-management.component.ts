@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UEService, UEDTO, UEStatistics } from '../services/ue.service';
-import { ClassesService, FiliereDTO } from '../services/classes.service';
+import { ClassesService, FiliereDTO, SpecialiteDTO } from '../services/classes.service';
+import { EcoleDTO, EcoleService } from '../services/ecole.service';
 import { NotificationService } from '../services/notification.service';
 
 @Component({
@@ -17,6 +18,8 @@ export class UEManagementComponent implements OnInit {
   ues: UEDTO[] = [];
   filteredUEs: UEDTO[] = [];
   filieres: FiliereDTO[] = [];
+  specialites: SpecialiteDTO[] = [];
+  ecoles: EcoleDTO[] = [];
   statistics: UEStatistics | null = null;
 
   activeSection: string = 'list';
@@ -38,14 +41,23 @@ export class UEManagementComponent implements OnInit {
   constructor(
     private ueService: UEService,
     private classesService: ClassesService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private ecoleService: EcoleService
   ) {}
 
   ngOnInit(): void {
     this.loadUEs();
     this.classesService.getFilieres().subscribe({
       next: (f) => this.filieres = f,
-      error: () => this.filieres = []
+      error: () => this.errorMessage = 'Impossible de charger les départements.'
+    });
+    this.classesService.getSpecialites().subscribe({
+      next: (specialites) => this.specialites = specialites,
+      error: () => this.errorMessage = 'Impossible de charger les spécialités.'
+    });
+    this.ecoleService.obtenirToutes().subscribe({
+      next: (ecoles) => this.ecoles = ecoles,
+      error: () => this.errorMessage = 'Impossible de charger les écoles.'
     });
   }
 
@@ -120,7 +132,9 @@ export class UEManagementComponent implements OnInit {
       `Nom : ${ue.nomUE}`,
       ue.description ? `Description : ${ue.description}` : '',
       ue.niveau ? `Niveau : ${ue.niveau}` : '',
-      ue.nomFiliere ? `Filière : ${ue.nomFiliere}` : '',
+      ue.nomFiliere ? `Département : ${ue.nomFiliere}` : '',
+      ue.specialite ? `Spécialité : ${ue.specialite}` : '',
+      ue.idEcole ? `École : ${this.ecoles.find(ecole => ecole.idEcole === ue.idEcole)?.nomEcole ?? ue.idEcole}` : '',
       ue.nombreCredit != null ? `Crédits : ${ue.nombreCredit}` : '',
       ue.heuresCM != null ? `CM : ${ue.heuresCM}h` : '',
       ue.heuresTD != null ? `TD : ${ue.heuresTD}h` : '',
@@ -131,7 +145,44 @@ export class UEManagementComponent implements OnInit {
 
   onFiliereChange(ue: UEDTO): void {
     const f = this.filieres.find(f => f.idFiliere === ue.idFiliere);
-    if (f) ue.nomFiliere = f.nom;
+    ue.nomFiliere = f?.nom;
+    ue.idSpecialite = '';
+    ue.specialite = '';
+  }
+
+  onEcoleChange(ue: UEDTO): void {
+    ue.idFiliere = '';
+    ue.nomFiliere = '';
+    ue.idSpecialite = '';
+    ue.specialite = '';
+  }
+
+  onSpecialiteChange(ue: UEDTO): void {
+    ue.specialite = this.specialites.find(item => item.idSpecialite === ue.idSpecialite)?.nom ?? '';
+  }
+
+  getEcoleName(idEcole: string): string {
+    return this.ecoles.find(ecole => ecole.idEcole === idEcole)?.nomEcole ?? idEcole;
+  }
+
+  get departmentsForNewUE(): FiliereDTO[] {
+    return this.filieres.filter(filiere => filiere.idEcole === this.newUE.idEcole);
+  }
+
+  get departmentsForEditingUE(): FiliereDTO[] {
+    return this.editingUE
+      ? this.filieres.filter(filiere => filiere.idEcole === this.editingUE!.idEcole)
+      : [];
+  }
+
+  get specialitesForNewUE(): SpecialiteDTO[] {
+    return this.specialites.filter(specialite => specialite.idFiliere === this.newUE.idFiliere);
+  }
+
+  get specialitesForEditingUE(): SpecialiteDTO[] {
+    return this.editingUE
+      ? this.specialites.filter(specialite => specialite.idFiliere === this.editingUE!.idFiliere)
+      : [];
   }
 
   createUE(): void {
@@ -206,6 +257,10 @@ export class UEManagementComponent implements OnInit {
   private validate(ue: UEDTO): boolean {
     if (!ue.codeUE?.trim()) { this.errorMessage = 'Le code UE est obligatoire.'; return false; }
     if (!ue.nomUE?.trim()) { this.errorMessage = "Le nom de l'UE est obligatoire."; return false; }
+    if (!ue.idEcole || !ue.idFiliere || !ue.idSpecialite || !ue.specialite) {
+      this.errorMessage = "L'école, le département et la spécialité sont obligatoires.";
+      return false;
+    }
     return true;
   }
 
@@ -215,7 +270,8 @@ export class UEManagementComponent implements OnInit {
       nombreCredit: undefined, nombreHeur: undefined,
       heuresCM: undefined, heuresTD: undefined, heuresTP: undefined,
       heureDebut: '08:00', heureFin: '18:00',
-      niveau: undefined, idFiliere: undefined, nomFiliere: undefined
+      niveau: undefined, idFiliere: '', nomFiliere: '',
+      idEcole: '', idSpecialite: '', specialite: ''
     };
   }
 

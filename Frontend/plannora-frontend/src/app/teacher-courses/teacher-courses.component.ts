@@ -87,7 +87,11 @@ export class TeacherCoursesComponent implements OnInit {
 
   getNomUE(ueId: number): string {
     const ue = this.toutesLesUEs.find(u => u.id === ueId);
-    return ue ? `${ue.codeUE} – ${ue.nomUE}` : `UE #${ueId}`;
+    return ue ? `${ue.codeUE} – ${ue.nomUE} (${ue.idEcole ?? 'école inconnue'})` : `UE #${ueId}`;
+  }
+
+  getUEOptionLabel(ue: UEDTO): string {
+    return `${ue.codeUE} – ${ue.nomUE} (${ue.idEcole ?? 'école inconnue'})`;
   }
 
   toggleAddForm(): void {
@@ -112,10 +116,19 @@ export class TeacherCoursesComponent implements OnInit {
       return;
     }
 
+    const ueInfo = this.toutesLesUEs.find(ue => ue.id === this.selectedUEId);
+    if (!ueInfo?.idEcole) {
+      this.notification.error("Cette UE n'est associée à aucune école.");
+      return;
+    }
+
     this.adding = true;
     const dto: UEEnseignantDTO = {
       ueId: this.selectedUEId,
       enseignantId: this.currentTeacherId,
+      idEcole: ueInfo.idEcole,
+      codeUE: ueInfo.codeUE,
+      nomUE: ueInfo.nomUE,
       peutCM: this.newPeutCM,
       peutTD: this.newPeutTD,
       peutTP: this.newPeutTP

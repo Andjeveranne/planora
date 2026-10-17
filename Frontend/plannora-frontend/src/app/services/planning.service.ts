@@ -25,6 +25,7 @@ export interface EmploiDuTempsDTO {
     salle?: string;
     classeId?: string;
     nomClasse?: string;
+    idEcole?: string;
     ueId?: number;
     codeUE?: string;
     nomUE?: string;

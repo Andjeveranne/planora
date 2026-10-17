@@ -725,6 +725,7 @@ textarea.form-control {
 .form-group label { font-weight: 500; font-size: 14px; color: #374151; }
 .form-input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
 .form-input:focus { outline: none; border-color: #3b4c96; box-shadow: 0 0 0 3px rgba(59,76,150,0.1); }
+.form-hint { display: block; margin-top: 0.4rem; color: #6b7280; font-size: 0.8rem; }
 
 .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
 .btn-primary { background: #3b4c96; color: white; }
