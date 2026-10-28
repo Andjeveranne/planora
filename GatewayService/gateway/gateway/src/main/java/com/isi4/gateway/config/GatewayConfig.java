@@ -27,7 +27,7 @@ public class GatewayConfig {
             
             // Route pour le service utilisateurs
             .route("user-service", r -> r
-                .path("/api/utilisateurs/**", "/api/users/**", "/api/courses/**", "/api/enseignant-ues/**")
+                .path("/api/utilisateurs/**", "/api/users/**", "/api/courses/**", "/api/enseignant-ues/**", "/api/attendance/**")
                 .uri("lb://user-service"))
 
             // Route pour le service des Unités d'enseignement (UE)

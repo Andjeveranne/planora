@@ -3,6 +3,7 @@ package com.isi4.salleservice.enums;
 public enum TypeSalle {
     AMPHITHEATRE,
     SALLE_COURS,
+    SALLE_COURS_AMPHITHEATRE,
     LABORATOIRE,
     SALLE_INFORMATIQUE,
     SALLE_CONFERENCE,

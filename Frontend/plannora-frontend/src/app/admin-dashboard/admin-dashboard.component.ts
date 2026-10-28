@@ -14,6 +14,7 @@ import { GestionEnseignantsComponent } from './gestion-enseignants/gestion-ensei
 import { GestionEcolesComponent } from './gestion-ecoles/gestion-ecoles.component';
 import { GestionClassesComponent } from './gestion-classes/gestion-classes.component';
 import { GenerationEmploisComponent } from './generation-emplois/generation-emplois.component';
+import { GestionEtudiantsComponent } from './gestion-etudiants/gestion-etudiants.component';
 
 interface UserInfo {
   nom: string;
@@ -46,7 +47,7 @@ interface EdtSlot {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, UEManagementComponent, GestionSallesComponent, GestionEnseignantsComponent, GestionEcolesComponent, GestionClassesComponent, GenerationEmploisComponent],
+  imports: [CommonModule, FormsModule, UEManagementComponent, GestionSallesComponent, GestionEnseignantsComponent, GestionEcolesComponent, GestionClassesComponent, GenerationEmploisComponent, GestionEtudiantsComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.css']
 })
@@ -367,6 +368,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   getSectionHeader(): { title: string; description: string } {
     const headers: Record<string, { title: string; description: string }> = {
       overview: { title: 'Tableau de bord', description: 'Vue d\'ensemble des indicateurs et des listes de la plateforme Planora.' },
+      etudiants: { title: 'Gestion des étudiants', description: 'Consulter, créer et gérer les comptes et profils des étudiants.' },
       enseignants: { title: 'Gestion des enseignants', description: 'Consulter, ajouter et gérer les comptes et les disponibilités des enseignants.' },
       ues: { title: 'Unités d\'enseignement', description: 'Gérer les UE, les matières et leur affectation aux formations.' },
       rooms: { title: 'Gestion des salles', description: 'Créer et gérer les salles, capacités et types pour la planification.' },
@@ -1500,7 +1502,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       specialite: enseignant.specialite || '',
       departement: enseignant.departement || '',
       idEcole: enseignant.idEcole || '',
-      idEcoles: enseignant.idEcoles ?? (enseignant.idEcole ? [enseignant.idEcole] : [])
+      idEcoles: enseignant.idEcole ? [enseignant.idEcole] : []
     };
     this.showAddEnseignantForm = true;
     this.successMessage = `Modification de ${enseignant.prenomUser} ${enseignant.nomUser}`;

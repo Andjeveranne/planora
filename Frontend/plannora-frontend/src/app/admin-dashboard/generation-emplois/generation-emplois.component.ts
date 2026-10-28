@@ -1,9 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, map } from 'rxjs';
 import { EmploiDuTempsService, EmploiDuTempsDTO } from '../../services/emploi-du-temps.service';
 import { EcoleService, EcoleDTO } from '../../services/ecole.service';
 import { ClassesService, FiliereDTO, SpecialiteDTO } from '../../services/classes.service';
+import { PlanningService } from '../../services/planning.service';
+import { UserService, Enseignant } from '../../services/user.service';
 
 interface EnseignantDispo {
   enseignantId: string;
@@ -54,19 +57,30 @@ export class GenerationEmploisComponent implements OnInit {
   messages = { success: '', error: '' };
 
   readonly JOURS = [
-    { num: 1, label: 'Lundi' },
-    { num: 2, label: 'Mardi' },
-    { num: 3, label: 'Mercredi' },
-    { num: 4, label: 'Jeudi' },
-    { num: 5, label: 'Vendredi' }
+    { num: 1, label: 'Monday' },
+    { num: 2, label: 'Tuesday' },
+    { num: 3, label: 'Wednesday' },
+    { num: 4, label: 'Thursday' },
+    { num: 5, label: 'Friday' }
   ];
 
-  readonly CRENEAUX = ['8h-10h', '10h-12h', '12h-14h', '14h-16h', '16h-18h'];
+  readonly CRENEAUX = ['8:00-10:00', '10:00-12:00', '12:00-14:00', '14:00-16:00', '16:00-18:00'];
+
+  /** Normalise any créneau format to the canonical display format used by CRENEAUX. */
+  private normalizeCreneau(raw: string): string {
+    if (!raw) return raw;
+    // "8h-10h"  → "8:00-10:00"
+    // "10h-12h" → "10:00-12:00"
+    return raw.replace(/(\d{1,2})h-(\d{1,2})h/, (_m, h1: string, h2: string) =>
+      `${h1.padStart(1, '0')}:00-${h2.padStart(1, '0')}:00`
+    );
+  }
 
   constructor(
     private emploiDuTempsService: EmploiDuTempsService,
     private ecoleService: EcoleService,
-    private classesService: ClassesService
+    private classesService: ClassesService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
@@ -102,25 +116,82 @@ export class GenerationEmploisComponent implements OnInit {
 
   loadEnseignantsDispo(): void {
     this.isLoadingEnseignants = true;
+    this.messages = { success: '', error: '' };
+
+    const planningRequest = this.emploiDuTempsService.getEnseignantsAvecDisponibilites(
+      this.selectedEcoleId || undefined,
+      this.selectedDepartement || undefined,
+      this.selectedSpecialite || undefined
+    );
+
+    const teacherRequest = this.userService.rechercherEnseignants(
+      this.selectedEcoleId || undefined,
+      this.selectedDepartement || undefined,
+      this.selectedSpecialite || undefined
+    );
+
     this.emploiDuTempsService.getEnseignantsAvecDisponibilites(
       this.selectedEcoleId || undefined,
-      this.selectedDepartement || undefined
+      this.selectedDepartement || undefined,
+      this.selectedSpecialite || undefined
     ).subscribe({
       next: (data: any[]) => {
-        this.enseignantsDispo = data.map(d => ({
-          enseignantId: d.enseignantId ?? d.idUser,
-          nom: d.nom ?? d.nomUser,
-          prenom: d.prenom ?? d.prenomUser,
-          email: d.email,
-          departement: d.departement,
-          specialite: d.specialite,
-          nombreDisponibilites: d.nombreDisponibilites ?? 0
-        }));
-        this.isLoadingEnseignants = false;
+        const fromPlanning = (data ?? []).map(d => ({
+          enseignantId: d.enseignantId ?? d.idUser ?? '',
+          nom: d.nom ?? d.nomUser ?? '',
+          prenom: d.prenom ?? d.prenomUser ?? '',
+          email: d.email ?? '',
+          departement: d.departement ?? '',
+          specialite: d.specialite ?? '',
+          nombreDisponibilites: Number(d.nombreDisponibilites ?? d.nbDisponibilites ?? 0)
+        })).filter(ens => ens.enseignantId);
+
+        if (fromPlanning.length > 0) {
+          this.enseignantsDispo = fromPlanning;
+          this.isLoadingEnseignants = false;
+          return;
+        }
+
+        teacherRequest.subscribe({
+          next: (teachers) => {
+            this.enseignantsDispo = (teachers ?? []).map(t => ({
+              enseignantId: t.idUser ?? '',
+              nom: t.nomUser ?? '',
+              prenom: t.prenomUser ?? '',
+              email: t.email ?? '',
+              departement: t.departement ?? '',
+              specialite: t.specialite ?? '',
+              nombreDisponibilites: 0
+            })).filter(ens => ens.enseignantId);
+            this.isLoadingEnseignants = false;
+          },
+          error: () => {
+            this.enseignantsDispo = [];
+            this.messages.error = 'Impossible de charger la liste des enseignants.';
+            this.isLoadingEnseignants = false;
+          }
+        });
       },
       error: () => {
-        this.messages.error = 'Impossible de charger la liste des enseignants.';
-        this.isLoadingEnseignants = false;
+        teacherRequest.subscribe({
+          next: (teachers) => {
+            this.enseignantsDispo = (teachers ?? []).map(t => ({
+              enseignantId: t.idUser ?? '',
+              nom: t.nomUser ?? '',
+              prenom: t.prenomUser ?? '',
+              email: t.email ?? '',
+              departement: t.departement ?? '',
+              specialite: t.specialite ?? '',
+              nombreDisponibilites: 0
+            })).filter(ens => ens.enseignantId);
+            this.isLoadingEnseignants = false;
+          },
+          error: () => {
+            this.enseignantsDispo = [];
+            this.messages.error = 'Impossible de charger la liste des enseignants.';
+            this.isLoadingEnseignants = false;
+          }
+        });
       }
     });
   }
@@ -204,7 +275,7 @@ export class GenerationEmploisComponent implements OnInit {
       }
       const entry = this.grille[e.classeId];
       if (!entry.jours[e.jourSemaine]) entry.jours[e.jourSemaine] = {};
-      entry.jours[e.jourSemaine][e.creneau] = e;
+      entry.jours[e.jourSemaine][this.normalizeCreneau(e.creneau)] = e;
     }
 
     this.classesIds.sort((a, b) =>
@@ -218,34 +289,65 @@ export class GenerationEmploisComponent implements OnInit {
   getSlotClass(slot: EmploiDuTempsDTO | null): string {
     if (!slot) return 'slot-empty';
     const t = (slot.typeCours ?? '').toLowerCase();
-    if (t === 'tpe') return 'slot-tpe';
-    if (t === 'cm') return 'slot-cm';
-    if (t === 'td') return 'slot-td';
-    if (t === 'tp') return 'slot-tp';
+    if (t === 'tpe' || t === 'project work' || t === 'guided project') return 'slot-tpe';
+    if (t === 'cm' || t === 'lecture') return 'slot-cm';
+    if (t === 'td' || t === 'tutorial') return 'slot-td';
+    if (t === 'tp' || t === 'practical' || t === 'practical lab') return 'slot-tp';
     return 'slot-other';
+  }
+
+  getTypeLabel(typeCours?: string): string {
+    const normalized = (typeCours ?? '').trim().toLowerCase();
+    const labels: Record<string, string> = {
+      cm: 'Lecture',
+      lecture: 'Lecture',
+      td: 'Tutorial',
+      tutorial: 'Tutorial',
+      tp: 'Practical',
+      practical: 'Practical',
+      practicallab: 'Practical',
+      tpe: 'Project Work',
+      'project work': 'Project Work',
+      'guided project': 'Project Work'
+    };
+    return labels[normalized] ?? (typeCours ?? 'Course');
+  }
+
+  getCourseDisplay(slot: EmploiDuTempsDTO | null): string {
+    if (!slot) return '';
+    return slot.codeUE || slot.nomUE || 'Course';
+  }
+
+  getCourseTitle(slot: EmploiDuTempsDTO | null): string {
+    if (!slot) return '';
+    return slot.nomUE || slot.codeUE || 'Course';
+  }
+
+  getTeacherDisplay(slot: EmploiDuTempsDTO | null): string {
+    if (!slot) return '';
+    return slot.nomEnseignant || slot.enseignantId || 'Teacher';
   }
 
   getSlotLabel(slot: EmploiDuTempsDTO | null): string {
     if (!slot) return '';
-    if (slot.typeCours === 'TPE') return 'TPE';
-    return `${slot.typeCours ?? ''} – ${slot.codeUE ?? ''}`;
+    return `${this.getTypeLabel(slot.typeCours)} • ${this.getCourseDisplay(slot)}`;
   }
 
   getSlotTooltip(slot: EmploiDuTempsDTO | null): string {
     if (!slot) return '';
-    if (slot.typeCours === 'TPE') return 'Travaux Personnels Encadrés';
+    const teacher = this.getTeacherDisplay(slot);
     return [
-      slot.typeCours,
+      this.getTypeLabel(slot.typeCours),
       slot.codeUE ? `UE: ${slot.codeUE} – ${slot.nomUE ?? ''}` : '',
-      slot.enseignantId ? `Prof: ${slot.enseignantId}` : '',
-      slot.nomSalle ? `Salle: ${slot.nomSalle}` : ''
+      teacher ? `Teacher: ${teacher}` : '',
+      slot.nomSalle ? `Room: ${slot.nomSalle}` : ''
     ].filter(Boolean).join('\n');
   }
 
-  get nombreCM(): number { return this.emploisGeneres.filter(e => e.typeCours === 'CM').length; }
-  get nombreTD(): number { return this.emploisGeneres.filter(e => e.typeCours === 'TD').length; }
-  get nombreTP(): number { return this.emploisGeneres.filter(e => e.typeCours === 'TP').length; }
-  get nombreTPE(): number { return this.emploisGeneres.filter(e => e.typeCours === 'TPE').length; }
+  get nombreCM(): number { return this.emploisGeneres.filter(e => this.getTypeLabel(e.typeCours) === 'Lecture').length; }
+  get nombreTD(): number { return this.emploisGeneres.filter(e => this.getTypeLabel(e.typeCours) === 'Tutorial').length; }
+  get nombreTP(): number { return this.emploisGeneres.filter(e => this.getTypeLabel(e.typeCours) === 'Practical').length; }
+  get nombreTPE(): number { return this.emploisGeneres.filter(e => this.getTypeLabel(e.typeCours) === 'Project Work').length; }
 
   get nomEcoleSelectionnee(): string {
     return this.ecoles.find(e => e.idEcole === this.selectedEcoleId)?.nomEcole ?? '';

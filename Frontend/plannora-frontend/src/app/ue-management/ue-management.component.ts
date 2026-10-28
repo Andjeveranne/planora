@@ -229,6 +229,10 @@ export class UEManagementComponent implements OnInit {
     });
   }
 
+  saveEditUE(): void {
+    this.updateUE();
+  }
+
   deleteUE(ue: UEDTO): void {
     if (!ue.id) return;
     this.notification.confirm(

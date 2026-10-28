@@ -1,6 +1,5 @@
 # Local secrets and environment overrides
-.env
-.env.*
+
 !.env.example
 
 # Java / Maven build output

@@ -17,6 +17,7 @@ export interface SalleDTO {
 export enum TypeSalle {
   AMPHITHEATRE = 'AMPHITHEATRE',
   SALLE_COURS = 'SALLE_COURS',
+  SALLE_COURS_AMPHITHEATRE = 'SALLE_COURS_AMPHITHEATRE',
   LABORATOIRE = 'LABORATOIRE',
   SALLE_INFORMATIQUE = 'SALLE_INFORMATIQUE',
   SALLE_CONFERENCE = 'SALLE_CONFERENCE',
@@ -106,23 +107,24 @@ export class SalleService {
   // Méthodes utilitaires
   getTypeLabel(type: TypeSalle): string {
     const labels: { [key in TypeSalle]: string } = {
-      [TypeSalle.AMPHITHEATRE]: 'Amphithéâtre',
-      [TypeSalle.SALLE_COURS]: 'Salle de cours',
-      [TypeSalle.LABORATOIRE]: 'Laboratoire',
-      [TypeSalle.SALLE_INFORMATIQUE]: 'Salle informatique',
-      [TypeSalle.SALLE_CONFERENCE]: 'Salle de conférence',
-      [TypeSalle.BIBLIOTHEQUE]: 'Bibliothèque',
-      [TypeSalle.SALLE_REUNION]: 'Salle de réunion'
+      [TypeSalle.AMPHITHEATRE]: 'Amphitheatre',
+      [TypeSalle.SALLE_COURS]: 'Lecture room',
+      [TypeSalle.SALLE_COURS_AMPHITHEATRE]: 'Lecture room and amphitheatre',
+      [TypeSalle.LABORATOIRE]: 'Laboratory',
+      [TypeSalle.SALLE_INFORMATIQUE]: 'Computer room',
+      [TypeSalle.SALLE_CONFERENCE]: 'Conference room',
+      [TypeSalle.BIBLIOTHEQUE]: 'Library',
+      [TypeSalle.SALLE_REUNION]: 'Meeting room'
     };
     return labels[type] || type;
   }
 
   getStatutLabel(statut: StatutSalle): string {
     const labels: { [key in StatutSalle]: string } = {
-      [StatutSalle.DISPONIBLE]: 'Disponible',
-      [StatutSalle.OCCUPEE]: 'Occupée',
-      [StatutSalle.MAINTENANCE]: 'En maintenance',
-      [StatutSalle.HORS_SERVICE]: 'Hors service'
+      [StatutSalle.DISPONIBLE]: 'Available',
+      [StatutSalle.OCCUPEE]: 'Occupied',
+      [StatutSalle.MAINTENANCE]: 'Under maintenance',
+      [StatutSalle.HORS_SERVICE]: 'Out of service'
     };
     return labels[statut] || statut;
   }

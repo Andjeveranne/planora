@@ -1,39 +1,39 @@
 <div class="ue-management-container">
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Unités d'Enseignement</h1>
-      <p class="page-subtitle">Gérez les UEs par école, département, spécialité, niveau et volumes horaires</p>
+      <h1 class="page-title">Teaching Units</h1>
+      <p class="page-subtitle">Manage UEs by school, department, specialty, level and teaching volumes</p>
     </div>
     <div class="header-actions">
       @if (activeSection === 'list') {
-        <button class="btn btn-primary" (click)="showAddUEForm()">+ Ajouter une UE</button>
+        <button class="btn btn-primary" (click)="showAddUEForm()">+ Add a UE</button>
       }
     </div>
   </div>
 
   <div class="nav-tabs">
-    <button class="nav-tab" [class.active]="activeSection === 'list'" (click)="setActiveSection('list')">Liste des UEs</button>
-    <button class="nav-tab" [class.active]="activeSection === 'statistics'" (click)="setActiveSection('statistics')">Statistiques</button>
+    <button class="nav-tab" [class.active]="activeSection === 'list'" (click)="setActiveSection('list')">UE list</button>
+    <button class="nav-tab" [class.active]="activeSection === 'statistics'" (click)="setActiveSection('statistics')">Statistics</button>
   </div>
 
   @if (successMessage) { <div class="alert alert-success">{{ successMessage }}</div> }
   @if (errorMessage)   { <div class="alert alert-error">{{ errorMessage }}</div> }
-  @if (isLoading)      { <div class="loading-overlay"><div class="loading-spinner"></div><p>Chargement...</p></div> }
+  @if (isLoading)      { <div class="loading-overlay"><div class="loading-spinner"></div><p>Loading...</p></div> }
 
   @if (activeSection === 'list' && !isLoading) {
     <div class="main-content">
-      <!-- Filtres -->
+      <!-- Filters -->
       <div class="filters-section">
-        <input type="text" placeholder="Rechercher par code, nom..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
+        <input type="text" placeholder="Search by code or name..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
         <select [(ngModel)]="filterNiveau" (change)="applyFilters()" class="filter-select">
-          <option value="">Tous les niveaux</option>
+          <option value="">All levels</option>
           @for (n of niveaux; track n) { <option [value]="n">{{ n }}</option> }
         </select>
         <select [(ngModel)]="filterFiliere" (change)="applyFilters()" class="filter-select">
-          <option value="">Tous les départements</option>
+          <option value="">All departments</option>
           @for (f of filieres; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
         </select>
-        <button class="btn btn-secondary" (click)="clearFilters()">Effacer</button>
+        <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
         <span class="results-count">{{ filteredUEs.length }} UE(s)</span>
       </div>
 
@@ -53,16 +53,16 @@
               <h3 class="ue-title">{{ ue.nomUE }}</h3>
               @if (ue.description) { <p class="ue-description">{{ ue.description }}</p> }
               <div class="ue-hours">
-                @if (ue.heuresCM) { <span class="hour-badge cm">CM {{ ue.heuresCM }}h</span> }
-                @if (ue.heuresTD) { <span class="hour-badge td">TD {{ ue.heuresTD }}h</span> }
-                @if (ue.heuresTP) { <span class="hour-badge tp">TP {{ ue.heuresTP }}h</span> }
-                @if (ue.nombreCredit) { <span class="hour-badge credit">{{ ue.nombreCredit }} crédits</span> }
+                @if (ue.heuresCM) { <span class="hour-badge cm">Lecture {{ ue.heuresCM }}h</span> }
+                @if (ue.heuresTD) { <span class="hour-badge td">Tutorial {{ ue.heuresTD }}h</span> }
+                @if (ue.heuresTP) { <span class="hour-badge tp">Practical {{ ue.heuresTP }}h</span> }
+                @if (ue.nombreCredit) { <span class="hour-badge credit">{{ ue.nombreCredit }} credits</span> }
               </div>
             </div>
             <div class="ue-card-actions">
-              <button class="action-btn view-btn"   (click)="viewUE(ue)">Voir</button>
-              <button class="action-btn edit-btn"   (click)="editUE(ue)">Modifier</button>
-              <button class="action-btn delete-btn" (click)="deleteUE(ue)">Supprimer</button>
+              <button class="action-btn view-btn"   (click)="viewUE(ue)">View</button>
+              <button class="action-btn edit-btn"   (click)="editUE(ue)">Edit</button>
+              <button class="action-btn delete-btn" (click)="deleteUE(ue)">Delete</button>
             </div>
           </div>
         }
@@ -70,9 +70,9 @@
 
       @if (filteredUEs.length === 0) {
         <div class="empty-state">
-          <h3>Aucune UE trouvée</h3>
-          <p>Aucune unité d'enseignement ne correspond à vos critères.</p>
-          <button class="btn btn-primary" (click)="showAddUEForm()">Créer une UE</button>
+          <h3>No UE found</h3>
+          <p>No teaching unit matches your criteria.</p>
+          <button class="btn btn-primary" (click)="showAddUEForm()">Create a UE</button>
         </div>
       }
     </div>
@@ -83,72 +83,72 @@
       @if (statistics) {
         <div class="statistics-grid">
           <div class="stat-card"><div class="stat-number">{{ statistics.totalUEs }}</div><div class="stat-label">Total UEs</div></div>
-          <div class="stat-card"><div class="stat-number">{{ statistics.totalCredits }}</div><div class="stat-label">Total Crédits</div></div>
-          <div class="stat-card"><div class="stat-number">{{ statistics.totalHeures }}h</div><div class="stat-label">Total Heures</div></div>
-          <div class="stat-card"><div class="stat-number">{{ statistics.avgCredits | number:'1.1-1' }}</div><div class="stat-label">Moy. Crédits/UE</div></div>
+          <div class="stat-card"><div class="stat-number">{{ statistics.totalCredits }}</div><div class="stat-label">Total credits</div></div>
+          <div class="stat-card"><div class="stat-number">{{ statistics.totalHeures }}h</div><div class="stat-label">Total hours</div></div>
+          <div class="stat-card"><div class="stat-number">{{ statistics.avgCredits | number:'1.1-1' }}</div><div class="stat-label">Avg. credits/UE</div></div>
         </div>
       }
     </div>
   }
 
-  <!-- Modal Ajout -->
+  <!-- Add modal -->
   @if (showAddForm) {
     <div class="modal-overlay" (click)="cancelAdd()">
       <div class="modal-content large-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>Ajouter une UE</h2>
+          <h2>Add a UE</h2>
           <button class="modal-close" (click)="cancelAdd()">✕</button>
         </div>
         <div class="modal-body">
           <form class="ue-form">
             <div class="form-row">
               <div class="form-group">
-                <label>Code UE *</label>
+                <label>UE code *</label>
                 <input type="text" [(ngModel)]="newUE.codeUE" name="codeUE" class="form-input" placeholder="ex: INFO101">
               </div>
               <div class="form-group">
-                <label>Nom de l'UE *</label>
-                <input type="text" [(ngModel)]="newUE.nomUE" name="nomUE" class="form-input" placeholder="ex: Algorithmique">
+                <label>UE name *</label>
+                <input type="text" [(ngModel)]="newUE.nomUE" name="nomUE" class="form-input" placeholder="ex: Algorithms">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Début d'enseignement</label>
+                <label>Teaching start</label>
                 <input type="time" [(ngModel)]="newUE.heureDebut" name="heureDebut" min="08:00" max="18:00">
               </div>
               <div class="form-group">
-                <label>Fin d'enseignement</label>
+                <label>Teaching end</label>
                 <input type="time" [(ngModel)]="newUE.heureFin" name="heureFin" min="08:00" max="18:00">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>École *</label>
+                <label>School *</label>
                 <select [(ngModel)]="newUE.idEcole" name="idEcole" class="form-input" (change)="onEcoleChange(newUE)">
-                  <option value="">-- Choisir une école --</option>
+                  <option value="">-- Select a school --</option>
                   @for (ecole of ecoles; track ecole.idEcole) { <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option> }
                 </select>
               </div>
               <div class="form-group">
-                <label>Département *</label>
+                <label>Department *</label>
                 <select [(ngModel)]="newUE.idFiliere" name="idFiliere" class="form-input" (change)="onFiliereChange(newUE)" [disabled]="!newUE.idEcole">
-                  <option value="">-- Choisir un département --</option>
+                  <option value="">-- Select a department --</option>
                   @for (f of departmentsForNewUE; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
                 </select>
               </div>
               <div class="form-group">
-                <label>Spécialité *</label>
+                <label>Specialty *</label>
                 <select [(ngModel)]="newUE.idSpecialite" name="idSpecialite" class="form-input" (change)="onSpecialiteChange(newUE)" [disabled]="!newUE.idFiliere">
-                  <option value="">-- Choisir une spécialité --</option>
+                  <option value="">-- Select a specialty --</option>
                   @for (specialite of specialitesForNewUE; track specialite.idSpecialite) { <option [value]="specialite.idSpecialite">{{ specialite.nom }}</option> }
                 </select>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Niveau</label>
+                <label>Level</label>
                 <select [(ngModel)]="newUE.niveau" name="niveau" class="form-input">
-                  <option value="">-- Choisir --</option>
+                  <option value="">-- Select --</option>
                   @for (n of niveaux; track n) { <option [value]="n">{{ n }}</option> }
                 </select>
               </div>
@@ -159,121 +159,111 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Crédits ECTS</label>
+                <label>ECTS credits</label>
                 <input type="number" [(ngModel)]="newUE.nombreCredit" name="nombreCredit" min="0" class="form-input">
               </div>
               <div class="form-group">
-                <label>Heures CM</label>
+                <label>Lecture hours</label>
                 <input type="number" [(ngModel)]="newUE.heuresCM" name="heuresCM" min="0" class="form-input" placeholder="0">
               </div>
               <div class="form-group">
-                <label>Heures TD</label>
+                <label>Tutorial hours</label>
                 <input type="number" [(ngModel)]="newUE.heuresTD" name="heuresTD" min="0" class="form-input" placeholder="0">
               </div>
               <div class="form-group">
-                <label>Heures TP</label>
+                <label>Practical hours</label>
                 <input type="number" [(ngModel)]="newUE.heuresTP" name="heuresTP" min="0" class="form-input" placeholder="0">
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="cancelAdd()">Annuler</button>
-          <button class="btn btn-primary" (click)="createUE()" [disabled]="isLoading">Créer l'UE</button>
+          <button class="btn btn-secondary" (click)="cancelAdd()">Cancel</button>
+          <button class="btn btn-primary" (click)="createUE()" [disabled]="isLoading">Create UE</button>
         </div>
       </div>
     </div>
   }
 
-  <!-- Modal Modification -->
+  <!-- Edit modal -->
   @if (showEditForm && editingUE) {
     <div class="modal-overlay" (click)="cancelEdit()">
       <div class="modal-content large-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>Modifier l'UE</h2>
+          <h2>Edit UE</h2>
           <button class="modal-close" (click)="cancelEdit()">✕</button>
         </div>
         <div class="modal-body">
           <form class="ue-form">
             <div class="form-row">
               <div class="form-group">
-                <label>Code UE *</label>
+                <label>UE code *</label>
                 <input type="text" [(ngModel)]="editingUE.codeUE" name="codeUE" class="form-input">
               </div>
               <div class="form-group">
-                <label>Nom de l'UE *</label>
+                <label>UE name *</label>
                 <input type="text" [(ngModel)]="editingUE.nomUE" name="nomUE" class="form-input">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>École *</label>
+                <label>School *</label>
                 <select [(ngModel)]="editingUE.idEcole" name="editIdEcole" class="form-input" (change)="onEcoleChange(editingUE)">
-                  <option value="">-- Choisir une école --</option>
+                  <option value="">-- Select a school --</option>
                   @for (ecole of ecoles; track ecole.idEcole) { <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option> }
                 </select>
               </div>
               <div class="form-group">
-                <label>Département *</label>
+                <label>Department *</label>
                 <select [(ngModel)]="editingUE.idFiliere" name="editIdFiliere" class="form-input" (change)="onFiliereChange(editingUE)" [disabled]="!editingUE.idEcole">
-                  <option value="">-- Choisir un département --</option>
+                  <option value="">-- Select a department --</option>
                   @for (f of departmentsForEditingUE; track f.idFiliere) { <option [value]="f.idFiliere">{{ f.nom }}</option> }
                 </select>
               </div>
               <div class="form-group">
-                <label>Spécialité *</label>
-                <select [(ngModel)]="editingUE.idSpecialite" name="editIdSpecialite" class="form-input" (change)="onSpecialiteChange(editingUE)" [disabled]="!editingUE.idFiliere">
-                  <option value="">-- Choisir une spécialité --</option>
+                <label>Specialty *</label>
+                <select [(ngModel)]="editingUE.idSpecialite" name="editIdSpecialite" class="form-input" [disabled]="!editingUE.idFiliere">
+                  <option value="">-- Select a specialty --</option>
                   @for (specialite of specialitesForEditingUE; track specialite.idSpecialite) { <option [value]="specialite.idSpecialite">{{ specialite.nom }}</option> }
                 </select>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Niveau</label>
-                <select [(ngModel)]="editingUE.niveau" name="niveau" class="form-input">
-                  <option value="">-- Choisir --</option>
+                <label>Level</label>
+                <select [(ngModel)]="editingUE.niveau" name="editNiveau" class="form-input">
+                  <option value="">-- Select --</option>
                   @for (n of niveaux; track n) { <option [value]="n">{{ n }}</option> }
                 </select>
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Début d'enseignement</label>
-                <input type="time" [(ngModel)]="editingUE.heureDebut" name="editHeureDebut" min="08:00" max="18:00">
-              </div>
-              <div class="form-group">
-                <label>Fin d'enseignement</label>
-                <input type="time" [(ngModel)]="editingUE.heureFin" name="editHeureFin" min="08:00" max="18:00">
-              </div>
-            </div>
             <div class="form-group">
               <label>Description</label>
-              <textarea [(ngModel)]="editingUE.description" name="description" rows="2" class="form-textarea"></textarea>
+              <textarea [(ngModel)]="editingUE.description" name="editDescription" rows="2" class="form-textarea"></textarea>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Crédits ECTS</label>
-                <input type="number" [(ngModel)]="editingUE.nombreCredit" name="nombreCredit" min="0" class="form-input">
+                <label>ECTS credits</label>
+                <input type="number" [(ngModel)]="editingUE.nombreCredit" name="editNombreCredit" min="0" class="form-input">
               </div>
               <div class="form-group">
-                <label>Heures CM</label>
-                <input type="number" [(ngModel)]="editingUE.heuresCM" name="heuresCM" min="0" class="form-input">
+                <label>Lecture hours</label>
+                <input type="number" [(ngModel)]="editingUE.heuresCM" name="editHeuresCM" min="0" class="form-input">
               </div>
               <div class="form-group">
-                <label>Heures TD</label>
-                <input type="number" [(ngModel)]="editingUE.heuresTD" name="heuresTD" min="0" class="form-input">
+                <label>Tutorial hours</label>
+                <input type="number" [(ngModel)]="editingUE.heuresTD" name="editHeuresTD" min="0" class="form-input">
               </div>
               <div class="form-group">
-                <label>Heures TP</label>
-                <input type="number" [(ngModel)]="editingUE.heuresTP" name="heuresTP" min="0" class="form-input">
+                <label>Practical hours</label>
+                <input type="number" [(ngModel)]="editingUE.heuresTP" name="editHeuresTP" min="0" class="form-input">
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="cancelEdit()">Annuler</button>
-          <button class="btn btn-primary" (click)="updateUE()" [disabled]="isLoading">Enregistrer</button>
+          <button class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary" (click)="saveEditUE()">Save changes</button>
         </div>
       </div>
     </div>

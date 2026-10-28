@@ -1,6 +1,9 @@
 package com.isi4.planningservice.controller;
 
 import com.isi4.planningservice.dto.EmploiDuTempsDTO;
+import com.isi4.planningservice.dto.GenerationRequestDto;
+import com.isi4.planningservice.dto.GenerationSummaryDto;
+import com.isi4.planningservice.service.CanonicalTimetableGenerationService;
 import com.isi4.planningservice.service.EmploiDuTempsService;
 import com.isi4.planningservice.service.EmploiDuTempsServiceV2;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,16 @@ public class EmploiDuTempsController {
 
     private final EmploiDuTempsService emploiDuTempsService;
     private final EmploiDuTempsServiceV2 emploiDuTempsServiceV2;
+    private final CanonicalTimetableGenerationService canonicalTimetableGenerationService;
+
+    @PostMapping("/generer-canonique")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<GenerationSummaryDto> genererEmploisDuTempsCanonique(@RequestBody GenerationRequestDto request) {
+        log.info("Génération canonique EDT: school={}, department={}, speciality={}, level={}",
+                request.getSchoolId(), request.getDepartmentId(), request.getSpecialityId(), request.getLevelId());
+        GenerationSummaryDto summary = canonicalTimetableGenerationService.generate(request);
+        return ResponseEntity.ok(summary);
+    }
 
     @PostMapping("/generer")
     @PreAuthorize("hasRole('ADMIN')")
@@ -34,6 +47,9 @@ public class EmploiDuTempsController {
             List<EmploiDuTempsDTO> emplois = emploiDuTempsServiceV2.genererEmploisDuTemps(idEcole, departement, specialite);
             log.info("Génération réussie: {} créneaux planifiés", emplois.size());
             return ResponseEntity.ok(emplois);
+        } catch (IllegalStateException e) {
+            log.error("Erreur métier lors de la génération", e);
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             log.error("Erreur génération", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
@@ -61,9 +77,10 @@ public class EmploiDuTempsController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> getEnseignantsAvecDisponibilites(
             @RequestParam(required = false) String idEcole,
-            @RequestParam(required = false) String departement) {
+            @RequestParam(required = false) String departement,
+            @RequestParam(required = false) String specialite) {
         try {
-            List<Map<String, Object>> enseignants = emploiDuTempsServiceV2.getEnseignantsAvecDisponibilitesDetailles(idEcole, departement);
+            List<Map<String, Object>> enseignants = emploiDuTempsServiceV2.getEnseignantsAvecDisponibilitesDetailles(idEcole, departement, specialite);
             return ResponseEntity.ok(enseignants);
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des enseignants avec disponibilités", e);

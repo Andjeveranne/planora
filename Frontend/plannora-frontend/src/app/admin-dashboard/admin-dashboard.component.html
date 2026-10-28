@@ -18,6 +18,17 @@
         </span>
         <span>Dashboard</span>
       </button>
+      <button class="nav-item" [class.active]="activeSection === 'etudiants'" (click)="setActiveSection('etudiants')">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        <span>Étudiants</span>
+      </button>
       <button class="nav-item" [class.active]="activeSection === 'enseignants'"
         (click)="setActiveSection('enseignants')">
         <span class="nav-icon">
@@ -39,6 +50,17 @@
         </span>
         <span>Unités d'Enseignement</span>
       </button>
+      <button class="nav-item" [class.active]="activeSection === 'classes'" (click)="setActiveSection('classes')">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        <span>Classes</span>
+      </button>
       <button class="nav-item" [class.active]="activeSection === 'rooms'" (click)="setActiveSection('rooms')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,15 +80,16 @@
         </span>
         <span>Écoles</span>
       </button>
-      <button class="nav-item" [class.active]="activeSection === 'equipment'" (click)="setActiveSection('equipment')">
+      <button class="nav-item" [class.active]="activeSection === 'emplois-du-temps'" (click)="setActiveSection('emplois-du-temps')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </span>
-        <span>Équipements</span>
+        <span>Emplois du Temps</span>
       </button>
       <button class="nav-item" [class.active]="activeSection === 'reservations'" (click)="setActiveSection('reservations')">
         <span class="nav-icon">
@@ -100,27 +123,15 @@
         </span>
         <span>Calendrier</span>
       </button>
-      <button class="nav-item" [class.active]="activeSection === 'classes'" (click)="setActiveSection('classes')">
+      <button class="nav-item" [class.active]="activeSection === 'equipment'" (click)="setActiveSection('equipment')">
         <span class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
           </svg>
         </span>
-        <span>Classes</span>
-      </button>
-      <button class="nav-item" [class.active]="activeSection === 'emplois-du-temps'" (click)="setActiveSection('emplois-du-temps')">
-        <span class="nav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-        </span>
-        <span>Emplois du Temps</span>
+        <span>Équipements</span>
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -273,6 +284,11 @@
         </div>
       }
 
+      <!-- Étudiants -->
+      @if (activeSection === 'etudiants') {
+        <app-gestion-etudiants></app-gestion-etudiants>
+      }
+
       <!-- Enseignants -->
       @if (activeSection === 'enseignants') {
         <app-gestion-enseignants></app-gestion-enseignants>
@@ -285,16 +301,31 @@
         </div>
       }
 
-      <!-- Equipements -->
-      @if (activeSection === 'equipment') {
+      <!-- Classes -->
+      @if (activeSection === 'classes') {
         <div class="section">
-          <div class="section-header">
-            <h2>Gestion des Équipements</h2>
-            <button class="btn-primary">+ Ajouter un équipement</button>
-          </div>
-          <div class="placeholder-content">
-            <p>🔧 Liste des équipements à venir...</p>
-          </div>
+          <app-gestion-classes></app-gestion-classes>
+        </div>
+      }
+
+      <!-- Salles -->
+      @if (activeSection === 'rooms') {
+        <div class="section">
+          <app-gestion-salles></app-gestion-salles>
+        </div>
+      }
+
+      <!-- Écoles -->
+      @if (activeSection === 'ecoles') {
+        <div class="section">
+          <app-gestion-ecoles></app-gestion-ecoles>
+        </div>
+      }
+
+      <!-- Emplois du Temps -->
+      @if (activeSection === 'emplois-du-temps') {
+        <div class="section">
+          <app-generation-emplois></app-generation-emplois>
         </div>
       }
 
@@ -334,34 +365,6 @@
           <div class="placeholder-content">
             <p>📅 Calendrier à venir...</p>
           </div>
-        </div>
-      }
-
-      <!-- Classes -->
-      @if (activeSection === 'classes') {
-        <div class="section">
-          <app-gestion-classes></app-gestion-classes>
-        </div>
-      }
-
-      <!-- Salles -->
-      @if (activeSection === 'rooms') {
-        <div class="section">
-          <app-gestion-salles></app-gestion-salles>
-        </div>
-      }
-
-      <!-- Écoles -->
-      @if (activeSection === 'ecoles') {
-        <div class="section">
-          <app-gestion-ecoles></app-gestion-ecoles>
-        </div>
-      }
-
-      <!-- Emplois du Temps -->
-      @if (activeSection === 'emplois-du-temps') {
-        <div class="section">
-          <app-generation-emplois></app-generation-emplois>
         </div>
       }
     </main>

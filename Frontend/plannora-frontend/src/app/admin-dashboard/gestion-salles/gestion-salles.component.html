@@ -15,16 +15,16 @@
   }
 
   <div class="main-layout">
-    <!-- Section principale -->
+    <!-- Main section -->
     <div class="main-content">
-      <!-- Header avec recherche et actions -->
+      <!-- Header with search and actions -->
       <div class="header-section">
         <div class="search-container">
           <div class="search-input">
             <img src="https://cdn-icons-png.flaticon.com/512/149/149852.png" alt="Search" class="search-icon">
             <input 
               type="text" 
-              placeholder="Recherche"
+              placeholder="Search"
               [(ngModel)]="filtreRecherche"
               class="search-field">
           </div>
@@ -33,14 +33,14 @@
         <div class="header-actions">
           <button class="btn-export">
             <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Export" class="btn-icon">
-            Exporter la liste
+            Export list
           </button>
           <button class="btn-add" (click)="ouvrirModal()">
             <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="Add" class="btn-icon">
-            Ajouter une salle
+            Add room
           </button>
           <select class="school-select" [(ngModel)]="selectedSchool">
-            <option value="">Toutes les écoles</option>
+            <option value="">All schools</option>
             @for (ecole of ecoles; track ecole.idEcole) {
               <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
             }
@@ -48,24 +48,24 @@
         </div>
       </div>
 
-      <!-- Tableau des salles -->
+      <!-- Rooms table -->
       <div class="table-container">
         <table class="salles-table">
           <thead>
             <tr>
               <th class="sortable" (click)="sortBy('nomSalle')">
                 <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Checkbox" class="checkbox-icon">
-                Nom Salle
+                Room name
                 <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
               </th>
               <th class="sortable" (click)="sortBy('localisation')">
-                Localisation
+                Location
                 <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
               </th>
-              <th>École</th>
-              <th>Classe attribuée</th>
+              <th>School</th>
+              <th>Assigned class</th>
               <th class="sortable" (click)="sortBy('statut')">
-                Statut
+                Status
                 <img src="https://cdn-icons-png.flaticon.com/512/2223/2223615.png" alt="Sort" class="sort-icon">
               </th>
               <th>Actions</th>
@@ -76,7 +76,7 @@
               <tr>
                 <td colspan="6" class="loading-cell">
                   <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Chargement...</span>
+                    <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
@@ -93,13 +93,13 @@
                     </span>
                   </td>
                   <td class="actions-cell">
-                    <button class="action-btn view-btn" title="Voir">
+                    <button class="action-btn view-btn" title="View">
                       <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png" alt="View" class="action-icon">
                     </button>
-                    <button class="action-btn edit-btn" (click)="ouvrirModal(salle)" title="Modifier">
+                    <button class="action-btn edit-btn" (click)="ouvrirModal(salle)" title="Edit">
                       <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" class="action-icon">
                     </button>
-                    <button class="action-btn delete-btn" (click)="supprimerSalle(salle)" title="Supprimer">
+                    <button class="action-btn delete-btn" (click)="supprimerSalle(salle)" title="Delete">
                       <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png" alt="Delete" class="action-icon">
                     </button>
                   </td>
@@ -112,13 +112,13 @@
         <!-- Pagination -->
         <div class="pagination-container">
           <div class="pagination-info">
-            <span>Ligne par page</span>
+            <span>Rows per page</span>
             <select class="page-size-select" [(ngModel)]="pageSize">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
             </select>
-            <span>de {{ totalItems }} lignes</span>
+            <span>of {{ totalItems }} rows</span>
           </div>
           
           <div class="pagination-controls">
@@ -151,16 +151,16 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
 
-t
-
-<!-- Modal pour créer/modifier une salle -->
+<!-- Modal to create/edit a room -->
 <div class="modal" [class.show]="showModal" [style.display]="showModal ? 'flex' : 'none'">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          {{ isEditMode ? 'Modifier la salle' : 'Nouvelle salle' }}
+          {{ isEditMode ? 'Edit room' : 'New room' }}
         </h5>
         <button type="button" class="btn-close" (click)="fermerModal()"></button>
       </div>
@@ -169,7 +169,7 @@ t
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="nomSalle" class="form-label">Nom de la salle *</label>
+                <label for="nomSalle" class="form-label">Room name *</label>
                 <input 
                   type="text" 
                   id="nomSalle"
@@ -179,10 +179,10 @@ t
                 @if (nomSalle?.invalid && nomSalle?.touched) {
                   <div class="invalid-feedback">
                     @if (nomSalle?.errors?.['required']) {
-                      <div>Le nom est obligatoire</div>
+                      <div>Room name is required</div>
                     }
                     @if (nomSalle?.errors?.['minlength']) {
-                      <div>Le nom doit contenir au moins 2 caractères</div>
+                      <div>Room name must contain at least 2 characters</div>
                     }
                   </div>
                 }
@@ -197,9 +197,10 @@ t
                   formControlName="type"
                   (change)="onTypeChange()"
                   [class.is-invalid]="type?.invalid && type?.touched">
-                  <option value="">Sélectionner un type</option>
+                  <option value="">Select a type</option>
                   <option value="AMPHITHEATRE">{{ getTypeLabel(TypeSalle.AMPHITHEATRE) }}</option>
                   <option value="SALLE_COURS">{{ getTypeLabel(TypeSalle.SALLE_COURS) }}</option>
+                  <option value="SALLE_COURS_AMPHITHEATRE">{{ getTypeLabel(TypeSalle.SALLE_COURS_AMPHITHEATRE) }}</option>
                   <option value="LABORATOIRE">{{ getTypeLabel(TypeSalle.LABORATOIRE) }}</option>
                   <option value="SALLE_INFORMATIQUE">{{ getTypeLabel(TypeSalle.SALLE_INFORMATIQUE) }}</option>
                   <option value="SALLE_CONFERENCE">{{ getTypeLabel(TypeSalle.SALLE_CONFERENCE) }}</option>
@@ -208,27 +209,27 @@ t
                 </select>
                 @if (type?.invalid && type?.touched) {
                   <div class="invalid-feedback">
-                    Le type est obligatoire
+                    Type is required
                   </div>
                 }
               </div>
             </div>
           </div>
 
-          @if (salleForm.get('type')?.value === TypeSalle.SALLE_COURS) {
+          @if (salleForm.get('type')?.value === TypeSalle.SALLE_COURS || salleForm.get('type')?.value === TypeSalle.SALLE_COURS_AMPHITHEATRE) {
             <div class="mb-3">
-              <label for="idClasse" class="form-label">Classe attribuée *</label>
+              <label for="idClasse" class="form-label">Assigned class *</label>
               <select id="idClasse" class="form-select" formControlName="idClasse">
-                <option value="">Sélectionner une classe</option>
+                <option value="">Select a class</option>
                 @for (classe of classesForSelectedSchool; track classe.idClasse) {
                   <option [value]="classe.idClasse">{{ classe.nomClasse }} — {{ classe.specialite }} ({{ classe.niveau }})</option>
                 }
               </select>
               @if (!classesForSelectedSchool.length) {
-                <div class="text-muted">Aucune classe n'est enregistrée pour cette école.</div>
+                <div class="text-muted">No class is registered for this school.</div>
               }
               @if (salleForm.get('idClasse')?.invalid && salleForm.get('idClasse')?.touched) {
-                <div class="invalid-feedback d-block">Attribuez cette salle à une classe.</div>
+                <div class="invalid-feedback d-block">Assign this room to a class.</div>
               }
             </div>
           }
@@ -236,21 +237,21 @@ t
           <div class="row">
             <div class="col-md-12">
               <div class="mb-3">
-                <label for="localisation" class="form-label">Localisation *</label>
+                <label for="localisation" class="form-label">Location *</label>
                 <input 
                   type="text" 
                   id="localisation"
                   class="form-control" 
                   formControlName="localisation"
-                  placeholder="Ex: Bâtiment A, 1er étage"
+                  placeholder="e.g. Building A, 1st floor"
                   [class.is-invalid]="localisation?.invalid && localisation?.touched">
                 @if (localisation?.invalid && localisation?.touched) {
                   <div class="invalid-feedback">
                     @if (localisation?.errors?.['required']) {
-                      <div>La localisation est obligatoire</div>
+                      <div>Location is required</div>
                     }
                     @if (localisation?.errors?.['minlength']) {
-                      <div>La localisation doit contenir au moins 2 caractères</div>
+                      <div>Location must contain at least 2 characters</div>
                     }
                   </div>
                 }
@@ -261,7 +262,7 @@ t
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="capacite" class="form-label">Capacité normale *</label>
+                <label for="capacite" class="form-label">Normal capacity *</label>
                 <input 
                   type="number" 
                   id="capacite"
@@ -272,10 +273,10 @@ t
                 @if (capacite?.invalid && capacite?.touched) {
                   <div class="invalid-feedback">
                     @if (capacite?.errors?.['required']) {
-                      <div>La capacité est obligatoire</div>
+                      <div>Capacity is required</div>
                     }
                     @if (capacite?.errors?.['min']) {
-                      <div>La capacité doit être au moins de 1</div>
+                      <div>Capacity must be at least 1</div>
                     }
                   </div>
                 }
@@ -283,7 +284,7 @@ t
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="capaciteExam" class="form-label">Capacité examen *</label>
+                <label for="capaciteExam" class="form-label">Exam capacity *</label>
                 <input 
                   type="number" 
                   id="capaciteExam"
@@ -294,10 +295,10 @@ t
                 @if (capaciteExam?.invalid && capaciteExam?.touched) {
                   <div class="invalid-feedback">
                     @if (capaciteExam?.errors?.['required']) {
-                      <div>La capacité d'examen est obligatoire</div>
+                      <div>Exam capacity is required</div>
                     }
                     @if (capaciteExam?.errors?.['min']) {
-                      <div>La capacité d'examen doit être au moins de 1</div>
+                      <div>Exam capacity must be at least 1</div>
                     }
                   </div>
                 }
@@ -308,13 +309,13 @@ t
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="idEcole" class="form-label">École *</label>
+                <label for="idEcole" class="form-label">School *</label>
                 <select
                   id="idEcole"
                   class="form-select"
                   formControlName="idEcole"
                   (change)="onSchoolChange()">
-                  <option value="">Sélectionner une école</option>
+                  <option value="">Select a school</option>
                   @for (ecole of ecoles; track ecole.idEcole) {
                     <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
                   }
@@ -323,7 +324,7 @@ t
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="statut" class="form-label">Statut *</label>
+                <label for="statut" class="form-label">Status *</label>
                 <select 
                   id="statut"
                   class="form-select" 
@@ -338,12 +339,12 @@ t
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="fermerModal()">Annuler</button>
+          <button type="button" class="btn btn-secondary" (click)="fermerModal()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="salleForm.invalid || isLoading">
             @if (isLoading) {
               <span class="spinner-border spinner-border-sm me-2"></span>
             }
-            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+            {{ isEditMode ? 'Update' : 'Create' }}
           </button>
         </div>
       </form>
@@ -351,7 +352,7 @@ t
   </div>
 </div>
 
-<!-- Backdrop du modal -->
+<!-- Modal backdrop -->
 @if (showModal) {
   <div class="modal-backdrop show" (click)="fermerModal()"></div>
 }

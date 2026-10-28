@@ -15,7 +15,10 @@
 	<description>Service de gestion des salles</description>
 	
 	<properties>
-		<java.version>25</java.version>
+		<java.version>17</java.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.release>17</maven.compiler.release>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 	</properties>
 	

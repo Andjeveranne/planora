@@ -1,14 +1,14 @@
 <div class="gen-container">
 
-  <!-- En-tête -->
+  <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Génération des Emplois du Temps</h1>
-      <p class="page-subtitle">Planification automatique de la semaine à venir</p>
+      <h1 class="page-title">Timetable Generation</h1>
+      <p class="page-subtitle">Automatic scheduling for the upcoming week</p>
     </div>
   </div>
 
-  <!-- Alertes -->
+  <!-- Alerts -->
   @if (messages.success) {
     <div class="alert alert-success">{{ messages.success }}</div>
   }
@@ -18,19 +18,19 @@
 
   <div class="top-grid">
 
-    <!-- Panneau : Enseignants avec disponibilités -->
+    <!-- Panel: Teachers with availability -->
     <div class="panel">
       <div class="panel-header">
-        <h2 class="panel-title">Enseignants disponibles</h2>
+        <h2 class="panel-title">Available teachers</h2>
         <span class="badge-count">{{ enseignantsDispo.length }}</span>
-        <button class="btn-icon" (click)="loadEnseignantsDispo()" title="Rafraîchir">↺</button>
+        <button class="btn-icon" (click)="loadEnseignantsDispo()" title="Refresh">↺</button>
       </div>
 
       @if (isLoadingEnseignants) {
-        <div class="loading-row"><div class="spinner"></div> Chargement…</div>
+        <div class="loading-row"><div class="spinner"></div> Loading…</div>
       } @else if (enseignantsDispo.length === 0) {
         <div class="empty-state">
-          <p>Aucun enseignant n'a encore renseigné ses disponibilités.</p>
+          <p>No teacher has entered availability yet.</p>
         </div>
       } @else {
         <div class="enseignants-list">
@@ -49,8 +49,8 @@
                   <div class="ens-dept">{{ ens.departement }}</div>
                 }
               </div>
-              <div class="ens-dispo-count" title="Créneaux déclarés">
-                {{ ens.nombreDisponibilites }} créneau(x)
+              <div class="ens-dispo-count" title="Declared time slots">
+                {{ ens.nombreDisponibilites }} slot(s)
               </div>
             </div>
           }
@@ -58,20 +58,20 @@
       }
     </div>
 
-    <!-- Panneau : Lancer la génération -->
+    <!-- Panel: Start generation -->
     <div class="panel panel-action">
       <div class="panel-header">
-        <h2 class="panel-title">Générer l'emploi du temps</h2>
+        <h2 class="panel-title">Generate timetable</h2>
       </div>
 
       <div class="action-body">
         <div class="form-group">
-          <label class="form-label">École</label>
+          <label class="form-label">School</label>
           @if (isLoadingEcoles) {
-            <div class="loading-row"><div class="spinner-sm"></div> Chargement…</div>
+            <div class="loading-row"><div class="spinner-sm"></div> Loading…</div>
           } @else {
             <select class="form-select" [(ngModel)]="selectedEcoleId" (change)="onSchoolChange()">
-              <option value="">— Toutes les écoles —</option>
+              <option value="">— All schools —</option>
               @for (ecole of ecoles; track ecole.idEcole) {
                 <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
               }
@@ -80,9 +80,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Département</label>
+          <label class="form-label">Department</label>
           <select class="form-select" [(ngModel)]="selectedDepartement" (change)="onDepartmentChange()" [disabled]="!departements.length">
-            <option value="">Tous les départements</option>
+            <option value="">All departments</option>
             @for (departement of departements; track departement) {
               <option [value]="departement">{{ departement }}</option>
             }
@@ -90,9 +90,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Spécialité</label>
+          <label class="form-label">Speciality</label>
           <select class="form-select" [(ngModel)]="selectedSpecialite" [disabled]="!selectedDepartement || !specialites.length">
-            <option value="">Toutes les spécialités</option>
+            <option value="">All specialities</option>
             @for (specialite of specialites; track specialite) {
               <option [value]="specialite">{{ specialite }}</option>
             }
@@ -101,45 +101,45 @@
 
         <div class="info-box">
           <span class="info-icon">ℹ</span>
-          La génération cible automatiquement la <strong>semaine à venir</strong>.
-          Les créneaux non couverts seront marqués <strong>TPE</strong>.
+          The generator automatically targets the <strong>upcoming week</strong>.
+          Slots not covered will be marked as <strong>Project Work</strong>.
         </div>
 
         <div class="stats-row">
           <div class="stat-item">
             <span class="stat-num">{{ enseignantsDispo.length }}</span>
-            <span class="stat-lbl">Enseignants prêts</span>
+            <span class="stat-lbl">Teachers ready</span>
           </div>
         </div>
 
         <button class="btn-generate" (click)="generer()" [disabled]="isGenerating || isLoadingEcoles">
           @if (isGenerating) {
-            <span class="spinner-btn"></span> Génération en cours…
+            <span class="spinner-btn"></span> Generating…
           } @else {
-            ⚡ Générer la semaine à venir
+            ⚡ Generate the upcoming week
           }
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Résultats -->
+  <!-- Results -->
   @if (emploisGeneres.length > 0) {
     <div class="results-section">
       <div class="results-header">
-        <h2 class="panel-title">Emplois du temps générés</h2>
-          <button class="btn-export-pdf" (click)="exporterPdf()" title="Imprimer ou enregistrer en PDF">Exporter PDF</button>
+        <h2 class="panel-title">Generated Timetable</h2>
+        <button class="btn-export-pdf" (click)="exporterPdf()" title="Print or save as PDF">Export PDF</button>
         <div class="legend">
-          <span class="legend-item slot-cm">CM</span>
-          <span class="legend-item slot-td">TD</span>
-          <span class="legend-item slot-tp">TP</span>
-          <span class="legend-item slot-tpe">TPE</span>
+          <span class="legend-item slot-cm">Lecture</span>
+          <span class="legend-item slot-td">Tutorial</span>
+          <span class="legend-item slot-tp">Practical</span>
+          <span class="legend-item slot-tpe">Project Work</span>
         </div>
         <div class="results-stats">
-          <span class="stat-badge cm">CM : {{ nombreCM }}</span>
-          <span class="stat-badge td">TD : {{ nombreTD }}</span>
-          <span class="stat-badge tp">TP : {{ nombreTP }}</span>
-          <span class="stat-badge tpe">TPE : {{ nombreTPE }}</span>
+          <span class="stat-badge cm">Lecture : {{ nombreCM }}</span>
+          <span class="stat-badge td">Tutorial : {{ nombreTD }}</span>
+          <span class="stat-badge tp">Practical : {{ nombreTP }}</span>
+          <span class="stat-badge tpe">Project Work : {{ nombreTPE }}</span>
         </div>
       </div>
 
@@ -150,7 +150,7 @@
             <table class="timetable">
               <thead>
                 <tr>
-                  <th class="th-creneau">Créneau</th>
+                  <th class="th-creneau">Time slot</th>
                   @for (jour of JOURS; track jour.num) {
                     <th>{{ jour.label }}</th>
                   }
@@ -165,12 +165,19 @@
                         @let slot = getSlot(classeId, jour.num, creneau);
                         @if (slot) {
                           <div [class]="'slot ' + getSlotClass(slot)" [title]="getSlotTooltip(slot)">
-                            <span class="slot-type">{{ slot.typeCours }}</span>
+                            <span class="slot-type">{{ getTypeLabel(slot.typeCours) }}</span>
                             @if (slot.typeCours !== 'TPE') {
-                              <span class="slot-ue">{{ slot.codeUE }}</span>
+                              <span class="slot-ue">{{ getCourseDisplay(slot) }}</span>
+                              <span class="slot-title">{{ getCourseTitle(slot) }}</span>
+                              @if (getTeacherDisplay(slot)) {
+                                <span class="slot-teacher">{{ getTeacherDisplay(slot) }}</span>
+                              }
                               @if (slot.nomSalle) {
                                 <span class="slot-salle">{{ slot.nomSalle }}</span>
                               }
+                            } @else {
+                              <span class="slot-ue">Project Work</span>
+                              <span class="slot-title">Independent study</span>
                             }
                           </div>
                         } @else {

@@ -1,13 +1,13 @@
-<!-- En-tête -->
+<!-- Header -->
 <div class="tc-header">
   <div class="tc-title-row">
-    <h2>Mes UEs enseignées</h2>
+    <h2>My taught UEs</h2>
     <button class="btn-add" (click)="toggleAddForm()">
-      {{ showAddForm ? 'Annuler' : '+ Ajouter une UE' }}
+      {{ showAddForm ? 'Cancel' : '+ Add a UE' }}
     </button>
   </div>
 
-  <!-- Stats rapides -->
+  <!-- Quick stats -->
   <div class="tc-stats">
     <div class="tc-stat">
       <span class="tc-stat-value">{{ mesUEEnseignants.length }}</span>
@@ -15,27 +15,27 @@
     </div>
     <div class="tc-stat">
       <span class="tc-stat-value">{{ totalCM }}</span>
-      <span class="tc-stat-label">CM</span>
+      <span class="tc-stat-label">Lecture</span>
     </div>
     <div class="tc-stat">
       <span class="tc-stat-value">{{ totalTD }}</span>
-      <span class="tc-stat-label">TD</span>
+      <span class="tc-stat-label">Tutorial</span>
     </div>
     <div class="tc-stat">
       <span class="tc-stat-value">{{ totalTP }}</span>
-      <span class="tc-stat-label">TP</span>
+      <span class="tc-stat-label">Practical</span>
     </div>
   </div>
 </div>
 
-<!-- Formulaire d'ajout -->
+<!-- Add form -->
 @if (showAddForm) {
   <div class="tc-add-form">
-    <h3>Déclarer une UE que j'enseigne</h3>
+    <h3>Declare a UE that I teach</h3>
     <div class="tc-form-row">
       <label>UE</label>
       <select [(ngModel)]="selectedUEId" class="tc-select">
-        <option [ngValue]="null" disabled>-- Choisir une UE --</option>
+        <option [ngValue]="null" disabled>-- Select a UE --</option>
         @for (ue of uesDisponibles; track ue.id) {
           <option [ngValue]="ue.id">{{ getUEOptionLabel(ue) }}</option>
         }
@@ -43,53 +43,53 @@
     </div>
 
     <div class="tc-form-row">
-      <label>Types de cours que je peux dispenser</label>
+      <label>Course types I can teach</label>
       <div class="tc-checkboxes">
         <label class="tc-check">
-          <input type="checkbox" [(ngModel)]="newPeutCM"> CM
+          <input type="checkbox" [(ngModel)]="newPeutCM"> Lecture
         </label>
         <label class="tc-check">
-          <input type="checkbox" [(ngModel)]="newPeutTD"> TD
+          <input type="checkbox" [(ngModel)]="newPeutTD"> Tutorial
         </label>
         <label class="tc-check">
-          <input type="checkbox" [(ngModel)]="newPeutTP"> TP
+          <input type="checkbox" [(ngModel)]="newPeutTP"> Practical
         </label>
       </div>
     </div>
 
     <div class="tc-form-actions">
       <button class="btn-save" (click)="ajouterUE()" [disabled]="adding">
-        {{ adding ? 'Ajout...' : 'Confirmer' }}
+        {{ adding ? 'Adding...' : 'Confirm' }}
       </button>
     </div>
 
     @if (uesDisponibles.length === 0) {
-      <p class="tc-no-ues">Toutes les UEs du système sont déjà dans votre liste.</p>
+      <p class="tc-no-ues">All UEs in the system are already in your list.</p>
     }
   </div>
 }
 
-<!-- Chargement -->
+<!-- Loading -->
 @if (loading) {
-  <div class="tc-loading">Chargement...</div>
+  <div class="tc-loading">Loading...</div>
 }
 
-<!-- Liste des UEs assignées -->
+<!-- UE list -->
 @if (!loading) {
   @if (mesUEEnseignants.length === 0) {
     <div class="tc-empty">
-      <p>Vous n'avez pas encore déclaré d'UEs. Cliquez sur "Ajouter une UE" pour commencer.</p>
+      <p>You have not declared any UEs yet. Click "Add a UE" to get started.</p>
     </div>
   } @else {
     <div class="tc-table-wrapper">
       <table class="tc-table">
         <thead>
           <tr>
-            <th>Code UE</th>
-            <th>Nom de l'UE</th>
-            <th class="tc-center">CM</th>
-            <th class="tc-center">TD</th>
-            <th class="tc-center">TP</th>
+            <th>UE code</th>
+            <th>UE name</th>
+            <th class="tc-center">Lecture</th>
+            <th class="tc-center">Tutorial</th>
+            <th class="tc-center">Practical</th>
             <th class="tc-center">Actions</th>
           </tr>
         </thead>
@@ -117,7 +117,7 @@
                        [disabled]="savingId === entry.id">
               </td>
               <td class="tc-center">
-                <button class="btn-delete" (click)="supprimerUE(entry)" title="Retirer">✕</button>
+                <button class="btn-delete" (click)="supprimerUE(entry)" title="Remove">✕</button>
               </td>
             </tr>
           }
@@ -125,8 +125,8 @@
       </table>
     </div>
     <p class="tc-hint">
-      Cochez les types de cours (CM, TD, TP) que vous pouvez dispenser pour chaque UE.
-      Ces informations seront utilisées lors de la génération de l'emploi du temps.
+      Tick the course types (Lecture, Tutorial, Practical) that you can teach for each UE.
+      This information is used when generating the timetable.
     </p>
   }
 }

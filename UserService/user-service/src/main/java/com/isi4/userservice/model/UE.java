@@ -28,7 +28,7 @@ public class UE {
     private Long id;
 
     @NotBlank(message = "Le code UE est obligatoire")
-    @Column(name = "code_ue", nullable = false, unique = true, length = 20)
+    @Column(name = "code_ue", nullable = false, unique = true, length = 50)
     private String codeUE;
 
     @NotBlank(message = "Le nom de l'UE est obligatoire")

@@ -33,7 +33,9 @@ class FordFulkersonSchedulerTest {
         slot.setSemaine(41);
 
         FordFulkersonScheduler.Salle otherSchoolRoom = room("room-other", "other", 100);
+        otherSchoolRoom.setIdClasse("class-other");
         FordFulkersonScheduler.Salle ictRoom = room("room-ict", "ict", 30);
+        ictRoom.setIdClasse("class-ict");
         FordFulkersonScheduler.Disponibilite availability = new FordFulkersonScheduler.Disponibilite();
         availability.setEnseignantId("teacher-1");
         availability.setDebut(start);
@@ -170,6 +172,44 @@ class FordFulkersonSchedulerTest {
 
         assertEquals(1, results.size());
         assertEquals("room-class", results.get(0).getSalleId());
+    }
+
+    @Test
+    void acceptsCombinedCourseAndAmphitheatreRoomForCmAndTd() {
+        LocalDateTime start = LocalDateTime.of(2026, 10, 5, 8, 0);
+
+        FordFulkersonScheduler.SchedulingRequest request = new FordFulkersonScheduler.SchedulingRequest();
+        request.setClasseId("class-ict");
+        request.setIdEcole("ict");
+        request.setUeId(1L);
+        request.setEnseignantId("teacher-1");
+        request.setTypeCours("CM");
+        request.setHeuresRequises(2);
+        request.setEffectifClasse(25);
+        request.setHeureDebut(start.toLocalTime());
+        request.setHeureFin(start.plusHours(2).toLocalTime());
+
+        FordFulkersonScheduler.TimeSlot slot = new FordFulkersonScheduler.TimeSlot();
+        slot.setDebut(start);
+        slot.setFin(start.plusHours(2));
+        slot.setJourSemaine(1);
+        slot.setCreneau("8h-10h");
+        slot.setSemaine(41);
+
+        FordFulkersonScheduler.Disponibilite availability = new FordFulkersonScheduler.Disponibilite();
+        availability.setEnseignantId("teacher-1");
+        availability.setDebut(start);
+        availability.setFin(start.plusHours(2));
+
+        FordFulkersonScheduler.Salle combinedRoom = room("room-combined", "ict", 30);
+        combinedRoom.setType("SALLE_COURS_AMPHITHEATRE");
+        combinedRoom.setIdClasse("class-ict");
+
+        List<FordFulkersonScheduler.SchedulingResult> results = scheduler.generateSchedule(
+                List.of(request), List.of(slot), List.of(combinedRoom), List.of(availability));
+
+        assertEquals(1, results.size());
+        assertEquals("room-combined", results.get(0).getSalleId());
     }
 
     private FordFulkersonScheduler.SchedulingRequest request() {

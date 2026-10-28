@@ -17,14 +17,14 @@
   <div class="main-layout">
     <!-- Section principale -->
     <div class="main-content">
-      <!-- Header avec recherche et actions -->
+      <!-- Header with search and actions -->
       <div class="header-section">
         <div class="search-container">
           <div class="search-input">
             <img src="https://cdn-icons-png.flaticon.com/512/149/149852.png" alt="Search" class="search-icon">
             <input 
               type="text" 
-              placeholder="Recherche"
+              placeholder="Search"
               [(ngModel)]="searchTerm"
               class="search-field">
           </div>
@@ -33,15 +33,15 @@
         <div class="header-actions">
           <button class="btn-export" (click)="loadEnseignants()">
             <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Refresh" class="btn-icon">
-            Actualiser
+            Refresh
           </button>
           <button class="btn-export" (click)="exportEnseignantsCSV()">
             <img src="https://cdn-icons-png.flaticon.com/512/3097/3097412.png" alt="Export" class="btn-icon">
-            Exporter CSV
+            Export CSV
           </button>
           <button class="btn-export" (click)="triggerFileInput()">
             <img src="https://cdn-icons-png.flaticon.com/512/3097/3097369.png" alt="Import" class="btn-icon">
-            Importer CSV
+            Import CSV
           </button>
           <input 
             type="file" 
@@ -51,32 +51,32 @@
             (change)="importEnseignantsCSV($event)">
           <button class="btn-add" (click)="toggleAddEnseignantForm()">
             <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="Add" class="btn-icon">
-            Ajouter un enseignant
+            Add teacher
           </button>
         </div>
       </div>
 
-      <!-- Barre de filtres -->
+      <!-- Filters -->
       <div class="filters-section">
         <div class="filter-group">
           <label class="filter-label">
             <img src="https://cdn-icons-png.flaticon.com/512/2920/2920349.png" alt="Status" class="filter-icon">
-            Statut
+            Status
           </label>
           <select class="filter-select" [(ngModel)]="filterStatus" (change)="applyFilters()">
-            <option value="all">Tous</option>
-            <option value="active">Actifs</option>
-            <option value="inactive">Désactivés</option>
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </div>
 
         <div class="filter-group">
           <label class="filter-label">
             <img src="https://cdn-icons-png.flaticon.com/512/3281/3281289.png" alt="Department" class="filter-icon">
-            Département
+            Department
           </label>
           <select class="filter-select" [(ngModel)]="filterDepartement" (change)="applyFilters()">
-            <option value="all">Tous les départements</option>
+            <option value="all">All departments</option>
             @for (dept of availableDepartements; track dept) {
               <option [value]="dept">{{ dept }}</option>
             }
@@ -86,10 +86,10 @@
         <div class="filter-group">
           <label class="filter-label">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="School" class="filter-icon">
-            École
+            School
           </label>
           <select class="filter-select" [(ngModel)]="filterEcole" (change)="applyFilters()">
-            <option value="all">Toutes les écoles</option>
+            <option value="all">All schools</option>
             @for (ecole of ecoles; track ecole.idEcole) {
               <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
             }
@@ -97,29 +97,29 @@
         </div>
 
         <div class="filter-group">
-          <button class="btn-reset-filters" (click)="resetFilters()" title="Réinitialiser les filtres">
+          <button class="btn-reset-filters" (click)="resetFilters()" title="Reset filters">
             <img src="https://cdn-icons-png.flaticon.com/512/3094/3094837.png" alt="Reset" class="filter-icon">
-            Réinitialiser
+            Reset
           </button>
         </div>
 
         <div class="filter-results">
-          <span class="results-count">{{ filteredEnseignants.length }} résultat(s)</span>
+          <span class="results-count">{{ filteredEnseignants.length }} result(s)</span>
         </div>
       </div>
 
-      <!-- Formulaire d'ajout -->
+      <!-- Add teacher form -->
       @if (showAddEnseignantForm) {
         <div class="form-container">
-          <h3>Ajouter un nouvel enseignant</h3>
+          <h3>Add new teacher</h3>
           <form (ngSubmit)="ajouterEnseignant()" class="enseignant-form">
             <div class="form-row">
               <div class="form-group">
-                <label for="nom">Nom *</label>
+                <label for="nom">Last name *</label>
                 <input type="text" id="nom" [(ngModel)]="newEnseignant.nomUser" name="nom" required>
               </div>
               <div class="form-group">
-                <label for="prenom">Prénom *</label>
+                <label for="prenom">First name *</label>
                 <input type="text" id="prenom" [(ngModel)]="newEnseignant.prenomUser" name="prenom" required>
               </div>
             </div>
@@ -129,30 +129,30 @@
                 <input type="email" id="email" [(ngModel)]="newEnseignant.email" name="email" required>
               </div>
               <div class="form-group">
-                <label for="mdp">Mot de passe *</label>
-                <input type="password" id="mdp" [(ngModel)]="newEnseignant.mdp" name="mdp" required placeholder="Min. 6 caractères">
+                <label for="mdp">Password *</label>
+                <input type="password" id="mdp" [(ngModel)]="newEnseignant.mdp" name="mdp" required placeholder="Min. 6 characters">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="telephone">Téléphone</label>
+                <label for="telephone">Phone</label>
                 <input type="tel" id="telephone" [(ngModel)]="newEnseignant.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
               </div>
               <div class="form-group">
-                <label for="specialite">Spécialité *</label>
+                <label for="specialite">Specialty *</label>
                 <select id="specialite" [(ngModel)]="newEnseignant.specialite" name="specialite" required
                   [disabled]="!newEnseignant.departement || specialtiesForSelectedTeacherDepartment.length === 0">
-                  <option value="">Sélectionner une spécialité</option>
+                  <option value="">Select a specialty</option>
                   @for (specialite of specialtiesForSelectedTeacherDepartment; track specialite.idSpecialite) {
                     <option [value]="specialite.nom">{{ specialite.nom }}</option>
                   }
                 </select>
-                <small class="form-hint">Cette spécialité sera disponible pour les classes de ce département.</small>
+                <small class="form-hint">This specialty will be available for classes in this department.</small>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="ecole">Écoles *</label>
+                <label for="ecole">Schools *</label>
                 <select id="ecole" [(ngModel)]="newEnseignant.idEcoles" (ngModelChange)="onNewTeacherSchoolsChange()"
                   name="idEcoles" multiple required>
                   @for (ecole of ecoles; track ecole.idEcole) {
@@ -161,11 +161,11 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="departement">Département *</label>
+                <label for="departement">Department *</label>
                 <select id="departement" [(ngModel)]="newEnseignant.departement"
                   (ngModelChange)="onNewTeacherDepartmentChange()" name="departement" required
                   [disabled]="!newEnseignant.idEcoles.length">
-                  <option value="">Sélectionner un département</option>
+                  <option value="">Select a department</option>
                   @for (departement of departmentsForSelectedTeacherSchools; track departement.idFiliere) {
                     <option [value]="departement.nom">{{ departement.nom }}</option>
                   }
@@ -173,14 +173,14 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn-secondary" (click)="toggleAddEnseignantForm()">Annuler</button>
-              <button type="submit" class="btn-primary">Modifier</button>
+              <button type="button" class="btn-secondary" (click)="toggleAddEnseignantForm()">Cancel</button>
+              <button type="submit" class="btn-primary">Save</button>
             </div>
           </form>
         </div>
       }
 
-      <!-- Tableau des enseignants -->
+      <!-- Teacher table -->
       <div class="table-container">
         <div class="table-scroll-wrapper">
         <table class="enseignants-table">
@@ -188,18 +188,18 @@
             <tr>
               <th class="sortable">
                 <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Checkbox" class="checkbox-icon">
-                Enseignant
+                Teacher
               </th>
               <th class="sortable">
                 Email
               </th>
               <th class="sortable">
-                Spécialité
+                Specialty
               </th>
               <th class="sortable">
-                Département
+                Department
               </th>
-              <th>École</th>
+              <th>School</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -208,7 +208,7 @@
               <tr>
                 <td colspan="6" class="loading-cell">
                   <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Chargement...</span>
+                    <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
@@ -223,8 +223,8 @@
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                       </svg>
-                      <h3>Aucun enseignant trouvé</h3>
-                      <p>Commencez par ajouter votre premier enseignant.</p>
+                      <h3>No teachers found</h3>
+                      <p>Start by adding your first teacher.</p>
                     </div>
                   </td>
                 </tr>
@@ -233,8 +233,8 @@
                   <tr class="table-row">
                     <td class="name-cell">{{ enseignant.prenomUser }} {{ enseignant.nomUser }}</td>
                     <td class="email-cell">{{ enseignant.email }}</td>
-                    <td class="specialty-cell">{{ enseignant.specialite || 'Non définie' }}</td>
-                    <td class="dept-cell">{{ enseignant.departement || 'Non défini' }}</td>
+                    <td class="specialty-cell">{{ enseignant.specialite || 'Not defined' }}</td>
+                    <td class="dept-cell">{{ enseignant.departement || 'Not defined' }}</td>
                     <td>{{ getSchoolName(enseignant.idEcole) }}</td>
                     <td class="actions-cell">
                       <div class="dropdown-container">
@@ -244,28 +244,28 @@
                         @if (openDropdownId === enseignant.idUser) {
                           <div class="dropdown-menu">
                             <button class="dropdown-item" (click)="openDisponibilitesModal(enseignant); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/2838/2838779.png" alt="Disponibilités" class="dropdown-icon">
-                              Consulter les disponibilités
+                              <img src="https://cdn-icons-png.flaticon.com/512/2838/2838779.png" alt="Availability" class="dropdown-icon">
+                              View availability
                             </button>
                             <button class="dropdown-item" (click)="openEdtModal(enseignant, 'view'); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" alt="Emploi du temps" class="dropdown-icon">
-                              Consulter l'emploi du temps
+                              <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" alt="Timetable" class="dropdown-icon">
+                              View timetable
                             </button>
                             <button class="dropdown-item" (click)="viewEnseignantInfo(enseignant); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828791.png" alt="Informations" class="dropdown-icon">
-                              Voir les informations
+                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828791.png" alt="Information" class="dropdown-icon">
+                              View information
                             </button>
                             <button class="dropdown-item" (click)="assignerUE(enseignant); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/3002/3002543.png" alt="Assigner UE" class="dropdown-icon">
-                              Assigner une UE
+                              <img src="https://cdn-icons-png.flaticon.com/512/3002/3002543.png" alt="Assign UE" class="dropdown-icon">
+                              Assign UE
                             </button>
                             <button class="dropdown-item" (click)="editEnseignant(enseignant); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Modifier" class="dropdown-icon">
-                              Modifier l'enseignant
+                              <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" class="dropdown-icon">
+                              Edit teacher
                             </button>
                             <button class="dropdown-item danger" (click)="desactiverEnseignant(enseignant.idUser || ''); closeDropdown()">
-                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" alt="Désactiver" class="dropdown-icon">
-                              Désactiver l'enseignant
+                              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" alt="Disable" class="dropdown-icon">
+                              Disable teacher
                             </button>
                           </div>
                         }
@@ -282,20 +282,19 @@
         <!-- Pagination -->
         <div class="pagination-container">
           <div class="pagination-info">
-            <span>Ligne par page</span>
+            <span>Rows per page</span>
             <select class="page-size-select" [(ngModel)]="pageSize">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
             </select>
-            <span>de {{ totalEnseignants }} lignes</span>
+            <span>of {{ totalEnseignants }} rows</span>
           </div>
           
           <div class="pagination-controls">
             <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)">
               <img src="https://cdn-icons-png.flaticon.com/512/271/271220.png" alt="First" class="page-icon">
             </button>
-            
             
             @for (page of getVisiblePages(); track page) {
               <button 
@@ -312,7 +311,6 @@
             <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
               <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" class="page-icon">
             </button>
-            
           </div>
         </div>
       </div>
@@ -326,8 +324,8 @@
     <div class="modal-content modal-large" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-section">
-          <h2>📅 Disponibilités de {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</h2>
-          <p class="modal-subtitle">Consultation des créneaux disponibles</p>
+          <h2>📅 Availability for {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</h2>
+          <p class="modal-subtitle">Available time slots</p>
         </div>
         <button class="btn-close" (click)="closeDisponibilitesModal()">×</button>
       </div>
@@ -336,49 +334,34 @@
         <div class="week-nav">
           <button class="btn-nav" (click)="changeWeek(-1)">
             <img src="https://cdn-icons-png.flaticon.com/512/271/271218.png" alt="Previous" style="width: 16px; height: 16px;">
-            Semaine précédente
+            Previous week
           </button>
           <span class="week-label">{{ getWeekLabel() }}</span>
           <button class="btn-nav" (click)="changeWeek(1)">
-            Semaine suivante
+            Next week
             <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" style="width: 16px; height: 16px;">
           </button>
-          <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
-        </div>
-
-        <div class="dispo-stats">
-          <div class="stat-item">
-            <div class="stat-number">{{ getTotalDisponibilites() }}</div>
-            <div class="stat-label">Créneaux disponibles</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getAvailableHoursThisWeek() }}h</div>
-            <div class="stat-label">Heures cette semaine</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getMostAvailableDay() }}</div>
-            <div class="stat-label">Jour le plus disponible</div>
-          </div>
+          <button class="btn-today" (click)="setWeekToCurrent()">Today</button>
         </div>
 
         @if (isLoadingDisponibilites) {
           <div class="loading-inline">
             <div class="loading-spinner"></div>
-            <span>Chargement des disponibilités...</span>
+            <span>Loading availability...</span>
           </div>
         } @else {
           <div class="calendar-grid">
             <table class="dispo-table">
               <thead>
                 <tr>
-                  <th class="time-col">Horaire</th>
+                  <th class="time-col">Time</th>
                   @for (day of weekDays; track day.name) {
                     <th [class.past-day]="isPastDay(day)">
                       <div class="day-header">
                         <span class="day-name">{{ day.name }}</span>
                         <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
                         @if (isPastDay(day)) {
-                          <span class="past-label">(passé)</span>
+                          <span class="past-label">(past)</span>
                         }
                       </div>
                     </th>
@@ -410,25 +393,25 @@
           <div class="legend-row">
             <div class="legend-item">
               <div class="legend-box available"></div>
-              <span>Disponible</span>
+              <span>Available</span>
             </div>
             <div class="legend-item">
               <div class="legend-box"></div>
-              <span>Non disponible</span>
+              <span>Unavailable</span>
             </div>
             <div class="legend-item">
               <div class="legend-box past"></div>
-              <span>Passé</span>
+              <span>Past</span>
             </div>
           </div>
         }
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeDisponibilitesModal()">Fermer</button>
+        <button class="btn-secondary" (click)="closeDisponibilitesModal()">Close</button>
         <button class="btn-primary" (click)="exportDisponibilites()">
           <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Export" style="width: 16px; height: 16px; margin-right: 8px;">
-          Exporter
+          Export
         </button>
       </div>
     </div>
@@ -726,7 +709,7 @@
 <!-- Modal Modification Enseignant -->
 @if (showEditModal && editingEnseignant) {
   <div class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal-content modal-info" (click)="$event.stopPropagation()">
+    <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-section">
           <h2>✏️ Modifier l'enseignant</h2>
@@ -739,41 +722,31 @@
         @if (errorMessage) {
           <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ errorMessage }}</div>
         }
-        <form class="enseignant-form" (ngSubmit)="saveEditEnseignant()">
+        <form class="enseignant-form teacher-edit-form" (ngSubmit)="saveEditEnseignant()">
           <div class="form-row">
             <div class="form-group">
               <label for="edit-nom">Nom *</label>
-              <input type="text" id="edit-nom" [(ngModel)]="editForm.nomUser" name="nomUser" required>
+              <input class="field-control" type="text" id="edit-nom" [(ngModel)]="editForm.nomUser" name="nomUser" required>
             </div>
             <div class="form-group">
               <label for="edit-prenom">Prénom *</label>
-              <input type="text" id="edit-prenom" [(ngModel)]="editForm.prenomUser" name="prenomUser" required>
+              <input class="field-control" type="text" id="edit-prenom" [(ngModel)]="editForm.prenomUser" name="prenomUser" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="edit-email">Email *</label>
-              <input type="email" id="edit-email" [(ngModel)]="editForm.email" name="email" required>
+              <input class="field-control" type="email" id="edit-email" [(ngModel)]="editForm.email" name="email" required>
             </div>
             <div class="form-group">
               <label for="edit-telephone">Téléphone</label>
-              <input type="tel" id="edit-telephone" [(ngModel)]="editForm.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
+              <input class="field-control" type="tel" id="edit-telephone" [(ngModel)]="editForm.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-specialite">Spécialité</label>
-              <select id="edit-specialite" [(ngModel)]="editForm.specialite" name="specialite"
-                [disabled]="!editForm.departement || specialtiesForEditedTeacherDepartment.length === 0">
-                <option value="">Sélectionner une spécialité</option>
-                @for (specialite of specialtiesForEditedTeacherDepartment; track specialite.idSpecialite) {
-                  <option [value]="specialite.nom">{{ specialite.nom }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="edit-departement">Département</label>
-              <select id="edit-departement" [(ngModel)]="editForm.departement"
+              <label for="edit-departement">Département *</label>
+              <select class="field-control" id="edit-departement" [(ngModel)]="editForm.departement"
                 (ngModelChange)="onEditedTeacherDepartmentChange()" name="departement"
                 [disabled]="!editForm.idEcoles?.length">
                 <option value="">Sélectionner un département</option>
@@ -783,9 +756,21 @@
               </select>
             </div>
             <div class="form-group">
+              <label for="edit-specialite">Spécialité *</label>
+              <select class="field-control" id="edit-specialite" [(ngModel)]="editForm.specialite" name="specialite"
+                [disabled]="!editForm.departement || specialtiesForEditedTeacherDepartment.length === 0">
+                <option value="">Sélectionner une spécialité</option>
+                @for (specialite of specialtiesForEditedTeacherDepartment; track specialite.idSpecialite) {
+                  <option [value]="specialite.nom">{{ specialite.nom }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row single-row">
+            <div class="form-group full-width">
               <label for="edit-ecole">Écoles *</label>
-            <select id="edit-ecole" [(ngModel)]="editForm.idEcoles"
-              (ngModelChange)="onEditedTeacherSchoolsChange()" name="idEcoles" multiple required>
+              <select class="field-control" id="edit-ecole" [(ngModel)]="editForm.idEcoles"
+                (ngModelChange)="onEditedTeacherSchoolsChange()" name="idEcoles" multiple required>
                 @for (ecole of ecoles; track ecole.idEcole) {
                   <option [value]="ecole.idEcole">{{ ecole.nomEcole }}</option>
                 }

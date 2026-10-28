@@ -1,6 +1,5 @@
 package com.isi4.planningservice.algorithm;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,29 +13,56 @@ import java.util.stream.Stream;
 @Slf4j
 public class FordFulkersonScheduler {
 
-    @Data
     public static class SchedulingRequest {
         private String classeId;
         private String idEcole;
         private Long ueId;
         private String enseignantId;
-        private String typeCours; // CM, TD, TP
+        private String typeCours;
         private Integer heuresRequises;
         private Integer effectifClasse;
         private LocalTime heureDebut;
         private LocalTime heureFin;
+
+        public String getClasseId() { return classeId; }
+        public void setClasseId(String classeId) { this.classeId = classeId; }
+        public String getIdEcole() { return idEcole; }
+        public void setIdEcole(String idEcole) { this.idEcole = idEcole; }
+        public Long getUeId() { return ueId; }
+        public void setUeId(Long ueId) { this.ueId = ueId; }
+        public String getEnseignantId() { return enseignantId; }
+        public void setEnseignantId(String enseignantId) { this.enseignantId = enseignantId; }
+        public String getTypeCours() { return typeCours; }
+        public void setTypeCours(String typeCours) { this.typeCours = typeCours; }
+        public Integer getHeuresRequises() { return heuresRequises; }
+        public void setHeuresRequises(Integer heuresRequises) { this.heuresRequises = heuresRequises; }
+        public Integer getEffectifClasse() { return effectifClasse; }
+        public void setEffectifClasse(Integer effectifClasse) { this.effectifClasse = effectifClasse; }
+        public LocalTime getHeureDebut() { return heureDebut; }
+        public void setHeureDebut(LocalTime heureDebut) { this.heureDebut = heureDebut; }
+        public LocalTime getHeureFin() { return heureFin; }
+        public void setHeureFin(LocalTime heureFin) { this.heureFin = heureFin; }
     }
 
-    @Data
     public static class TimeSlot {
         private LocalDateTime debut;
         private LocalDateTime fin;
         private Integer jourSemaine;
         private String creneau;
         private Integer semaine;
+
+        public LocalDateTime getDebut() { return debut; }
+        public void setDebut(LocalDateTime debut) { this.debut = debut; }
+        public LocalDateTime getFin() { return fin; }
+        public void setFin(LocalDateTime fin) { this.fin = fin; }
+        public Integer getJourSemaine() { return jourSemaine; }
+        public void setJourSemaine(Integer jourSemaine) { this.jourSemaine = jourSemaine; }
+        public String getCreneau() { return creneau; }
+        public void setCreneau(String creneau) { this.creneau = creneau; }
+        public Integer getSemaine() { return semaine; }
+        public void setSemaine(Integer semaine) { this.semaine = semaine; }
     }
 
-    @Data
     public static class Salle {
         private String id;
         private String idEcole;
@@ -44,16 +70,34 @@ public class FordFulkersonScheduler {
         private String nom;
         private Integer capacite;
         private String type;
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getIdEcole() { return idEcole; }
+        public void setIdEcole(String idEcole) { this.idEcole = idEcole; }
+        public String getIdClasse() { return idClasse; }
+        public void setIdClasse(String idClasse) { this.idClasse = idClasse; }
+        public String getNom() { return nom; }
+        public void setNom(String nom) { this.nom = nom; }
+        public Integer getCapacite() { return capacite; }
+        public void setCapacite(Integer capacite) { this.capacite = capacite; }
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
     }
 
-    @Data
     public static class Disponibilite {
         private String enseignantId;
         private LocalDateTime debut;
         private LocalDateTime fin;
+
+        public String getEnseignantId() { return enseignantId; }
+        public void setEnseignantId(String enseignantId) { this.enseignantId = enseignantId; }
+        public LocalDateTime getDebut() { return debut; }
+        public void setDebut(LocalDateTime debut) { this.debut = debut; }
+        public LocalDateTime getFin() { return fin; }
+        public void setFin(LocalDateTime fin) { this.fin = fin; }
     }
 
-    @Data
     public static class SchedulingResult {
         private String classeId;
         private String enseignantId;
@@ -65,6 +109,27 @@ public class FordFulkersonScheduler {
         private Integer semaine;
         private Integer jourSemaine;
         private String creneau;
+
+        public String getClasseId() { return classeId; }
+        public void setClasseId(String classeId) { this.classeId = classeId; }
+        public String getEnseignantId() { return enseignantId; }
+        public void setEnseignantId(String enseignantId) { this.enseignantId = enseignantId; }
+        public Long getUeId() { return ueId; }
+        public void setUeId(Long ueId) { this.ueId = ueId; }
+        public String getSalleId() { return salleId; }
+        public void setSalleId(String salleId) { this.salleId = salleId; }
+        public LocalDateTime getDateHeureDebut() { return dateHeureDebut; }
+        public void setDateHeureDebut(LocalDateTime dateHeureDebut) { this.dateHeureDebut = dateHeureDebut; }
+        public LocalDateTime getDateHeureFin() { return dateHeureFin; }
+        public void setDateHeureFin(LocalDateTime dateHeureFin) { this.dateHeureFin = dateHeureFin; }
+        public String getTypeCours() { return typeCours; }
+        public void setTypeCours(String typeCours) { this.typeCours = typeCours; }
+        public Integer getSemaine() { return semaine; }
+        public void setSemaine(Integer semaine) { this.semaine = semaine; }
+        public Integer getJourSemaine() { return jourSemaine; }
+        public void setJourSemaine(Integer jourSemaine) { this.jourSemaine = jourSemaine; }
+        public String getCreneau() { return creneau; }
+        public void setCreneau(String creneau) { this.creneau = creneau; }
     }
 
     // Graphe pour l'algorithme Ford-Fulkerson
@@ -205,61 +270,131 @@ public class FordFulkersonScheduler {
             List<SchedulingResult> currentResults) {
 
         return availableSlots.stream()
-            .filter(slot -> request.getHeureDebut() == null || !slot.getDebut().toLocalTime().isBefore(request.getHeureDebut()))
-            .filter(slot -> request.getHeureFin() == null || !slot.getFin().toLocalTime().isAfter(request.getHeureFin()))
-                .filter(slot -> isEnseignantAvailable(request.getEnseignantId(), slot, disponibilites))
-                .filter(slot -> !isClasseOccupied(request.getClasseId(), slot, existingResults, currentResults))
-                .filter(slot -> !isEnseignantOccupied(request.getEnseignantId(), slot, existingResults, currentResults))
-                .collect(Collectors.toList());
+            .filter(slot -> {
+                if (request.getHeureDebut() == null && request.getHeureFin() == null) {
+                    return true;
+                }
+                LocalTime slotStart = slot.getDebut().toLocalTime();
+                LocalTime slotEnd = slot.getFin().toLocalTime();
+                LocalTime ueStart = request.getHeureDebut() != null ? request.getHeureDebut() : slotStart;
+                LocalTime ueEnd = request.getHeureFin() != null ? request.getHeureFin() : slotEnd;
+                return slotEnd.isAfter(ueStart) && slotStart.isBefore(ueEnd);
+            })
+            .filter(slot -> isEnseignantAvailable(request.getEnseignantId(), slot, disponibilites))
+            .filter(slot -> !isClasseOccupied(request.getClasseId(), slot, existingResults, currentResults))
+            .filter(slot -> !isEnseignantOccupied(request.getEnseignantId(), slot, existingResults, currentResults))
+            .collect(Collectors.toList());
     }
 
     private List<Salle> filterValidSalles(SchedulingRequest request, List<Salle> salles) {
         return salles.stream()
             .filter(salle -> request.getIdEcole() == null || request.getIdEcole().isBlank()
                 || request.getIdEcole().equals(salle.getIdEcole()))
-                .filter(salle -> salle.getIdClasse() == null || salle.getIdClasse().isBlank()
-                    || request.getClasseId().equals(salle.getIdClasse()))
-                .filter(salle -> salle.getCapacite() >= request.getEffectifClasse())
-                .filter(salle -> isTypeCompatible(salle.getType(), request.getTypeCours()))
-                .collect(Collectors.toList());
+            .filter(salle -> isSalleCompatibleWithClasse(request, salle))
+            .filter(salle -> salle.getCapacite() >= request.getEffectifClasse())
+            .filter(salle -> isTypeCompatible(salle.getType(), request.getTypeCours()))
+            .collect(Collectors.toList());
+    }
+
+    private boolean isSalleCompatibleWithClasse(SchedulingRequest request, Salle salle) {
+        if (isCourseRoomType(salle.getType())) {
+            if (salle.getIdClasse() == null || salle.getIdClasse().isBlank()) {
+                return true;
+            }
+            return request.getClasseId().equals(salle.getIdClasse());
+        }
+        if (isTpRoomType(salle.getType())) {
+            return salle.getIdClasse() == null || salle.getIdClasse().isBlank()
+                    || request.getClasseId().equals(salle.getIdClasse());
+        }
+        return true;
+    }
+
+    private boolean isCourseRoomType(String typeSalle) {
+        String normalized = normalizeRoomType(typeSalle);
+        return normalized.contains("COURS") || normalized.contains("AMPH") || normalized.contains("THEATRE")
+                || normalized.contains("CONFERENCE") || normalized.contains("COURS_AMPHITHEATRE")
+                || normalized.contains("AMPHITHEATRE_SALLE_DE_COURS") || normalized.contains("SALLE_DE_COURS_AND_AMPHITHEATRE");
+    }
+
+    private boolean isTpRoomType(String typeSalle) {
+        String normalized = normalizeRoomType(typeSalle);
+        return normalized.contains("LABO") || normalized.contains("INFO") || normalized.contains("INFORMATIQUE")
+                || normalized.contains("LABORATOIRE") || normalized.contains("SALLE_INFORMATIQUE_ET_LABORATOIRE");
     }
 
     private boolean isEnseignantAvailable(String enseignantId, TimeSlot slot, List<Disponibilite> disponibilites) {
         return disponibilites.stream()
-                .anyMatch(dispo -> dispo.getEnseignantId().equals(enseignantId) &&
-                        !dispo.getDebut().isAfter(slot.getDebut()) &&
-                        !dispo.getFin().isBefore(slot.getFin()));
-    }
-
-    private boolean isClasseOccupied(String classeId, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
-        return Stream.concat(existingResults.stream(), currentResults.stream())
-                .anyMatch(result -> result.getClasseId().equals(classeId) &&
-                        isTimeOverlap(result.getDateHeureDebut(), result.getDateHeureFin(), slot.getDebut(), slot.getFin()));
-    }
-
-    private boolean isEnseignantOccupied(String enseignantId, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
-        return Stream.concat(existingResults.stream(), currentResults.stream())
-                .anyMatch(result -> result.getEnseignantId().equals(enseignantId) &&
-                        isTimeOverlap(result.getDateHeureDebut(), result.getDateHeureFin(), slot.getDebut(), slot.getFin()));
-    }
-
-    private boolean isSalleAvailable(Salle salle, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
-        return Stream.concat(existingResults.stream(), currentResults.stream())
-                .noneMatch(result -> result.getSalleId().equals(salle.getId()) &&
-                        isTimeOverlap(result.getDateHeureDebut(), result.getDateHeureFin(), slot.getDebut(), slot.getFin()));
-    }
-
-    private boolean isTimeOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
-        return start1.isBefore(end2) && end1.isAfter(start2);
+                .filter(dispo -> dispo.getEnseignantId().equals(enseignantId))
+                .anyMatch(dispo -> {
+                    LocalDateTime slotStart = slot.getDebut();
+                    LocalDateTime slotEnd = slot.getFin();
+                    LocalDateTime dispoStart = dispo.getDebut();
+                    LocalDateTime dispoEnd = dispo.getFin();
+                    return slotStart.isBefore(dispoEnd) && slotEnd.isAfter(dispoStart);
+                });
     }
 
     private boolean isTypeCompatible(String typeSalle, String typeCours) {
-        return switch (typeCours) {
-            case "CM" -> List.of("AMPHITHEATRE", "SALLE_COURS", "SALLE_CONFERENCE").contains(typeSalle);
-            case "TD" -> List.of("SALLE_COURS", "SALLE_CONFERENCE").contains(typeSalle);
-            case "TP" -> List.of("LABORATOIRE", "SALLE_INFORMATIQUE").contains(typeSalle);
-            default -> true;
+        String normalizedType = normalizeRoomType(typeSalle);
+        String normalizedCours = normalizeCourseType(typeCours);
+
+        Set<String> allowedTypes = switch (normalizedCours) {
+            case "CM" -> Set.of("AMPHITHEATRE", "SALLE_COURS", "SALLE_CONFERENCE", "AMPHI", "SALLEDECOURS", "AMPHI_THEATRE",
+                    "SALLE_DE_COURS", "SALLE_DE_COURS_AMPHITHEATRE", "AMPHITHEATRE_SALLE_DE_COURS",
+                    "SALLE_DE_COURS_AND_AMPHITHEATRE", "SALLE_COURS_AMPHITHEATRE");
+            case "TD" -> Set.of("SALLE_COURS", "SALLE_CONFERENCE", "SALLEDECOURS", "AMPHITHEATRE", "AMPHI", "AMPHI_THEATRE",
+                    "SALLE_DE_COURS", "SALLE_DE_COURS_AMPHITHEATRE", "AMPHITHEATRE_SALLE_DE_COURS",
+                    "SALLE_DE_COURS_AND_AMPHITHEATRE", "SALLE_COURS_AMPHITHEATRE");
+            case "TP" -> Set.of("LABORATOIRE", "SALLE_INFORMATIQUE", "INFO", "LABO", "LABORATOIRE_INFORMATIQUE",
+                    "SALLE_INFORMATIQUE_AMPHITHEATRE", "SALLE_INFORMATIQUE_ET_LABORATOIRE", "LABORATOIRE_ET_SALLE_INFORMATIQUE");
+            default -> Set.of();
         };
+
+        if (normalizedType.isBlank()) {
+            return true;
+        }
+
+        if (allowedTypes.contains(normalizedType) || allowedTypes.contains(normalizedType.replace(" ", "_"))) {
+            return true;
+        }
+
+        if (normalizedCours.equals("CM") || normalizedCours.equals("TD")) {
+            return normalizedType.contains("COURS") || normalizedType.contains("AMPH") || normalizedType.contains("THEATRE")
+                    || normalizedType.contains("CONFERENCE") || normalizedType.contains("COURS_AMPHITHEATRE");
+        }
+        if (normalizedCours.equals("TP")) {
+            return normalizedType.contains("LABO") || normalizedType.contains("INFO") || normalizedType.contains("INFORMATIQUE")
+                    || normalizedType.contains("LABORATOIRE");
+        }
+
+        return false;
+    }
+
+    private String normalizeRoomType(String typeSalle) {
+        if (typeSalle == null) {
+            return "";
+        }
+        String normalized = typeSalle.trim()
+                .replace('&', '_')
+                .replace(',', '_')
+                .replace('+', '_')
+                .replace('-', '_')
+                .replace(' ', '_')
+                .replace('.', '_')
+                .replace('/', '_')
+                .replaceAll("[^A-Za-z0-9]+", "_")
+                .toUpperCase(Locale.ROOT);
+        normalized = normalized.replace("__", "_").replace("_AND_", "_").replace("_ET_", "_");
+        normalized = normalized.replace("SALLE_DE_COURS_AND_AMPHITHEATRE", "SALLE_COURS_AMPHITHEATRE");
+        return normalized.replaceAll("^_+|_+$", "");
+    }
+
+    private String normalizeCourseType(String typeCours) {
+        if (typeCours == null) {
+            return "";
+        }
+        return typeCours.trim().toUpperCase(Locale.ROOT);
     }
 
     private int fordFulkerson(FlowNetwork network, String source, String sink) {
@@ -351,5 +486,29 @@ public class FordFulkersonScheduler {
         }
         
         return null;
+    }
+
+    private boolean isSalleAvailable(Salle salle, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
+        return Stream.concat(existingResults.stream(), currentResults.stream())
+                .filter(result -> result != null && result.getSalleId() != null && result.getSalleId().equals(salle.getId()))
+                .noneMatch(result -> result.getDateHeureDebut() != null && result.getDateHeureFin() != null
+                        && result.getDateHeureDebut().isBefore(slot.getFin())
+                        && slot.getDebut().isBefore(result.getDateHeureFin()));
+    }
+
+    private boolean isClasseOccupied(String classeId, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
+        return Stream.concat(existingResults.stream(), currentResults.stream())
+                .filter(result -> result != null && result.getClasseId() != null && result.getClasseId().equals(classeId))
+                .anyMatch(result -> result.getDateHeureDebut() != null && result.getDateHeureFin() != null
+                        && result.getDateHeureDebut().isBefore(slot.getFin())
+                        && slot.getDebut().isBefore(result.getDateHeureFin()));
+    }
+
+    private boolean isEnseignantOccupied(String enseignantId, TimeSlot slot, List<SchedulingResult> existingResults, List<SchedulingResult> currentResults) {
+        return Stream.concat(existingResults.stream(), currentResults.stream())
+                .filter(result -> result != null && result.getEnseignantId() != null && result.getEnseignantId().equals(enseignantId))
+                .anyMatch(result -> result.getDateHeureDebut() != null && result.getDateHeureFin() != null
+                        && result.getDateHeureDebut().isBefore(slot.getFin())
+                        && slot.getDebut().isBefore(result.getDateHeureFin()));
     }
 }

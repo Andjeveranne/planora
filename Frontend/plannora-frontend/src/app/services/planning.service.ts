@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 
 export interface DisponibiliteDTO {
     id?: number;
@@ -43,6 +43,7 @@ export interface EmploiDuTempsDTO {
 export class PlanningService {
     private baseUrl = 'http://localhost:8081/api/planning';
     private dispoUrl = `${this.baseUrl}/disponibilites`;
+    private fallbackDispoUrl = 'http://localhost:8081/api/disponibilites';
     private edtUrl = `${this.baseUrl}/edt`;
 
     constructor(private http: HttpClient) { }
@@ -55,24 +56,42 @@ export class PlanningService {
         });
     }
 
+    private fallbackRequest<T>(planningUrl: string, fallbackUrl: string): Observable<T> {
+        return this.http.get<T>(planningUrl, { headers: this.getHeaders() }).pipe(
+            catchError(() => this.http.get<T>(fallbackUrl, { headers: this.getHeaders() }))
+        );
+    }
+
+    private fallbackMutation<T>(planningUrl: string, fallbackUrl: string, body: any): Observable<T> {
+        return this.http.post<T>(planningUrl, body, { headers: this.getHeaders() }).pipe(
+            catchError(() => this.http.post<T>(fallbackUrl, body, { headers: this.getHeaders() }))
+        );
+    }
+
     // ========== DISPONIBILITÉS ==========
 
     getDisponibilites(enseignantId: string): Observable<DisponibiliteDTO[]> {
-        return this.http.get<DisponibiliteDTO[]>(`${this.dispoUrl}/enseignant/${enseignantId}`, {
-            headers: this.getHeaders()
-        });
+        const planningUrl = `${this.dispoUrl}/enseignant/${enseignantId}`;
+        const fallbackUrl = `${this.fallbackDispoUrl}/enseignant/${enseignantId}`;
+        return this.fallbackRequest<DisponibiliteDTO[]>(planningUrl, fallbackUrl).pipe(
+            catchError(() => of([]))
+        );
     }
 
     addDisponibilite(dispo: DisponibiliteDTO): Observable<DisponibiliteDTO> {
-        return this.http.post<DisponibiliteDTO>(this.dispoUrl, dispo, {
-            headers: this.getHeaders()
-        });
+        const planningUrl = this.dispoUrl;
+        const fallbackUrl = this.fallbackDispoUrl;
+        return this.fallbackMutation<DisponibiliteDTO>(planningUrl, fallbackUrl, dispo).pipe(
+            catchError(() => of(dispo))
+        );
     }
 
     deleteDisponibilite(id: number): Observable<void> {
-        return this.http.delete<void>(`${this.dispoUrl}/${id}`, {
-            headers: this.getHeaders()
-        });
+        const planningUrl = `${this.dispoUrl}/${id}`;
+        const fallbackUrl = `${this.fallbackDispoUrl}/${id}`;
+        return this.http.delete<void>(planningUrl, { headers: this.getHeaders() }).pipe(
+            catchError(() => this.http.delete<void>(fallbackUrl, { headers: this.getHeaders() }))
+        );
     }
 
     // ========== EMPLOI DU TEMPS ==========

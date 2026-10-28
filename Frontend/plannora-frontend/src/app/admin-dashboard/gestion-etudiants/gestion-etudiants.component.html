@@ -1,0 +1,130 @@
+<section class="student-management-panel">
+  <div class="section-toolbar">
+    <div>
+      <p class="eyebrow">Academic management</p>
+      <h2>Students</h2>
+    </div>
+    <button type="button" class="primary-btn" (click)="openCreateForm()">+ Add student</button>
+  </div>
+
+  <div class="filters-row">
+    <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilters()" placeholder="Search students" />
+    <select [(ngModel)]="selectedSchool" (ngModelChange)="applyFilters()">
+      <option value="all">All schools</option>
+      <option *ngFor="let school of schoolOptions" [value]="school">{{ school }}</option>
+    </select>
+    <select [(ngModel)]="selectedDepartment" (ngModelChange)="applyFilters()">
+      <option value="all">All departments</option>
+      <option *ngFor="let department of departmentOptions" [value]="department">{{ department }}</option>
+    </select>
+    <select [(ngModel)]="selectedLevel" (ngModelChange)="applyFilters()">
+      <option value="all">All levels</option>
+      <option *ngFor="let level of levelOptions" [value]="level">{{ level }}</option>
+    </select>
+  </div>
+
+  <div class="student-table" *ngIf="filteredStudents.length; else emptyState">
+    <div class="table-row table-header">
+      <span>Student</span>
+      <span>School</span>
+      <span>Department</span>
+      <span>Specialty</span>
+      <span>Level</span>
+      <span>Status</span>
+      <span>Actions</span>
+    </div>
+
+    <div class="table-row" *ngFor="let student of filteredStudents">
+      <span>
+        <strong>{{ student.prenom }} {{ student.nom }}</strong><br>
+        <small>{{ student.email }}</small>
+      </span>
+      <span>{{ student.school }}</span>
+      <span>{{ student.department }}</span>
+      <span>{{ student.specialty }}</span>
+      <span>{{ student.level }}</span>
+      <span>
+        <span class="status-pill" [class.active]="student.status === 'Actif'">{{ student.status }}</span>
+      </span>
+      <span class="actions">
+        <button type="button" class="secondary-btn" (click)="openEditForm(student)">Edit</button>
+        <button type="button" class="danger-btn" (click)="deleteStudent(student.id)">Delete</button>
+      </span>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state">No students found for these filters.</div>
+  </ng-template>
+</section>
+
+<section class="modal-backdrop" *ngIf="showForm">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>{{ isEditing ? 'Edit student' : 'Add student' }}</h3>
+      <button type="button" class="close-btn" (click)="closeForm()">✕</button>
+    </div>
+
+    <div class="modal-grid">
+      <label>
+        <span>Last name</span>
+        <input type="text" [(ngModel)]="form.nom" />
+      </label>
+      <label>
+        <span>First name</span>
+        <input type="text" [(ngModel)]="form.prenom" />
+      </label>
+      <label class="full-width">
+        <span>Email</span>
+        <input type="email" [(ngModel)]="form.email" />
+      </label>
+      <label class="full-width">
+        <span>Password</span>
+        <input type="password" [(ngModel)]="form.password" placeholder="Min. 6 characters" />
+      </label>
+      <label class="full-width" *ngIf="!isEditing">
+        <span>Confirm password</span>
+        <input type="password" [(ngModel)]="passwordConfirm" placeholder="Re-enter password" />
+      </label>
+      <label>
+        <span>School</span>
+        <select [(ngModel)]="form.school" (change)="onSchoolChange()" required>
+          <option value="">Select a school</option>
+          <option *ngFor="let school of schoolOptions" [value]="school">{{ school }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Department</span>
+        <select [(ngModel)]="form.department" (change)="onDepartmentChange()" [disabled]="!form.school" required>
+          <option value="">Select a department</option>
+          <option *ngFor="let department of availableDepartments" [value]="department">{{ department }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Specialty</span>
+        <select [(ngModel)]="form.specialty" [disabled]="!form.department" required>
+          <option value="">Select a specialty</option>
+          <option *ngFor="let specialty of availableSpecialties" [value]="specialty">{{ specialty }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Level</span>
+        <select [(ngModel)]="form.level">
+          <option *ngFor="let level of levelOptions" [value]="level">{{ level }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Status</span>
+        <select [(ngModel)]="form.status">
+          <option value="Active">Active</option>
+          <option value="On hold">On hold</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="secondary-btn" (click)="closeForm()">Cancel</button>
+      <button type="button" class="primary-btn" (click)="saveStudent()">{{ isEditing ? 'Save' : 'Create' }}</button>
+    </div>
+  </div>
+</section>

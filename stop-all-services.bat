@@ -10,6 +10,9 @@ echo.
 echo Arret des processus Java sur les ports PLANORA...
 echo.
 
+set "NOPAUSE=0"
+if "%~1"=="--no-pause" set "NOPAUSE=1"
+
 set PORTS=8761 8081 8084 8085 8086 8087 8088 8089 8090 8092
 set N=0
 
@@ -34,4 +37,4 @@ if %N% equ 0 (
 )
 
 echo.
-pause
+if "%NOPAUSE%"=="0" pause

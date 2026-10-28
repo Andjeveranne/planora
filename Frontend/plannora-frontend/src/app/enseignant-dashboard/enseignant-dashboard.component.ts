@@ -8,6 +8,7 @@ import { NotificationService } from '../services/notification.service';
 import { NotificationApiService, TeacherNotification } from '../services/notification-api.service';
 import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
 import { EcoleService } from '../services/ecole.service';
+import { TeacherAttendanceComponent } from '../teacher-attendance/teacher-attendance.component';
 
 interface UserInfo {
   nom: string;
@@ -59,7 +60,7 @@ interface EdtSlot {
 @Component({
   selector: 'app-enseignant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, GestionDisponibilitesComponent],
+  imports: [CommonModule, FormsModule, GestionDisponibilitesComponent, TeacherAttendanceComponent],
   templateUrl: './enseignant-dashboard.component.html',
   styleUrls: ['./enseignant-dashboard.component.css']
 })
@@ -573,6 +574,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
       'courses': 'Mes Cours',
       'reservations': 'Réservations de Salles',
       'students': 'Mes Étudiants',
+      'attendance': 'Présence QR',
       'notifications': 'Notifications'
     };
     return titles[this.activeSection] || 'Dashboard Enseignant';

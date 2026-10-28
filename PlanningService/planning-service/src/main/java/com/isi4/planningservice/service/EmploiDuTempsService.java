@@ -1,4 +1,4 @@
-package com.isi4.planningservice.service;
+﻿package com.isi4.planningservice.service;
 
 import com.isi4.planningservice.algorithm.FordFulkersonScheduler;
 import com.isi4.planningservice.dto.EmploiDuTempsDTO;
@@ -8,10 +8,16 @@ import com.isi4.planningservice.repository.DisponibiliteRepository;
 import com.isi4.planningservice.repository.EmploiDuTempsRepository;
 import com.isi4.planningservice.repository.UEClasseRepository;
 import com.isi4.planningservice.repository.UEEnseignantRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.DayOfWeek;
@@ -374,7 +380,7 @@ public class EmploiDuTempsService {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> getClassesData() {
         try {
-            List<Map<String, Object>> data = webClientBuilder.build().get()
+            List<Map<String, Object>> data = authorizedWebClient().get()
                     .uri("http://classes-service/api/classes")
                     .retrieve().bodyToMono(List.class).block();
             return data != null ? data : Collections.emptyList();
@@ -387,7 +393,7 @@ public class EmploiDuTempsService {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> getUEsData() {
         try {
-            List<Map<String, Object>> data = webClientBuilder.build().get()
+            List<Map<String, Object>> data = authorizedWebClient().get()
                     .uri("http://ue-service/api/ues")
                     .retrieve().bodyToMono(List.class).block();
             return data != null ? data : Collections.emptyList();
@@ -403,7 +409,7 @@ public class EmploiDuTempsService {
             String uri = (idEcole != null && !idEcole.isBlank())
                     ? "http://salle-service/api/salles/ecole/" + idEcole
                     : "http://salle-service/api/salles";
-            List<Map<String, Object>> data = webClientBuilder.build().get()
+            List<Map<String, Object>> data = authorizedWebClient().get()
                     .uri(uri).retrieve().bodyToMono(List.class).block();
             if (data == null) return Collections.emptyMap();
             return data.stream()
@@ -417,5 +423,55 @@ public class EmploiDuTempsService {
 
     private int toInt(Object val) {
         return val instanceof Number n ? n.intValue() : 0;
+    }
+
+    // -----------------------------------------------------------------------
+    //  WEBCLIENT WITH JWT FORWARDING
+    // -----------------------------------------------------------------------
+
+    private WebClient authorizedWebClient() {
+        WebClient.Builder builder = webClientBuilder.build().mutate();
+
+        String requestAuth = null;
+        String requestUserId = null;
+        String requestUserRole = null;
+
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+            HttpServletRequest request = attributes.getRequest();
+            requestAuth = request.getHeader(HttpHeaders.AUTHORIZATION);
+            if (requestAuth != null && !requestAuth.isBlank()) {
+                builder.defaultHeader(HttpHeaders.AUTHORIZATION, requestAuth);
+            }
+            requestUserId = request.getHeader("X-User-Id");
+            requestUserRole = request.getHeader("X-User-Role");
+        }
+
+        if (requestUserId == null || requestUserId.isBlank()) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getName() != null) {
+                requestUserId = authentication.getName();
+            }
+        }
+
+        if (requestUserRole == null || requestUserRole.isBlank()) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getAuthorities() != null) {
+                requestUserRole = authentication.getAuthorities().stream()
+                        .map(grantedAuthority -> grantedAuthority.getAuthority())
+                        .filter(authority -> authority != null && !authority.isBlank())
+                        .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
+                        .findFirst()
+                        .orElse(null);
+            }
+        }
+
+        if (requestUserId != null && !requestUserId.isBlank()) {
+            builder.defaultHeader("X-User-Id", requestUserId);
+        }
+        if (requestUserRole != null && !requestUserRole.isBlank()) {
+            builder.defaultHeader("X-User-Role", requestUserRole);
+        }
+
+        return builder.build();
     }
 }

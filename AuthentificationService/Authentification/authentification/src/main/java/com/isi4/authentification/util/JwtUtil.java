@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -18,7 +19,11 @@ public class JwtUtil {
     private Long expiration;
     
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 64) {
+            throw new IllegalStateException("JWT secret must be at least 64 bytes (512 bits) for HS512. Set a stronger JWT_SECRET.");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
     
     public String generateToken(String email, String userId, String role) {

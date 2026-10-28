@@ -66,7 +66,7 @@ export class LoginComponent implements OnInit {
     if (!email.endsWith(allowedDomain)) {
       return { 
         institutionalEmail: { 
-          message: `Seules les adresses email ${allowedDomain} sont autorisées`,
+          message: `Only email addresses ending in ${allowedDomain} are allowed`,
           allowedDomain: allowedDomain
         } 
       };
@@ -84,7 +84,7 @@ export class LoginComponent implements OnInit {
     if (!/^[a-z]+\.[a-z]+$/.test(localPart)) {
       return { 
         institutionalEmailFormat: { 
-          message: 'Format attendu: prenom.nom@ictuniversity.org',
+          message: 'Expected format: firstname.lastname@ictuniversity.org',
           example: 'jean.dupont@ictuniversity.org'
         } 
       };
@@ -106,8 +106,8 @@ export class LoginComponent implements OnInit {
         // Set default values if backend is not available
         this.domainInfo = {
           allowedDomain: '@ictuniversity.org',
-          exampleFormat: 'prenom.nom@ictuniversity.org',
-          message: 'Seules les adresses email institutionnelles sont autorisées'
+          exampleFormat: 'firstname.lastname@ictuniversity.org',
+          message: 'Only institutional email addresses are allowed'
         };
       }
     });
@@ -124,26 +124,28 @@ export class LoginComponent implements OnInit {
           localStorage.setItem('currentUser', JSON.stringify(response));
           localStorage.setItem('token', response.token);
 
-          console.log('Connexion réussie!', response);
+          console.log('Login successful!', response);
 
-          // Redirection selon le rôle
+          // Redirect by role
           if (response.role === 'ADMIN' || response.role === 'ADMINISTRATEUR') {
             this.router.navigate(['/admin-dashboard']);
+          } else if (response.role === 'ETUDIANT') {
+            this.router.navigate(['/student-dashboard']);
           } else if (response.role === 'ENSEIGNANT') {
             this.router.navigate(['/enseignant-dashboard']);
           } else {
-            this.notification.info(`Bienvenue ${response.prenom} ${response.nom}!\nRôle: ${response.role}\nDashboard étudiant à venir...`, 'Connexion réussie');
+            this.notification.info(`Welcome ${response.prenom} ${response.nom}!\nRole: ${response.role}\nStudent dashboard coming soon...`, 'Login successful');
           }
         },
         error: (error) => {
           this.isLoading = false;
-          console.error('Erreur de connexion:', error);
+          console.error('Login error:', error);
           
           // Handle specific domain validation errors
           if (error.error?.message?.includes('ictuniversity.org')) {
             this.errorMessage = error.error.message;
           } else {
-            this.errorMessage = error.error?.message || 'Email ou mot de passe incorrect';
+            this.errorMessage = error.error?.message || 'Invalid email or password';
           }
         }
       });
@@ -156,7 +158,7 @@ export class LoginComponent implements OnInit {
   onForgotPassword(): void {
     const emailControl = this.loginForm.get('email');
     if (emailControl?.invalid || !emailControl?.value) {
-      this.errorMessage = 'Veuillez entrer une adresse email institutionnelle valide pour réinitialiser le mot de passe.';
+      this.errorMessage = 'Please enter a valid institutional email address to reset your password.';
       return;
     }
 
@@ -170,7 +172,7 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Erreur lors de l\'envoi de l\'email';
+        this.errorMessage = error.error?.message || 'Error sending password reset email';
       }
     });
   }
@@ -186,10 +188,10 @@ export class LoginComponent implements OnInit {
     const emailControl = this.email;
     if (emailControl?.errors && emailControl.touched) {
       if (emailControl.errors['required']) {
-        return 'L\'adresse email est requise';
+        return 'Email address is required';
       }
       if (emailControl.errors['email']) {
-        return 'Format d\'email invalide';
+        return 'Invalid email format';
       }
       if (emailControl.errors['institutionalEmail']) {
         return emailControl.errors['institutionalEmail'].message;

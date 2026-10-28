@@ -144,10 +144,23 @@ public class SalleService {
     }
 
     private void validerClasseAssociee(SalleDTO dto) {
-        if (dto.getType() == TypeSalle.SALLE_COURS
-                && (dto.getIdClasse() == null || dto.getIdClasse().isBlank())) {
-            throw new ValidationException("Une salle de cours doit être attribuée à une classe.");
+        if (dto == null || dto.getType() == null) {
+            return;
         }
+        if (estSalleCoursOuAmphi(dto.getType())
+                && (dto.getIdClasse() == null || dto.getIdClasse().isBlank())) {
+            throw new ValidationException("Une salle de cours ou amphithéâtre doit être attribuée à une classe pour le CM/TD.");
+        }
+        if ((dto.getType() == TypeSalle.LABORATOIRE || dto.getType() == TypeSalle.SALLE_INFORMATIQUE)
+                && dto.getIdClasse() != null && !dto.getIdClasse().isBlank()) {
+            // Les salles TP peuvent rester associées à une classe, mais elles restent compatibles TP.
+        }
+    }
+
+    private boolean estSalleCoursOuAmphi(TypeSalle type) {
+        return type == TypeSalle.SALLE_COURS
+                || type == TypeSalle.AMPHITHEATRE
+                || type == TypeSalle.SALLE_COURS_AMPHITHEATRE;
     }
     
     private SalleDTO convertirEntityVersDTO(Salle salle) {

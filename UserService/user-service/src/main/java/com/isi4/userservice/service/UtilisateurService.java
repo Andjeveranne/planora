@@ -14,10 +14,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,7 +56,7 @@ public class UtilisateurService {
     public UtilisateurResponseDTO creerEnseignant(EnseignantDTO dto) {
         dto.setEmail(dto.getEmail().trim());
         if ((dto.getIdEcole() == null || dto.getIdEcole().isBlank())
-            && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
+                && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
             throw new ValidationException("L'école de l'enseignant est obligatoire.");
         }
         if (utilisateurRepository.existsByEmail(dto.getEmail())) {
@@ -74,8 +74,11 @@ public class UtilisateurService {
         enseignant.setSpecialite(dto.getSpecialite());
         enseignant.setDepartement(dto.getDepartement());
         enseignant.setIdEcole(dto.getIdEcole());
+
         Set<String> schoolIds = dto.getIdEcoles() == null ? new HashSet<>() : new HashSet<>(dto.getIdEcoles());
-        if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) schoolIds.add(dto.getIdEcole());
+        if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) {
+            schoolIds.add(dto.getIdEcole());
+        }
         enseignant.setIdEcoles(schoolIds);
 
         enseignant = enseignantRepository.save(enseignant);
@@ -91,9 +94,7 @@ public class UtilisateurService {
 
     @Transactional(readOnly = true)
     public List<UtilisateurResponseDTO> getEnseignants() {
-        // Inclut les enseignants de la table `enseignants` (JPA) ET les utilisateurs
-        // créés via AuthentificationService avec role='ENSEIGNANT' dans `utilisateurs`
-        return utilisateurRepository.findByRole("ENSEIGNANT").stream()
+        return enseignantRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -107,12 +108,13 @@ public class UtilisateurService {
 
     @Transactional(readOnly = true)
     public List<UtilisateurResponseDTO> rechercherEnseignants(String idEcole, String departement, String specialite) {
-        return getEnseignants().stream()
-            .filter(enseignant -> idEcole == null || idEcole.isBlank()
-                || idEcole.equals(enseignant.getIdEcole())
-                || (enseignant.getIdEcoles() != null && enseignant.getIdEcoles().contains(idEcole)))
+        return enseignantRepository.findAll().stream()
+                .filter(enseignant -> idEcole == null || idEcole.isBlank()
+                        || idEcole.equals(enseignant.getIdEcole())
+                        || (enseignant.getIdEcoles() != null && enseignant.getIdEcoles().contains(idEcole)))
                 .filter(enseignant -> departement == null || departement.isBlank() || departement.equals(enseignant.getDepartement()))
                 .filter(enseignant -> specialite == null || specialite.isBlank() || specialite.equals(enseignant.getSpecialite()))
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -125,38 +127,27 @@ public class UtilisateurService {
 
     @Transactional
     public UtilisateurResponseDTO updateUtilisateur(String id, EnseignantDTO dto) {
+        if (dto == null) {
+            throw new ValidationException("Les données de l'enseignant sont obligatoires.");
+        }
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new ValidationException("L'email est obligatoire.");
+        }
         dto.setEmail(dto.getEmail().trim());
         if ((dto.getIdEcole() == null || dto.getIdEcole().isBlank())
-            && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
+                && (dto.getIdEcoles() == null || dto.getIdEcoles().isEmpty())) {
             throw new ValidationException("L'école de l'enseignant est obligatoire.");
         }
-        Utilisateur utilisateur = utilisateurRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id: " + id));
 
-        if (!utilisateur.getEmail().equals(dto.getEmail()) && utilisateurRepository.existsByEmail(dto.getEmail())) {
+        if (utilisateurRepository.existsByEmailAndIdUserNot(dto.getEmail(), id)) {
             throw new ValidationException("Un utilisateur avec cet email existe déjà.");
         }
 
-        utilisateur.setEmail(dto.getEmail());
-        utilisateur.setNomUser(dto.getNomUser());
-        utilisateur.setPrenomUser(dto.getPrenomUser());
-        utilisateur.setTelephone(dto.getTelephone());
+        Enseignant enseignant = enseignantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id: " + id));
 
-        if (dto.getMdp() != null && !dto.getMdp().isBlank()) {
-            utilisateur.setMdp(passwordEncoder.encode(dto.getMdp()));
-        }
-
-        if (utilisateur instanceof Enseignant enseignant) {
-            enseignant.setSpecialite(dto.getSpecialite());
-            enseignant.setDepartement(dto.getDepartement());
-            enseignant.setIdEcole(dto.getIdEcole());
-            Set<String> schoolIds = dto.getIdEcoles() == null ? new HashSet<>() : new HashSet<>(dto.getIdEcoles());
-            if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) schoolIds.add(dto.getIdEcole());
-            enseignant.setIdEcoles(schoolIds);
-        }
-
-        utilisateur = utilisateurRepository.save(utilisateur);
-        return toResponse(utilisateur);
+        applyEnseignantFields(enseignant, dto);
+        return toResponse(enseignantRepository.save(enseignant));
     }
 
     @Transactional
@@ -165,6 +156,28 @@ public class UtilisateurService {
             throw new ResourceNotFoundException("Utilisateur non trouvé avec l'id: " + id);
         }
         utilisateurRepository.deleteById(id);
+    }
+
+    private void applyEnseignantFields(Enseignant enseignant, EnseignantDTO dto) {
+        enseignant.setEmail(dto.getEmail());
+        enseignant.setNomUser(dto.getNomUser());
+        enseignant.setPrenomUser(dto.getPrenomUser());
+        enseignant.setTelephone(dto.getTelephone());
+        enseignant.setRole("ENSEIGNANT");
+
+        if (dto.getMdp() != null && !dto.getMdp().isBlank()) {
+            enseignant.setMdp(passwordEncoder.encode(dto.getMdp()));
+        }
+
+        enseignant.setSpecialite(dto.getSpecialite());
+        enseignant.setDepartement(dto.getDepartement());
+        enseignant.setIdEcole(dto.getIdEcole());
+
+        Set<String> schoolIds = dto.getIdEcoles() == null ? new HashSet<>() : new HashSet<>(dto.getIdEcoles());
+        if (dto.getIdEcole() != null && !dto.getIdEcole().isBlank()) {
+            schoolIds.add(dto.getIdEcole());
+        }
+        enseignant.setIdEcoles(schoolIds);
     }
 
     private UtilisateurResponseDTO toResponse(Utilisateur utilisateur) {

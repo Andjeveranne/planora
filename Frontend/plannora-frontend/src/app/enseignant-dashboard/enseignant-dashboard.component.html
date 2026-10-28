@@ -27,6 +27,10 @@
         <span class="nav-icon"><img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Students" class="nav-icon-img"></span>
         <span>Étudiants</span>
       </button>
+      <button class="nav-item" [class.active]="activeSection === 'attendance'" (click)="setActiveSection('attendance')">
+        <span class="nav-icon"><img src="https://cdn-icons-png.flaticon.com/512/1827/1827422.png" alt="Attendance" class="nav-icon-img"></span>
+        <span>Présence QR</span>
+      </button>
       <button class="nav-item" [class.active]="activeSection === 'notifications'" (click)="setActiveSection('notifications')">
         <span class="nav-icon"><img src="https://cdn-icons-png.flaticon.com/512/1827/1827422.png" alt="Notifications" class="nav-icon-img"></span>
         <span>Notifications</span>
@@ -220,6 +224,13 @@
       @if (activeSection === 'students') {
         <div class="section">
           <div class="placeholder-content"><p>👥 Liste de vos étudiants à venir...</p></div>
+        </div>
+      }
+
+      <!-- Présence QR -->
+      @if (activeSection === 'attendance') {
+        <div class="section">
+          <app-teacher-attendance></app-teacher-attendance>
         </div>
       }
 

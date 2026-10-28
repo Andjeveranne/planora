@@ -9,6 +9,7 @@ import lombok.*;
     @UniqueConstraint(name = "uk_specialites_nom_departement", columnNames = {"nom", "id_filiere"})
 })
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Specialite {

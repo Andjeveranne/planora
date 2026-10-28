@@ -5,7 +5,9 @@ import com.isi4.classesservice.dto.FiliereDTO;
 import com.isi4.classesservice.entity.Filiere;
 import com.isi4.classesservice.exception.ResourceNotFoundException;
 import com.isi4.classesservice.exception.ValidationException;
+import com.isi4.classesservice.repository.ClasseRepository;
 import com.isi4.classesservice.repository.FiliereRepository;
+import com.isi4.classesservice.repository.SpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 public class FiliereService {
 
     private final FiliereRepository filiereRepository;
+    private final ClasseRepository classeRepository;
+    private final SpecialiteRepository specialiteRepository;
 
     public FiliereDTO creer(FiliereDTO dto) {
         validerEcole(dto);
@@ -62,6 +66,9 @@ public class FiliereService {
         if (!filiereRepository.existsById(id)) {
             throw new ResourceNotFoundException("Filière non trouvée : " + id);
         }
+
+        classeRepository.findByFiliereIdFiliere(id).forEach(classe -> classeRepository.deleteById(classe.getIdClasse()));
+        specialiteRepository.findByIdFiliere(id).forEach(specialite -> specialiteRepository.deleteById(specialite.getIdSpecialite()));
         filiereRepository.deleteById(id);
     }
 

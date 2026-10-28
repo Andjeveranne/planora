@@ -19,6 +19,7 @@ com\isi4\classesservice\service\SpecialiteService.class
 com\isi4\classesservice\entity\Classe.class
 com\isi4\classesservice\dto\ClasseDTO.class
 com\isi4\classesservice\security\JwtTokenProvider.class
+com\isi4\classesservice\entity\Specialite$SpecialiteBuilder.class
 com\isi4\classesservice\repository\ClasseRepository.class
 com\isi4\classesservice\controller\ClasseController.class
 com\isi4\classesservice\repository\FiliereRepository.class

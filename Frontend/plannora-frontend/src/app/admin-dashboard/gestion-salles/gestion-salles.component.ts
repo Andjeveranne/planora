@@ -252,7 +252,8 @@ export class GestionSallesComponent implements OnInit {
 
   onTypeChange(): void {
     const classControl = this.salleForm.get('idClasse');
-    if (this.salleForm.get('type')?.value === TypeSalle.SALLE_COURS) {
+    const selectedType = this.salleForm.get('type')?.value;
+    if (selectedType === TypeSalle.SALLE_COURS || selectedType === TypeSalle.SALLE_COURS_AMPHITHEATRE) {
       classControl?.setValidators(Validators.required);
     } else {
       classControl?.clearValidators();
@@ -285,7 +286,7 @@ export class GestionSallesComponent implements OnInit {
       this.isLoading = true;
       const salleData: SalleDTO = {
         ...this.salleForm.value,
-        idClasse: this.salleForm.value.type === TypeSalle.SALLE_COURS
+        idClasse: this.salleForm.value.type === TypeSalle.SALLE_COURS || this.salleForm.value.type === TypeSalle.SALLE_COURS_AMPHITHEATRE
           ? this.salleForm.value.idClasse
           : null
       };

@@ -1,0 +1,640 @@
+<div class="student-shell">
+  <!-- Top Navigation Header -->
+  <header class="top-nav">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-text">
+        <span class="brand-title">PLANORA</span>
+        <span class="brand-badge">STUDENT PORTAL</span>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab" [class.active]="activeSection === 'overview'" (click)="setSection('overview')">
+        <span class="tab-icon">📊</span>
+        <span>Vue d'ensemble</span>
+      </button>
+      <button class="nav-tab" [class.active]="activeSection === 'courses'" (click)="setSection('courses')">
+        <span class="tab-icon">📚</span>
+        <span>Cours & Inscriptions</span>
+      </button>
+      <button class="nav-tab" [class.active]="activeSection === 'sessions'" (click)="setSection('sessions')">
+        <span class="tab-icon">⚡</span>
+        <span>Sessions Live</span>
+        <span class="pulse-indicator" *ngIf="activeSessions.length > 0">{{ activeSessions.length }}</span>
+      </button>
+      <button class="nav-tab" [class.active]="activeSection === 'attendance'" (click)="setSection('attendance')">
+        <span class="tab-icon">📋</span>
+        <span>Historique Présences</span>
+      </button>
+    </nav>
+
+    <!-- User Profile Strip -->
+    <div class="user-strip">
+      <button class="scan-quick-btn" (click)="openGeneralScanner()">
+        <span class="icon">📷</span>
+        <span>Scanner QR</span>
+      </button>
+      <div class="profile-meta">
+        <span class="user-name">{{ student.prenom }} {{ student.nom }}</span>
+        <span class="user-sub">{{ student.specialty }} • {{ student.level }}</span>
+      </div>
+      <div class="avatar-ring">
+        {{ student.prenom.charAt(0) }}{{ student.nom.charAt(0) }}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Canvas -->
+  <main class="dashboard-canvas" *ngIf="dashboardData as data">
+
+    <!-- ======================================================== -->
+    <!-- SECTION 1: OVERVIEW & RICH STATISTICS                    -->
+    <!-- ======================================================== -->
+    <section class="section-container" *ngIf="activeSection === 'overview'">
+      <!-- Hero Greeting -->
+      <div class="hero-bar">
+        <div>
+          <h2>Bonjour, {{ student.prenom }} 👋</h2>
+          <p class="subtitle">Bienvenue sur votre portail universitaire. Suivez votre assiduité en temps réel.</p>
+        </div>
+        <div class="status-chip active">
+          <span class="dot"></span>
+          <span>Semestre Académique en cours • {{ student.department }}</span>
+        </div>
+      </div>
+
+      <!-- 4 Data-Dense KPI Summary Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card indigo">
+          <div class="kpi-header">
+            <span class="kpi-label">Cours Inscrits</span>
+            <span class="kpi-icon">🎓</span>
+          </div>
+          <div class="kpi-value">{{ data.overview.totalCourses }}</div>
+          <div class="kpi-footer">
+            <span class="pill primary">{{ data.overview.credits }} ECTS validés</span>
+            <span class="subtext">sur 60 ECTS</span>
+          </div>
+        </div>
+
+        <div class="kpi-card emerald">
+          <div class="kpi-header">
+            <span class="kpi-label">Taux d'Assiduité Global</span>
+            <span class="kpi-icon">📈</span>
+          </div>
+          <div class="kpi-value">{{ data.overview.attendanceRate }}%</div>
+          <div class="kpi-footer">
+            <span class="pill success" *ngIf="data.overview.attendanceRate >= 80">Excellent niveau</span>
+            <span class="pill warning" *ngIf="data.overview.attendanceRate < 80">À surveiller</span>
+            <span class="subtext">Seuil min. 75%</span>
+          </div>
+        </div>
+
+        <div class="kpi-card amber">
+          <div class="kpi-header">
+            <span class="kpi-label">Sessions En Direct Aujourd'hui</span>
+            <span class="kpi-icon">⚡</span>
+          </div>
+          <div class="kpi-value">{{ activeSessions.length }}</div>
+          <div class="kpi-footer">
+            <span class="pill danger" *ngIf="activeSessions.length > 0">Émargement ouvert</span>
+            <span class="pill neutral" *ngIf="activeSessions.length === 0">Aucune session live</span>
+            <span class="subtext">QR code actif</span>
+          </div>
+        </div>
+
+        <div class="kpi-card cyan">
+          <div class="kpi-header">
+            <span class="kpi-label">Classes Validées</span>
+            <span class="kpi-icon">✅</span>
+          </div>
+          <div class="kpi-value">{{ data.overview.completedClasses || 28 }}</div>
+          <div class="kpi-footer">
+            <span class="pill neutral">Ce semestre</span>
+            <span class="subtext">0 absence injustifiée</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Layout: Active Sessions Feed & Quick Log -->
+      <div class="overview-split">
+        <!-- Live Ongoing Session Card -->
+        <div class="panel-box">
+          <div class="panel-title-bar">
+            <div>
+              <h3>Séances en cours d'émargement</h3>
+              <p class="panel-desc">Scannez le QR dynamique affiché par votre enseignant</p>
+            </div>
+            <button class="link-btn" (click)="setSection('sessions')">Voir tout ({{ activeSessions.length }})</button>
+          </div>
+
+          <div class="sessions-feed" *ngIf="activeSessions.length > 0; else noActiveSessions">
+            <div class="live-session-item" *ngFor="let s of activeSessions">
+              <div class="session-badge-wrap">
+                <span class="live-dot-pulse"></span>
+                <span class="badge-code">{{ s.courseCode }}</span>
+              </div>
+              <div class="session-content">
+                <h4>{{ s.title }}</h4>
+                <div class="meta-row">
+                  <span>👨‍🏫 {{ s.teacherName }}</span>
+                  <span>📍 {{ s.room || 'Amphi 3' }}</span>
+                  <span>⏱️ {{ s.sessionType || 'CM' }}</span>
+                </div>
+              </div>
+              <div class="session-action">
+                <button class="btn-scan-primary" (click)="openScannerForSession(s)">
+                  <span>📷 Émarger maintenant</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noActiveSessions>
+            <div class="empty-panel">
+              <span class="empty-icon">☕</span>
+              <p>Aucun cours n'est actuellement en session d'émargement.</p>
+              <small>Les sessions apparaîtront automatiquement dès le démarrage par vos professeurs.</small>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Recent Attendance Log -->
+        <div class="panel-box">
+          <div class="panel-title-bar">
+            <div>
+              <h3>Derniers émargements validés</h3>
+              <p class="panel-desc">Historique récent de vos présences vérifiées</p>
+            </div>
+            <button class="link-btn" (click)="setSection('attendance')">Historique complet</button>
+          </div>
+
+          <div class="log-list" *ngIf="data.attendance.length > 0; else noRecentLog">
+            <div class="log-item" *ngFor="let item of data.attendance.slice(0, 4)">
+              <div class="log-status-ring" [ngClass]="item.status.toLowerCase()">
+                ✓
+              </div>
+              <div class="log-info">
+                <strong>{{ item.course }}</strong>
+                <small>{{ item.date || 'Aujourd\'hui' }} • {{ item.time || '10:00' }}</small>
+              </div>
+              <span class="status-tag" [ngClass]="item.status.toLowerCase()">
+                {{ item.status }}
+              </span>
+            </div>
+          </div>
+
+          <ng-template #noRecentLog>
+            <div class="empty-panel">
+              <p>Aucun enregistrement récent.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SECTION 2: SPECIALTY COURSES & ENROLLMENT               -->
+    <!-- ======================================================== -->
+    <section class="section-container" *ngIf="activeSection === 'courses'">
+      <div class="section-header">
+        <div>
+          <h2>Catalogue des cours de la filière</h2>
+          <p class="subtitle">Consultez et gérez vos inscriptions aux unités d'enseignement</p>
+        </div>
+        <div class="enrolled-stat">
+          <span>Inscrit(e) à <strong>{{ filteredCourses.length }} cours</strong></span>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="toolbar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="courseSearchTerm"
+            placeholder="Rechercher par titre, code UE, enseignant..."
+            class="input-search"
+          />
+        </div>
+
+        <div class="filter-controls">
+          <select [(ngModel)]="selectedSpecialty" class="select-pill">
+            <option value="all">Toutes spécialités</option>
+            <option *ngFor="let spec of specialtiesList" [value]="spec">{{ spec }}</option>
+          </select>
+
+          <select [(ngModel)]="selectedType" class="select-pill">
+            <option value="all">Tous types (CM, TD, TP)</option>
+            <option value="CM">Cours Magistral (CM)</option>
+            <option value="TD">Travaux Dirigés (TD)</option>
+            <option value="TP">Travaux Pratiques (TP)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Course Cards Grid -->
+      <div class="courses-card-grid">
+        <div class="modern-course-card" *ngFor="let course of filteredCourses">
+          <div class="card-accent-bar" [style.background]="course.color"></div>
+          <div class="card-body">
+            <div class="card-top-row">
+              <span class="badge-code">{{ course.code }}</span>
+              <span class="type-pill">{{ course.type }}</span>
+              <span class="enrolled-indicator" *ngIf="course.enrolled">✓ Inscrit</span>
+            </div>
+
+            <h3 class="course-card-title">{{ course.title }}</h3>
+            <p class="course-teacher">👨‍🏫 {{ course.teacherName }}</p>
+
+            <div class="specs-grid">
+              <div class="spec-cell">
+                <span class="spec-label">Crédits</span>
+                <strong>{{ course.credits }} ECTS</strong>
+              </div>
+              <div class="spec-cell">
+                <span class="spec-label">Salle</span>
+                <strong>{{ course.room }}</strong>
+              </div>
+              <div class="spec-cell">
+                <span class="spec-label">Créneau</span>
+                <strong>{{ course.day }}</strong>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button class="btn-card-outline" (click)="openCourseDetails(course)">
+                Détails du syllabus
+              </button>
+              <button
+                class="btn-enroll-toggle"
+                [class.enrolled]="course.enrolled"
+                (click)="toggleEnrollment(course)"
+              >
+                {{ course.enrolled ? 'Se désinscrire' : 'S\'inscrire' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SECTION 3: LIVE SESSIONS & REAL-TIME QR EMISSION/SCAN    -->
+    <!-- ======================================================== -->
+    <section class="section-container" *ngIf="activeSection === 'sessions'">
+      <div class="section-header">
+        <div>
+          <h2>Sessions de cours en direct & Émargement</h2>
+          <p class="subtitle">Scannez le QR code dynamique ou saisissez le token de présence</p>
+        </div>
+        <button class="btn-primary-action" (click)="openGeneralScanner()">
+          <span>📷 Ouvrir le scanner universel</span>
+        </button>
+      </div>
+
+      <!-- Active Sessions Live Deck -->
+      <div class="live-deck" *ngIf="activeSessions.length > 0; else emptySessionsDeck">
+        <div class="live-card-hero" *ngFor="let s of activeSessions">
+          <div class="live-card-top">
+            <div class="live-badge">
+              <span class="pulsing-green-dot"></span>
+              <span>SESSION ACTIVE EN DIRECT</span>
+            </div>
+            <span class="countdown-badge">⏱️ Expire dans {{ s.remainingSeconds ? (s.remainingSeconds / 60 | number:'1.0-0') : 45 }} min</span>
+          </div>
+
+          <div class="live-main-content">
+            <div class="course-header-row">
+              <span class="course-tag">{{ s.courseCode }}</span>
+              <h3>{{ s.title }}</h3>
+            </div>
+            <div class="details-strip">
+              <span>👨‍🏫 {{ s.teacherName }}</span>
+              <span>📍 Salle : {{ s.room || 'Amphi 3' }}</span>
+              <span>📚 Type : {{ s.sessionType || 'CM' }}</span>
+              <span>👥 Participants enregistrés : <strong>{{ s.attendeesCount || sessionAttendees.length }}</strong></span>
+            </div>
+          </div>
+
+          <!-- Attendee roster for this live session -->
+          <div class="live-attendees-box">
+            <div class="attendees-header">
+              <h4>Camarades déjà enregistrés dans cette séance</h4>
+              <button class="btn-refresh-sub" (click)="loadAttendees(s.id)">Actualiser</button>
+            </div>
+
+            <div class="attendees-table-wrap">
+              <table class="data-table compact">
+                <thead>
+                  <tr>
+                    <th>Étudiant</th>
+                    <th>Statut</th>
+                    <th>Heure d'émargement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let attendee of sessionAttendees">
+                    <td>
+                      <strong>{{ attendee.studentName }}</strong>
+                      <span class="sub-text">{{ attendee.studentId }}</span>
+                    </td>
+                    <td>
+                      <span class="status-tag" [ngClass]="attendee.status.toLowerCase()">
+                        {{ attendee.status }}
+                      </span>
+                    </td>
+                    <td>{{ attendee.scannedAt | date:'HH:mm:ss' }}</td>
+                  </tr>
+                  <tr *ngIf="sessionAttendees.length === 0">
+                    <td colspan="3" class="text-center text-muted">
+                      Vous serez le premier à valider votre présence !
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card-footer-action">
+            <button class="btn-scan-large" (click)="openScannerForSession(s)">
+              <span>📷 Scanner le QR Code de ce cours</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #emptySessionsDeck>
+        <div class="empty-deck">
+          <div class="empty-circle-icon">📡</div>
+          <h3>Aucune session en cours de validation pour le moment</h3>
+          <p>Dès que votre enseignant lance l'émargement, la session s'affichera ici instantanément.</p>
+          <button class="btn-refresh-outline" (click)="loadActiveSessions()">Vérifier les nouvelles sessions</button>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SECTION 4: ATTENDANCE HISTORY (ADVANCED DATA TABLE)      -->
+    <!-- ======================================================== -->
+    <section class="section-container" *ngIf="activeSection === 'attendance'">
+      <div class="section-header">
+        <div>
+          <h2>Historique complet des présences</h2>
+          <p class="subtitle">Journal d'émargement officiel avec filtres, recherche et export</p>
+        </div>
+        <button class="btn-export-outline" (click)="exportHistoryCSV()">
+          <span>📥 Exporter le relevé (CSV)</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filter Bar -->
+      <div class="table-filter-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="historySearch"
+            placeholder="Filtrer par cours ou code..."
+            class="input-search"
+          />
+        </div>
+
+        <div class="status-pill-filters">
+          <button
+            class="pill-btn"
+            [class.active]="historyFilter === 'all'"
+            (click)="historyFilter = 'all'"
+          >
+            Tous ({{ dashboardData.attendance.length }})
+          </button>
+          <button
+            class="pill-btn present"
+            [class.active]="historyFilter === 'present'"
+            (click)="historyFilter = 'present'"
+          >
+            Présents
+          </button>
+          <button
+            class="pill-btn late"
+            [class.active]="historyFilter === 'late'"
+            (click)="historyFilter = 'late'"
+          >
+            Retards
+          </button>
+          <button
+            class="pill-btn absent"
+            [class.active]="historyFilter === 'absent'"
+            (click)="historyFilter = 'absent'"
+          >
+            Absences
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Data Table -->
+      <div class="table-container shadow-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date & Heure</th>
+              <th>Matière / Cours</th>
+              <th>Enseignant & Salle</th>
+              <th>Statut d'émargement</th>
+              <th>Vérification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rec of paginatedHistory">
+              <td>
+                <strong>{{ rec.date || '2026-10-28' }}</strong>
+                <span class="sub-text">{{ rec.time || '10:00' }}</span>
+              </td>
+              <td>
+                <div class="course-name-cell">
+                  <strong>{{ rec.course }}</strong>
+                </div>
+              </td>
+              <td>
+                <span>Dr. Jean Dupont</span>
+                <span class="sub-text">Amphi 3</span>
+              </td>
+              <td>
+                <span class="status-tag" [ngClass]="rec.status.toLowerCase()">
+                  {{ rec.status }}
+                </span>
+              </td>
+              <td>
+                <span class="verified-badge">🔒 Signé QR</span>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedHistory.length === 0">
+              <td colspan="5" class="empty-table-row">
+                Aucun enregistrement ne correspond aux critères sélectionnés.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Table Pagination Footer -->
+        <div class="pagination-footer">
+          <span class="page-info">
+            Affichage de {{ paginatedHistory.length }} sur {{ filteredHistory.length }} enregistrements
+          </span>
+          <div class="page-buttons">
+            <button
+              class="btn-page"
+              [disabled]="historyPage <= 1"
+              (click)="changeHistoryPage(historyPage - 1)"
+            >
+              Précédent
+            </button>
+            <span class="current-page">Page {{ historyPage }} / {{ totalHistoryPages }}</span>
+            <button
+              class="btn-page"
+              [disabled]="historyPage >= totalHistoryPages"
+              (click)="changeHistoryPage(historyPage + 1)"
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: COURSE DETAILS & ENROLLMENT CONFIRMATION          -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" *ngIf="isCourseModalOpen && selectedCourseForModal as c">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <span class="modal-kicker">{{ c.code }} • {{ c.type }}</span>
+          <h3>{{ c.title }}</h3>
+        </div>
+        <button class="btn-close-modal" (click)="closeCourseModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-info-grid">
+          <div class="info-block">
+            <span class="label">Professeur</span>
+            <strong>{{ c.teacherName }}</strong>
+          </div>
+          <div class="info-block">
+            <span class="label">Crédits ECTS</span>
+            <strong>{{ c.credits }} crédits</strong>
+          </div>
+          <div class="info-block">
+            <span class="label">Salle assignée</span>
+            <strong>{{ c.room }}</strong>
+          </div>
+          <div class="info-block">
+            <span class="label">Créneau hebdomadaire</span>
+            <strong>{{ c.schedule }}</strong>
+          </div>
+        </div>
+
+        <div class="syllabus-desc">
+          <h4>Programme & Syllabus</h4>
+          <p>{{ c.description || 'Ce module approfondit les concepts théoriques et pratiques nécessaires à la validation du cycle ingénieur.' }}</p>
+        </div>
+
+        <div class="feedback-toast" *ngIf="enrollmentFeedback">
+          {{ enrollmentFeedback }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeCourseModal()">Fermer</button>
+        <button
+          class="btn-primary"
+          [class.btn-danger]="c.enrolled"
+          (click)="toggleEnrollment(c)"
+        >
+          {{ c.enrolled ? 'Confirmer la désinscription' : 'Confirmer mon inscription au cours' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: REAL-TIME QR SCANNER (CAMERA & FILE FALLBACK)     -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" *ngIf="isScannerOpen">
+    <div class="modal-window scanner-modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-kicker">ÉMARGEMENT INSTANTANÉ</span>
+          <h3>Scanner le QR Code de présence</h3>
+        </div>
+        <button class="btn-close-modal" (click)="closeScanner()">✕</button>
+      </div>
+
+      <div class="modal-body text-center">
+        <!-- Live Video Viewfinder -->
+        <div class="viewfinder-container">
+          <video id="scanner-video" playsinline autoplay muted class="video-preview" [hidden]="!isCameraActive"></video>
+          <div class="viewfinder-box">
+            <div class="target-corner top-left"></div>
+            <div class="target-corner top-right"></div>
+            <div class="target-corner bottom-left"></div>
+            <div class="target-corner bottom-right"></div>
+            <div class="scan-laser-line"></div>
+          </div>
+        </div>
+
+        <div class="camera-fallback-msg" *ngIf="!isCameraActive">
+          <p>Caméra non connectée ou accès refusé. Vous pouvez saisir le token du QR code ou importer une capture :</p>
+        </div>
+
+        <!-- Token Input Box -->
+        <div class="token-input-group">
+          <input
+            type="text"
+            [(ngModel)]="scanInputToken"
+            placeholder="Ex : PLN-1-ARCH-DEMO2026"
+            class="input-token"
+          />
+          <button class="btn-submit-token" (click)="submitScan()" [disabled]="scanStatus === 'validating'">
+            {{ scanStatus === 'validating' ? 'Validation...' : 'Valider Présence' }}
+          </button>
+        </div>
+
+        <!-- File Upload Option -->
+        <div class="file-upload-row">
+          <label class="file-label">
+            <span>📁 Importer une capture d'écran du QR Code</span>
+            <input type="file" accept="image/*" (change)="onFileUpload($event)" hidden />
+          </label>
+        </div>
+
+        <!-- Real-Time Feedback Card -->
+        <div class="scan-feedback-banner" [ngClass]="scanStatus" *ngIf="scanFeedback">
+          <span class="status-symbol" *ngIf="scanStatus === 'success'">✅</span>
+          <span class="status-symbol" *ngIf="scanStatus === 'error'">❌</span>
+          <span class="status-symbol" *ngIf="scanStatus === 'validating'">⏳</span>
+          <div>
+            <strong>{{ scanFeedback }}</strong>
+            <p *ngIf="lastScannedRecord">
+              Horodatage : {{ lastScannedRecord.scannedAt | date:'HH:mm:ss' }} • Statut : {{ lastScannedRecord.status }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeScanner()">Fermer</button>
+        <button class="btn-primary" (click)="submitScan()" *ngIf="scanStatus !== 'success'">
+          Valider
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

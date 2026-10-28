@@ -71,10 +71,11 @@ export class EmploiDuTempsService {
   }
 
   // Enseignants ayant soumis des disponibilités
-  getEnseignantsAvecDisponibilites(idEcole?: string, departement?: string): Observable<any[]> {
+  getEnseignantsAvecDisponibilites(idEcole?: string, departement?: string, specialite?: string): Observable<any[]> {
     let params = new HttpParams();
     if (idEcole) params = params.set('idEcole', idEcole);
     if (departement) params = params.set('departement', departement);
+    if (specialite) params = params.set('specialite', specialite);
     return this.http.get<any[]>(`${this.baseUrl}/emplois-du-temps/enseignants-disponibles`, { params });
   }
 

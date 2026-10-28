@@ -9,13 +9,13 @@
         <img src="Planora.png" alt="Plannora Logo" class="logo">
       </div>
 
-      <h1 class="title">Commençons la journée !</h1>
-      <p class="subtitle">Un logiciel pour la planification des emplois du temps</p>
+      <h1 class="title">Let’s start the day!</h1>
+      <p class="subtitle">A software for timetable planning</p>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
         <div class="form-group">
           <div class="input-wrapper">
-            <input type="email" id="email" formControlName="email" placeholder="Email institutionnel" class="form-input"
+            <input type="email" id="email" formControlName="email" placeholder="Institutional email" class="form-input"
               [class.error]="hasEmailError()">
             <span class="input-icon">📧</span>
           </div>
@@ -27,14 +27,14 @@
           @if (domainInfo && !hasEmailError() && email?.value) {
             <div class="help-message">
               <small class="help-text">
-                Format correct: {{ domainInfo.exampleFormat }}
+                Correct format: {{ domainInfo.exampleFormat }}
               </small>
             </div>
           }
           @if (!email?.value) {
             <div class="help-message">
               <small class="help-text">
-                Utilisez votre email institutionnel @ictuniversity.org
+                Use your institutional email @ictuniversity.org
               </small>
             </div>
           }
@@ -43,7 +43,7 @@
         <div class="form-group">
           <div class="input-wrapper">
             <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
-              placeholder="Mot de passe" class="form-input" [class.error]="password?.invalid && password?.touched">
+              placeholder="Password" class="form-input" [class.error]="password?.invalid && password?.touched">
             <span class="input-icon password-toggle" (click)="togglePasswordVisibility()">
               {{ showPassword ? '👁️' : '🔒' }}
             </span>
@@ -51,17 +51,17 @@
           @if (password?.invalid && password?.touched) {
             <div class="error-message">
               @if (password?.errors?.['required']) {
-                <span>Le mot de passe est obligatoire</span>
+                <span>Password is required</span>
               }
               @if (password?.errors?.['minlength']) {
-                <span>Le mot de passe doit contenir au moins 6 caractères</span>
+                <span>Password must contain at least 6 characters</span>
               }
             </div>
           }
         </div>
 
         <div class="forgot-password">
-          <a href="javascript:void(0)" (click)="onForgotPassword()" class="link">Mot de passe oublié ?</a>
+          <a href="javascript:void(0)" (click)="onForgotPassword()" class="link">Forgot password?</a>
         </div>
 
         <div *ngIf="errorMessage" class="alert alert-error">
@@ -70,10 +70,10 @@
 
         <button type="submit" class="btn-submit" [disabled]="loginForm.invalid || isLoading">
           @if (!isLoading) {
-            <span>Se Connecter</span>
+            <span>Sign in</span>
           }
           @if (isLoading) {
-            <span>Connexion en cours...</span>
+            <span>Signing in...</span>
           }
         </button>
       </form>

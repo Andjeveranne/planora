@@ -20,7 +20,11 @@ public class JwtTokenProvider {
     private long jwtExpiration;
     
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 64) {
+            throw new IllegalStateException("JWT secret must be at least 64 bytes (512 bits) for HS512. Set a stronger JWT_SECRET.");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
     
     public boolean validateToken(String token) {

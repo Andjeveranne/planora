@@ -2,8 +2,10 @@ package com.isi4.classesservice.config;
 
 import com.isi4.classesservice.entity.Classe;
 import com.isi4.classesservice.entity.Filiere;
+import com.isi4.classesservice.entity.Specialite;
 import com.isi4.classesservice.repository.ClasseRepository;
 import com.isi4.classesservice.repository.FiliereRepository;
+import com.isi4.classesservice.repository.SpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -19,18 +21,22 @@ public class DataInitializer implements CommandLineRunner {
 
     private final FiliereRepository filiereRepository;
     private final ClasseRepository classeRepository;
+    private final SpecialiteRepository specialiteRepository;
     private final JdbcTemplate jdbcTemplate;
 
     private static final String[] NIVEAUX = {"L1", "L2", "L3", "L4", "L5", "Master1", "Master2"};
 
     @Override
     public void run(String... args) {
-        // Step 1: ensure correct schema via JDBC (DDL causes implicit commit in MySQL,
-        // so this must run BEFORE any JPA transaction is opened)
+        // Keep schema verification, but never reset or recreate existing data on startup.
         ensureSchema();
 
-        // Step 2: populate data if needed (each repository.save() has its own transaction)
-        populateData();
+        if (filiereRepository.count() == 0 && classeRepository.count() == 0) {
+            log.info("Aucune donnée par défaut de départements/classes chargée. Le système démarre vide pour permettre la création manuelle de classes.");
+            return;
+        }
+
+        log.info("Les données existantes sont conservées; aucun mélange de classes Saint-Jean n'est réinjecté au démarrage.");
     }
 
     /**
@@ -112,12 +118,8 @@ public class DataInitializer implements CommandLineRunner {
                 Integer.class);
 
             if (count == null || count == 0) {
-                log.warn("Table 'classes': schéma incorrect ou absente – recréation...");
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                jdbcTemplate.execute("DROP TABLE IF EXISTS classes");
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-                jdbcTemplate.execute(
-                    "CREATE TABLE classes (" +
+                log.warn("Table 'classes': schéma incorrect ou absente – création du schéma si besoin.");
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS classes (" +
                     "  id_classe  VARCHAR(100) NOT NULL," +
                     "  nom_classe VARCHAR(100) NOT NULL," +
                     "  effectifs  INT          NOT NULL," +
@@ -130,7 +132,7 @@ public class DataInitializer implements CommandLineRunner {
                     "    FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere)" +
                     ")"
                 );
-                log.info("Table 'classes' recréée avec le bon schéma.");
+                log.info("Table 'classes' créée avec le bon schéma.");
             } else {
                 log.info("Table 'classes': schéma correct.");
                 Integer specialtyColumnCount = jdbcTemplate.queryForObject(
@@ -146,19 +148,6 @@ public class DataInitializer implements CommandLineRunner {
                     "WHEN 'ING4' THEN 'L4' WHEN 'ING5' THEN 'L5' ELSE niveau END " +
                     "WHERE niveau IN ('ING1', 'ING2', 'ING3', 'ING4', 'ING5')"
                 );
-                // Remove any rows with invalid id_filiere (NULL or empty string),
-                // which can appear when Hibernate's ddl-auto=update added the column
-                // to an existing table populated by another service.
-                try {
-                    int deleted = jdbcTemplate.update(
-                        "DELETE FROM classes WHERE id_filiere IS NULL OR id_filiere = ''"
-                    );
-                    if (deleted > 0) {
-                        log.warn("Supprimé {} classe(s) avec id_filiere invalide (données corrompues).", deleted);
-                    }
-                } catch (Exception e) {
-                    log.error("Erreur nettoyage id_filiere invalides: {}", e.getMessage());
-                }
             }
         } catch (Exception e) {
             log.error("Erreur vérification/réparation du schéma de 'classes': {}", e.getMessage());
@@ -166,68 +155,15 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     /**
-     * Populates filieres and classes if they are missing.
-     * Each repository.save() runs in its own Spring Data transaction.
+     * This project intentionally does not seed sample classes for legacy Saint-Jean campuses.
+     * Start with a clean catalog and create the real classes via the app itself.
      */
     private void populateData() {
-        boolean filieresExist = filiereRepository.count() > 0;
-        boolean classesExist  = classeRepository.count() > 0;
+        log.info("Aucune donnée par défaut de filières/classes n'est créée. Utiliser la gestion des classes de l'application.");
+    }
 
-        if (filieresExist && classesExist) {
-            assignDefaultSchool(filiereRepository.findById("fil-isi").orElse(null));
-            assignDefaultSchool(filiereRepository.findById("fil-srt").orElse(null));
-            assignDefaultSchool(filiereRepository.findById("fil-ge").orElse(null));
-            assignDefaultSchool(filiereRepository.findById("fil-gc").orElse(null));
-            log.info("Données déjà initialisées ({} filieres, {} classes).",
-                     filiereRepository.count(), classeRepository.count());
-            return;
-        }
-
-        log.info("Initialisation des filières et classes...");
-
-        Filiere isi, srt, ge, gc;
-
-        if (!filieresExist) {
-            isi = filiereRepository.save(Filiere.builder()
-                    .idFiliere("fil-isi").nom("ISI")
-                    .description("Informatique et Systèmes d'Information")
-                    .idEcole("SAINT_JEAN_INGENIEUR").build());
-            srt = filiereRepository.save(Filiere.builder()
-                    .idFiliere("fil-srt").nom("SRT")
-                    .description("Systèmes, Réseaux et Télécoms")
-                    .idEcole("SAINT_JEAN_INGENIEUR").build());
-            ge  = filiereRepository.save(Filiere.builder()
-                    .idFiliere("fil-ge").nom("Genie Electrique")
-                    .description("Filière Génie Électrique")
-                    .idEcole("SAINT_JEAN_INGENIEUR").build());
-            gc  = filiereRepository.save(Filiere.builder()
-                    .idFiliere("fil-gc").nom("Genie Civil")
-                    .description("Filière Génie Civil")
-                    .idEcole("SAINT_JEAN_INGENIEUR").build());
-            log.info("4 filières créées.");
-        } else {
-            // Filieres exist but classes might have been wiped by schema repair
-            isi = filiereRepository.findById("fil-isi").orElse(null);
-            srt = filiereRepository.findById("fil-srt").orElse(null);
-            ge  = filiereRepository.findById("fil-ge").orElse(null);
-            gc  = filiereRepository.findById("fil-gc").orElse(null);
-            assignDefaultSchool(isi);
-            assignDefaultSchool(srt);
-            assignDefaultSchool(ge);
-            assignDefaultSchool(gc);
-            log.info("Filières existantes récupérées.");
-        }
-
-        if (!classesExist) {
-            int count = 0;
-            for (String niveau : NIVEAUX) {
-                if (isi != null) { classeRepository.save(buildClasse(niveau + " ISI", niveau, isi)); count++; }
-                if (srt != null) { classeRepository.save(buildClasse(niveau + " SRT", niveau, srt)); count++; }
-                if (ge  != null) { classeRepository.save(buildClasse(niveau + " GE",  niveau, ge));  count++; }
-                if (gc  != null) { classeRepository.save(buildClasse(niveau + " GC",  niveau, gc));  count++; }
-            }
-            log.info("{} classes créées.", count);
-        }
+    private void ensureIctUniversityDepartments() {
+        log.info("Initialisation des départements par défaut désactivée. Le catalogue est laissé vide pour une création manuelle.");
     }
 
     private Classe buildClasse(String nom, String niveau, Filiere filiere) {
@@ -242,7 +178,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void assignDefaultSchool(Filiere filiere) {
         if (filiere != null && filiere.getIdEcole() == null) {
-            filiere.setIdEcole("SAINT_JEAN_INGENIEUR");
+            filiere.setIdEcole("ICT_UNIVERSITY");
             filiereRepository.save(filiere);
         }
     }

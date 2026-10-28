@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Initialise une école par défaut (référencée par SalleService et autres services).
+ * Initialise les écoles et universités de référence pour la génération d'emplois du temps.
  */
 @Component
 @RequiredArgsConstructor
@@ -21,16 +21,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (ecoleRepository.count() == 0) {
-            log.info("Initialisation des données des écoles du campus...");
-            List<Ecole> ecoles = List.of(
-                    Ecole.builder().idEcole("SAINT_JEAN_INGENIEUR").nomEcole("Saint Jean Ingénieur").build(),
-                    Ecole.builder().idEcole("SAINT_JEAN_MANAGEMENT").nomEcole("Saint Jean Management").build(),
-                    Ecole.builder().idEcole("PREPA_VOGT").nomEcole("Prépa Vogt").build(),
-                    Ecole.builder().idEcole("CPGE").nomEcole("CPGE").build()
-            );
-            ecoleRepository.saveAll(ecoles);
-            log.info("✓ {} écoles créées avec succès", ecoles.size());
-        }
+        log.info("Les écoles par défaut Saint-Jean/CPGE/Prépa sont désactivées pour ne pas réinjecter de catalogues legacy au démarrage.");
     }
 }

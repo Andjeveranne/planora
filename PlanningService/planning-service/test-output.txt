@@ -1,0 +1,24 @@
+10:55:39.320 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 1 salles
+10:55:39.347 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=class-ict, UE=1, enseignant=teacher-1, type=CM, heures=2
+10:55:39.434 [main] WARN com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Aucun flot trouvé pour le créneau 1 de la demande
+10:55:39.435 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 0 cours planifiés
+10:55:39.608 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 1 salles
+10:55:39.610 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=class-ict, UE=1, enseignant=teacher-1, type=CM, heures=2
+10:55:39.645 [main] WARN com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Aucun flot trouvé pour le créneau 1 de la demande
+10:55:39.647 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 0 cours planifiés
+10:55:39.672 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 1 salles
+10:55:39.673 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=class-ict, UE=1, enseignant=teacher-1, type=CM, heures=2
+10:55:39.674 [main] WARN com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Aucun flot trouvé pour le créneau 1 de la demande
+10:55:39.675 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 0 cours planifiés
+10:55:39.700 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 2 salles
+10:55:39.703 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=class-ict, UE=1, enseignant=teacher-1, type=CM, heures=2
+10:55:39.719 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Créneau 1 planifié: 2026-10-05T08:00-2026-10-05T10:00 en salle room-class
+10:55:39.720 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 1 cours planifiés
+10:55:39.740 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 1 salles
+10:55:39.741 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=eaf64cfe-eb69-496b-b994-f9be177407fd, UE=21, enseignant=09beed87-b406-4e77-9a9b-25cd209d39aa, type=CM, heures=2
+10:55:39.743 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Créneau 1 planifié: 2026-10-19T08:00-2026-10-19T10:00 en salle temporary-ictu-test-room
+10:55:39.744 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 1 cours planifiés
+10:55:39.764 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération d'emploi du temps avec 1 demandes, 1 créneaux, 2 salles
+10:55:39.765 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Traitement de la demande: classe=class-ict, UE=1, enseignant=teacher-1, type=CM, heures=2
+10:55:39.769 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Créneau 1 planifié: 2026-10-05T08:00-2026-10-05T10:00 en salle room-ict
+10:55:39.770 [main] INFO com.isi4.planningservice.algorithm.FordFulkersonScheduler -- Génération terminée avec 1 cours planifiés

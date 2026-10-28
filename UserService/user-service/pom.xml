@@ -15,7 +15,8 @@
 	<description>Service de gestion des utilisateurs</description>
 	
 	<properties>
-		<java.version>25</java.version>
+		<java.version>17</java.version>
+		<maven.compiler.release>${java.version}</maven.compiler.release>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 		<lombok.version>1.18.42</lombok.version>
 	</properties>
@@ -29,7 +30,10 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 		<!-- JPA et MySQL -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

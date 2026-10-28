@@ -66,6 +66,17 @@ export class UserService {
     });
   }
 
+  rechercherEnseignants(idEcole?: string, departement?: string, specialite?: string): Observable<Enseignant[]> {
+    let params: any = {};
+    if (idEcole) params.idEcole = idEcole;
+    if (departement) params.departement = departement;
+    if (specialite) params.specialite = specialite;
+    return this.http.get<Enseignant[]>(`${this.apiUrl}/enseignants/recherche`, {
+      headers: this.getHeaders(),
+      params
+    });
+  }
+
   creerEnseignant(enseignant: EnseignantRequest): Observable<Enseignant> {
     return this.http.post<Enseignant>(`${this.apiUrl}/enseignant`, enseignant, {
       headers: this.getHeaders()
