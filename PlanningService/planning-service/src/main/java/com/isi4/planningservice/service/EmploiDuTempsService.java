@@ -355,19 +355,34 @@ public class EmploiDuTempsService {
             dto.setJourSemaine(e.getJourSemaine());
             dto.setCreneau(e.getCreneau());
 
+            dto.setDateJour(e.getDateJour() != null ? e.getDateJour() : (e.getDateHeureDebut() != null ? e.getDateHeureDebut().toLocalDate() : null));
+            dto.setJour(e.getJour());
+            dto.setHeureDebut(e.getHeureDebut() != null ? e.getHeureDebut() : (e.getDateHeureDebut() != null ? e.getDateHeureDebut().getHour() : null));
+            dto.setHeureFin(e.getHeureFin() != null ? e.getHeureFin() : (e.getDateHeureFin() != null ? e.getDateHeureFin().getHour() : null));
+            dto.setClasse(e.getClasse());
+            dto.setSalle(e.getSalle());
+            dto.setUe(e.getUe());
+
             Optional.ofNullable(classesMap.get(e.getClasseId()))
                     .ifPresent(c -> {
                         dto.setNomClasse((String) c.get("nomClasse"));
                         dto.setIdEcole((String) c.get("idEcole"));
+                        dto.setClasse((String) c.get("nomClasse"));
                     });
             if (e.getSalleId() != null)
                 Optional.ofNullable(sallesMap.get(e.getSalleId()))
-                        .ifPresent(s -> dto.setNomSalle((String) s.get("nomSalle")));
+                        .ifPresent(s -> {
+                            dto.setNomSalle((String) s.get("nomSalle"));
+                            dto.setSalle((String) s.get("nomSalle"));
+                        });
             if (e.getUeId() != null)
                 Optional.ofNullable(uesMap.get(e.getUeId()))
                         .ifPresent(u -> {
                             dto.setCodeUE((String) u.get("codeUE"));
                             dto.setNomUE((String) u.get("nomUE"));
+                            String label = (String) u.get("nomUE");
+                            if (label == null || label.isBlank()) label = (String) u.get("codeUE");
+                            dto.setUe(label);
                         });
             return dto;
         }).collect(Collectors.toList());

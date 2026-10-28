@@ -15,22 +15,22 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
           <div class="brand-mark">P</div>
           <div>
             <h2>PLANORA</h2>
-            <small>Portail étudiant</small>
+            <small>Student Portal</small>
           </div>
         </div>
 
         <nav class="student-nav">
           <a routerLink="/student-dashboard" class="nav-link">
             <span>⌂</span>
-            <span>Vue d'ensemble</span>
+            <span>Overview</span>
           </a>
           <a routerLink="/student-course-enrollment" class="nav-link active">
             <span>◫</span>
-            <span>Catalogue UE</span>
+            <span>Course Catalog</span>
           </a>
           <a routerLink="/student-attendance-qr" class="nav-link">
             <span>◌</span>
-            <span>Scanner le QR</span>
+            <span>Scan QR</span>
           </a>
         </nav>
 
@@ -38,7 +38,7 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
           <div class="mini-profile">
             <div class="avatar">ST</div>
             <div>
-              <strong>Étudiant Planora</strong>
+              <strong>Planora Student</strong>
               <small>Software Engineering</small>
             </div>
           </div>

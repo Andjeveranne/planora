@@ -31,7 +31,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     id: 'STU-1001',
     nom: 'Planora',
     prenom: 'Alexandre',
-    email: 'etudiant@planora.cm',
+    email: 'alex.planora@ictuniversity.edu',
     school: 'ICT University',
     department: 'Computer Science',
     specialty: 'Software Engineering',
@@ -44,9 +44,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   courseSearchTerm = '';
   selectedSpecialty = 'all';
   selectedType = 'all';
+  selectedLevel = 'all';
   selectedCourseForModal: CourseCatalogItem | null = null;
   isCourseModalOpen = false;
   enrollmentFeedback = '';
+
+  // Quick Stats Breakdown Modal
+  quickStatsModalType: 'courses' | 'attendance' | 'sessions' | 'classes' | null = null;
 
   // QR Scanner Modal State
   isScannerOpen = false;
@@ -125,6 +129,14 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  openStatsModal(type: 'courses' | 'attendance' | 'sessions' | 'classes'): void {
+    this.quickStatsModalType = type;
+  }
+
+  closeStatsModal(): void {
+    this.quickStatsModalType = null;
+  }
+
   loadAttendees(sessionId: string): void {
     this.attendanceService.getSessionAttendeesHttp(sessionId).subscribe({
       next: (records) => {
@@ -174,13 +186,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     if (course.enrolled) {
       this.attendanceService.unenrollStudentHttp(course.id, this.student.id).subscribe(() => {
         course.enrolled = false;
-        this.enrollmentFeedback = 'Désinscription effectuée avec succès.';
+        this.enrollmentFeedback = 'Course dropped successfully.';
         this.refreshAll();
       });
     } else {
       this.attendanceService.enrollStudentHttp(course.id, this.student.id).subscribe(() => {
         course.enrolled = true;
-        this.enrollmentFeedback = 'Inscription confirmée avec succès !';
+        this.enrollmentFeedback = 'Course enrollment confirmed successfully!';
         this.refreshAll();
       });
     }
@@ -253,19 +265,19 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   submitScan(): void {
     if (!this.scanInputToken.trim()) {
       this.scanStatus = 'error';
-      this.scanFeedback = 'Veuillez saisir ou scanner un code QR valide.';
+      this.scanFeedback = 'Please enter or scan a valid QR code token.';
       return;
     }
 
     this.scanStatus = 'validating';
-    this.scanFeedback = 'Validation cryptographique de la présence en cours...';
+    this.scanFeedback = 'Validating digital cryptographic attendance token...';
 
     this.attendanceService
       .scanAttendanceHttp(this.scanInputToken.trim(), this.student.id, this.selectedSession?.id)
       .subscribe({
         next: (record) => {
           this.scanStatus = 'success';
-          this.scanFeedback = 'Présence validée avec succès ! Vous êtes enregistré(e).';
+          this.scanFeedback = 'Attendance validated successfully! You are marked present.';
           this.lastScannedRecord = record;
           this.refreshAll();
           if (this.selectedSession) {
@@ -275,7 +287,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.scanStatus = 'error';
-          this.scanFeedback = err.error?.message || 'Erreur lors de la validation du code QR.';
+          this.scanFeedback = err.error?.message || 'Error validating QR code. Please check with your lecturer.';
         }
       });
   }
@@ -283,7 +295,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   onFileUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
-      // Simulate decoding QR from image
+      // Simulate decoding QR from image file
       const token = this.selectedSession?.qrToken || 'PLN-SCAN-FILE-' + Date.now();
       this.scanInputToken = token;
       this.submitScan();
@@ -326,7 +338,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   exportHistoryCSV(): void {
     const rows = [
       ['Date', 'Time', 'Course', 'Status', 'Room'],
-      ...this.filteredHistory.map((h) => [h.date || '2026-10-28', h.time || '10:00', h.course, h.status, 'Amphi 3'])
+      ...this.filteredHistory.map((h) => [h.date || '2026-10-28', h.time || '10:00', h.course, h.status, 'Hall 3'])
     ];
     const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
     const encodedUri = encodeURI(csvContent);

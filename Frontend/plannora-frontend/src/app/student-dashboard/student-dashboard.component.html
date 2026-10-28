@@ -13,20 +13,20 @@
     <nav class="nav-tabs">
       <button class="nav-tab" [class.active]="activeSection === 'overview'" (click)="setSection('overview')">
         <span class="tab-icon">📊</span>
-        <span>Vue d'ensemble</span>
+        <span>Overview</span>
       </button>
       <button class="nav-tab" [class.active]="activeSection === 'courses'" (click)="setSection('courses')">
         <span class="tab-icon">📚</span>
-        <span>Cours & Inscriptions</span>
+        <span>Courses & Enrollment</span>
       </button>
       <button class="nav-tab" [class.active]="activeSection === 'sessions'" (click)="setSection('sessions')">
         <span class="tab-icon">⚡</span>
-        <span>Sessions Live</span>
+        <span>Live Sessions</span>
         <span class="pulse-indicator" *ngIf="activeSessions.length > 0">{{ activeSessions.length }}</span>
       </button>
       <button class="nav-tab" [class.active]="activeSection === 'attendance'" (click)="setSection('attendance')">
         <span class="tab-icon">📋</span>
-        <span>Historique Présences</span>
+        <span>Attendance History</span>
       </button>
     </nav>
 
@@ -34,7 +34,7 @@
     <div class="user-strip">
       <button class="scan-quick-btn" (click)="openGeneralScanner()">
         <span class="icon">📷</span>
-        <span>Scanner QR</span>
+        <span>Scan QR</span>
       </button>
       <div class="profile-meta">
         <span class="user-name">{{ student.prenom }} {{ student.nom }}</span>
@@ -56,64 +56,64 @@
       <!-- Hero Greeting -->
       <div class="hero-bar">
         <div>
-          <h2>Bonjour, {{ student.prenom }} 👋</h2>
-          <p class="subtitle">Bienvenue sur votre portail universitaire. Suivez votre assiduité en temps réel.</p>
+          <h2>Welcome, {{ student.prenom }} 👋</h2>
+          <p class="subtitle">Welcome to your university academic portal. Track your real-time attendance and courses.</p>
         </div>
         <div class="status-chip active">
           <span class="dot"></span>
-          <span>Semestre Académique en cours • {{ student.department }}</span>
+          <span>Current Academic Semester • {{ student.department }}</span>
         </div>
       </div>
 
-      <!-- 4 Data-Dense KPI Summary Cards -->
+      <!-- 4 Data-Dense KPI Summary Cards (Interactive with Modals) -->
       <div class="kpi-grid">
-        <div class="kpi-card indigo">
+        <div class="kpi-card indigo clickable" (click)="openStatsModal('courses')" title="Click to view course details and ECTS progress">
           <div class="kpi-header">
-            <span class="kpi-label">Cours Inscrits</span>
+            <span class="kpi-label">Enrolled Courses</span>
             <span class="kpi-icon">🎓</span>
           </div>
           <div class="kpi-value">{{ data.overview.totalCourses }}</div>
           <div class="kpi-footer">
-            <span class="pill primary">{{ data.overview.credits }} ECTS validés</span>
-            <span class="subtext">sur 60 ECTS</span>
+            <span class="pill primary">{{ data.overview.credits }} ECTS Earned</span>
+            <span class="subtext">out of 60 ECTS • Details ➔</span>
           </div>
         </div>
 
-        <div class="kpi-card emerald">
+        <div class="kpi-card emerald clickable" (click)="openStatsModal('attendance')" title="Click to view attendance rate breakdown">
           <div class="kpi-header">
-            <span class="kpi-label">Taux d'Assiduité Global</span>
+            <span class="kpi-label">Overall Attendance Rate</span>
             <span class="kpi-icon">📈</span>
           </div>
           <div class="kpi-value">{{ data.overview.attendanceRate }}%</div>
           <div class="kpi-footer">
-            <span class="pill success" *ngIf="data.overview.attendanceRate >= 80">Excellent niveau</span>
-            <span class="pill warning" *ngIf="data.overview.attendanceRate < 80">À surveiller</span>
-            <span class="subtext">Seuil min. 75%</span>
+            <span class="pill success" *ngIf="data.overview.attendanceRate >= 80">Excellent Standing</span>
+            <span class="pill warning" *ngIf="data.overview.attendanceRate < 80">Warning (&lt;80%)</span>
+            <span class="subtext">Min. threshold 75% • Details ➔</span>
           </div>
         </div>
 
-        <div class="kpi-card amber">
+        <div class="kpi-card amber clickable" (click)="openStatsModal('sessions')" title="Click to view live active sessions">
           <div class="kpi-header">
-            <span class="kpi-label">Sessions En Direct Aujourd'hui</span>
+            <span class="kpi-label">Live Sessions Today</span>
             <span class="kpi-icon">⚡</span>
           </div>
           <div class="kpi-value">{{ activeSessions.length }}</div>
           <div class="kpi-footer">
-            <span class="pill danger" *ngIf="activeSessions.length > 0">Émargement ouvert</span>
-            <span class="pill neutral" *ngIf="activeSessions.length === 0">Aucune session live</span>
-            <span class="subtext">QR code actif</span>
+            <span class="pill danger" *ngIf="activeSessions.length > 0">Check-in Open</span>
+            <span class="pill neutral" *ngIf="activeSessions.length === 0">No Live Session</span>
+            <span class="subtext">Active QR • Details ➔</span>
           </div>
         </div>
 
-        <div class="kpi-card cyan">
+        <div class="kpi-card cyan clickable" (click)="openStatsModal('classes')" title="Click to view completed lectures">
           <div class="kpi-header">
-            <span class="kpi-label">Classes Validées</span>
+            <span class="kpi-label">Validated Lectures</span>
             <span class="kpi-icon">✅</span>
           </div>
           <div class="kpi-value">{{ data.overview.completedClasses || 28 }}</div>
           <div class="kpi-footer">
-            <span class="pill neutral">Ce semestre</span>
-            <span class="subtext">0 absence injustifiée</span>
+            <span class="pill neutral">This Semester</span>
+            <span class="subtext">0 unexcused absences • Details ➔</span>
           </div>
         </div>
       </div>
@@ -124,10 +124,10 @@
         <div class="panel-box">
           <div class="panel-title-bar">
             <div>
-              <h3>Séances en cours d'émargement</h3>
-              <p class="panel-desc">Scannez le QR dynamique affiché par votre enseignant</p>
+              <h3>Ongoing Check-in Sessions</h3>
+              <p class="panel-desc">Scan the dynamic QR code displayed on your lecturer's screen</p>
             </div>
-            <button class="link-btn" (click)="setSection('sessions')">Voir tout ({{ activeSessions.length }})</button>
+            <button class="link-btn" (click)="setSection('sessions')">View All ({{ activeSessions.length }})</button>
           </div>
 
           <div class="sessions-feed" *ngIf="activeSessions.length > 0; else noActiveSessions">
@@ -140,13 +140,13 @@
                 <h4>{{ s.title }}</h4>
                 <div class="meta-row">
                   <span>👨‍🏫 {{ s.teacherName }}</span>
-                  <span>📍 {{ s.room || 'Amphi 3' }}</span>
-                  <span>⏱️ {{ s.sessionType || 'CM' }}</span>
+                  <span>📍 {{ s.room || 'Hall 3' }}</span>
+                  <span>⏱️ {{ s.sessionType || 'Lecture' }}</span>
                 </div>
               </div>
               <div class="session-action">
                 <button class="btn-scan-primary" (click)="openScannerForSession(s)">
-                  <span>📷 Émarger maintenant</span>
+                  <span>📷 Check-in Now</span>
                 </button>
               </div>
             </div>
@@ -155,8 +155,8 @@
           <ng-template #noActiveSessions>
             <div class="empty-panel">
               <span class="empty-icon">☕</span>
-              <p>Aucun cours n'est actuellement en session d'émargement.</p>
-              <small>Les sessions apparaîtront automatiquement dès le démarrage par vos professeurs.</small>
+              <p>No active attendance sessions currently in progress.</p>
+              <small>Live sessions will appear automatically as soon as your lecturer opens check-in.</small>
             </div>
           </ng-template>
         </div>
@@ -165,10 +165,10 @@
         <div class="panel-box">
           <div class="panel-title-bar">
             <div>
-              <h3>Derniers émargements validés</h3>
-              <p class="panel-desc">Historique récent de vos présences vérifiées</p>
+              <h3>Recent Verified Check-ins</h3>
+              <p class="panel-desc">Real-time log of your confirmed attendance</p>
             </div>
-            <button class="link-btn" (click)="setSection('attendance')">Historique complet</button>
+            <button class="link-btn" (click)="setSection('attendance')">Full History</button>
           </div>
 
           <div class="log-list" *ngIf="data.attendance.length > 0; else noRecentLog">
@@ -178,7 +178,7 @@
               </div>
               <div class="log-info">
                 <strong>{{ item.course }}</strong>
-                <small>{{ item.date || 'Aujourd\'hui' }} • {{ item.time || '10:00' }}</small>
+                <small>{{ item.date || 'Today' }} • {{ item.time || '10:00' }}</small>
               </div>
               <span class="status-tag" [ngClass]="item.status.toLowerCase()">
                 {{ item.status }}
@@ -188,7 +188,7 @@
 
           <ng-template #noRecentLog>
             <div class="empty-panel">
-              <p>Aucun enregistrement récent.</p>
+              <p>No attendance records logged yet.</p>
             </div>
           </ng-template>
         </div>
@@ -201,11 +201,11 @@
     <section class="section-container" *ngIf="activeSection === 'courses'">
       <div class="section-header">
         <div>
-          <h2>Catalogue des cours de la filière</h2>
-          <p class="subtitle">Consultez et gérez vos inscriptions aux unités d'enseignement</p>
+          <h2>Department Course Catalog</h2>
+          <p class="subtitle">Browse and manage your academic course unit enrollments</p>
         </div>
         <div class="enrolled-stat">
-          <span>Inscrit(e) à <strong>{{ filteredCourses.length }} cours</strong></span>
+          <span>Enrolled in <strong>{{ filteredCourses.length }} courses</strong></span>
         </div>
       </div>
 
@@ -216,22 +216,31 @@
           <input
             type="text"
             [(ngModel)]="courseSearchTerm"
-            placeholder="Rechercher par titre, code UE, enseignant..."
+            placeholder="Search by course title, code, lecturer..."
             class="input-search"
           />
         </div>
 
         <div class="filter-controls">
           <select [(ngModel)]="selectedSpecialty" class="select-pill">
-            <option value="all">Toutes spécialités</option>
+            <option value="all">All Specialties</option>
             <option *ngFor="let spec of specialtiesList" [value]="spec">{{ spec }}</option>
           </select>
 
+          <select [(ngModel)]="selectedLevel" class="select-pill">
+            <option value="all">All Levels</option>
+            <option value="L1">Bachelor 1 (L1)</option>
+            <option value="L2">Bachelor 2 (L2)</option>
+            <option value="L3">Bachelor 3 (L3)</option>
+            <option value="M1">Master 1 (M1)</option>
+            <option value="M2">Master 2 (M2)</option>
+          </select>
+
           <select [(ngModel)]="selectedType" class="select-pill">
-            <option value="all">Tous types (CM, TD, TP)</option>
-            <option value="CM">Cours Magistral (CM)</option>
-            <option value="TD">Travaux Dirigés (TD)</option>
-            <option value="TP">Travaux Pratiques (TP)</option>
+            <option value="all">All Types (CM, TD, TP)</option>
+            <option value="CM">Lecture (CM)</option>
+            <option value="TD">Tutorial (TD)</option>
+            <option value="TP">Practical Lab (TP)</option>
           </select>
         </div>
       </div>
@@ -244,7 +253,7 @@
             <div class="card-top-row">
               <span class="badge-code">{{ course.code }}</span>
               <span class="type-pill">{{ course.type }}</span>
-              <span class="enrolled-indicator" *ngIf="course.enrolled">✓ Inscrit</span>
+              <span class="enrolled-indicator" *ngIf="course.enrolled">✓ Enrolled</span>
             </div>
 
             <h3 class="course-card-title">{{ course.title }}</h3>
@@ -252,29 +261,29 @@
 
             <div class="specs-grid">
               <div class="spec-cell">
-                <span class="spec-label">Crédits</span>
+                <span class="spec-label">Credits</span>
                 <strong>{{ course.credits }} ECTS</strong>
               </div>
               <div class="spec-cell">
-                <span class="spec-label">Salle</span>
+                <span class="spec-label">Room</span>
                 <strong>{{ course.room }}</strong>
               </div>
               <div class="spec-cell">
-                <span class="spec-label">Créneau</span>
+                <span class="spec-label">Schedule</span>
                 <strong>{{ course.day }}</strong>
               </div>
             </div>
 
             <div class="card-actions">
               <button class="btn-card-outline" (click)="openCourseDetails(course)">
-                Détails du syllabus
+                Syllabus & Info
               </button>
               <button
                 class="btn-enroll-toggle"
                 [class.enrolled]="course.enrolled"
                 (click)="toggleEnrollment(course)"
               >
-                {{ course.enrolled ? 'Se désinscrire' : 'S\'inscrire' }}
+                {{ course.enrolled ? 'Drop Course' : 'Enroll in Course' }}
               </button>
             </div>
           </div>
@@ -288,11 +297,11 @@
     <section class="section-container" *ngIf="activeSection === 'sessions'">
       <div class="section-header">
         <div>
-          <h2>Sessions de cours en direct & Émargement</h2>
-          <p class="subtitle">Scannez le QR code dynamique ou saisissez le token de présence</p>
+          <h2>Live Lecture Sessions & Attendance Check-in</h2>
+          <p class="subtitle">Scan the dynamic QR code or manually enter the check-in token</p>
         </div>
         <button class="btn-primary-action" (click)="openGeneralScanner()">
-          <span>📷 Ouvrir le scanner universel</span>
+          <span>📷 Launch Universal Scanner</span>
         </button>
       </div>
 
@@ -302,9 +311,9 @@
           <div class="live-card-top">
             <div class="live-badge">
               <span class="pulsing-green-dot"></span>
-              <span>SESSION ACTIVE EN DIRECT</span>
+              <span>LIVE ONGOING SESSION</span>
             </div>
-            <span class="countdown-badge">⏱️ Expire dans {{ s.remainingSeconds ? (s.remainingSeconds / 60 | number:'1.0-0') : 45 }} min</span>
+            <span class="countdown-badge">⏱️ Expires in {{ s.remainingSeconds ? (s.remainingSeconds / 60 | number:'1.0-0') : 45 }} min</span>
           </div>
 
           <div class="live-main-content">
@@ -314,26 +323,26 @@
             </div>
             <div class="details-strip">
               <span>👨‍🏫 {{ s.teacherName }}</span>
-              <span>📍 Salle : {{ s.room || 'Amphi 3' }}</span>
-              <span>📚 Type : {{ s.sessionType || 'CM' }}</span>
-              <span>👥 Participants enregistrés : <strong>{{ s.attendeesCount || sessionAttendees.length }}</strong></span>
+              <span>📍 Room: {{ s.room || 'Hall 3' }}</span>
+              <span>📚 Type: {{ s.sessionType || 'Lecture' }}</span>
+              <span>👥 Checked-in Students: <strong>{{ s.attendeesCount || sessionAttendees.length }}</strong></span>
             </div>
           </div>
 
           <!-- Attendee roster for this live session -->
           <div class="live-attendees-box">
             <div class="attendees-header">
-              <h4>Camarades déjà enregistrés dans cette séance</h4>
-              <button class="btn-refresh-sub" (click)="loadAttendees(s.id)">Actualiser</button>
+              <h4>Classmates Already Checked In</h4>
+              <button class="btn-refresh-sub" (click)="loadAttendees(s.id)">Refresh</button>
             </div>
 
             <div class="attendees-table-wrap">
               <table class="data-table compact">
                 <thead>
                   <tr>
-                    <th>Étudiant</th>
-                    <th>Statut</th>
-                    <th>Heure d'émargement</th>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Check-in Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -351,7 +360,7 @@
                   </tr>
                   <tr *ngIf="sessionAttendees.length === 0">
                     <td colspan="3" class="text-center text-muted">
-                      Vous serez le premier à valider votre présence !
+                      Be the first to validate your attendance for this session!
                     </td>
                   </tr>
                 </tbody>
@@ -361,7 +370,7 @@
 
           <div class="card-footer-action">
             <button class="btn-scan-large" (click)="openScannerForSession(s)">
-              <span>📷 Scanner le QR Code de ce cours</span>
+              <span>📷 Scan QR Code for this Lecture</span>
             </button>
           </div>
         </div>
@@ -370,9 +379,9 @@
       <ng-template #emptySessionsDeck>
         <div class="empty-deck">
           <div class="empty-circle-icon">📡</div>
-          <h3>Aucune session en cours de validation pour le moment</h3>
-          <p>Dès que votre enseignant lance l'émargement, la session s'affichera ici instantanément.</p>
-          <button class="btn-refresh-outline" (click)="loadActiveSessions()">Vérifier les nouvelles sessions</button>
+          <h3>No Live Attendance Sessions Active Right Now</h3>
+          <p>As soon as your lecturer opens the attendance check-in, the session will appear here automatically.</p>
+          <button class="btn-refresh-outline" (click)="loadActiveSessions()">Check for New Sessions</button>
         </div>
       </ng-template>
     </section>
@@ -383,11 +392,11 @@
     <section class="section-container" *ngIf="activeSection === 'attendance'">
       <div class="section-header">
         <div>
-          <h2>Historique complet des présences</h2>
-          <p class="subtitle">Journal d'émargement officiel avec filtres, recherche et export</p>
+          <h2>Comprehensive Attendance Records</h2>
+          <p class="subtitle">Official university attendance ledger with filters, search, and CSV export</p>
         </div>
         <button class="btn-export-outline" (click)="exportHistoryCSV()">
-          <span>📥 Exporter le relevé (CSV)</span>
+          <span>📥 Export Attendance Ledger (CSV)</span>
         </button>
       </div>
 
@@ -398,7 +407,7 @@
           <input
             type="text"
             [(ngModel)]="historySearch"
-            placeholder="Filtrer par cours ou code..."
+            placeholder="Filter by course name or code..."
             class="input-search"
           />
         </div>
@@ -409,28 +418,28 @@
             [class.active]="historyFilter === 'all'"
             (click)="historyFilter = 'all'"
           >
-            Tous ({{ dashboardData.attendance.length }})
+            All ({{ dashboardData.attendance.length }})
           </button>
           <button
             class="pill-btn present"
             [class.active]="historyFilter === 'present'"
             (click)="historyFilter = 'present'"
           >
-            Présents
+            Present
           </button>
           <button
             class="pill-btn late"
             [class.active]="historyFilter === 'late'"
             (click)="historyFilter = 'late'"
           >
-            Retards
+            Late
           </button>
           <button
             class="pill-btn absent"
             [class.active]="historyFilter === 'absent'"
             (click)="historyFilter = 'absent'"
           >
-            Absences
+            Absent
           </button>
         </div>
       </div>
@@ -440,11 +449,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Date & Heure</th>
-              <th>Matière / Cours</th>
-              <th>Enseignant & Salle</th>
-              <th>Statut d'émargement</th>
-              <th>Vérification</th>
+              <th>Date & Time</th>
+              <th>Course / Subject</th>
+              <th>Lecturer & Room</th>
+              <th>Attendance Status</th>
+              <th>Verification</th>
             </tr>
           </thead>
           <tbody>
@@ -460,7 +469,7 @@
               </td>
               <td>
                 <span>Dr. Jean Dupont</span>
-                <span class="sub-text">Amphi 3</span>
+                <span class="sub-text">Hall 3</span>
               </td>
               <td>
                 <span class="status-tag" [ngClass]="rec.status.toLowerCase()">
@@ -468,12 +477,12 @@
                 </span>
               </td>
               <td>
-                <span class="verified-badge">🔒 Signé QR</span>
+                <span class="verified-badge">🔒 QR Signed</span>
               </td>
             </tr>
             <tr *ngIf="paginatedHistory.length === 0">
               <td colspan="5" class="empty-table-row">
-                Aucun enregistrement ne correspond aux critères sélectionnés.
+                No attendance records match your current search criteria.
               </td>
             </tr>
           </tbody>
@@ -482,7 +491,7 @@
         <!-- Table Pagination Footer -->
         <div class="pagination-footer">
           <span class="page-info">
-            Affichage de {{ paginatedHistory.length }} sur {{ filteredHistory.length }} enregistrements
+            Showing {{ paginatedHistory.length }} of {{ filteredHistory.length }} records
           </span>
           <div class="page-buttons">
             <button
@@ -490,7 +499,7 @@
               [disabled]="historyPage <= 1"
               (click)="changeHistoryPage(historyPage - 1)"
             >
-              Précédent
+              Previous
             </button>
             <span class="current-page">Page {{ historyPage }} / {{ totalHistoryPages }}</span>
             <button
@@ -498,7 +507,7 @@
               [disabled]="historyPage >= totalHistoryPages"
               (click)="changeHistoryPage(historyPage + 1)"
             >
-              Suivant
+              Next
             </button>
           </div>
         </div>
@@ -523,26 +532,26 @@
       <div class="modal-body">
         <div class="modal-info-grid">
           <div class="info-block">
-            <span class="label">Professeur</span>
+            <span class="label">Lecturer</span>
             <strong>{{ c.teacherName }}</strong>
           </div>
           <div class="info-block">
-            <span class="label">Crédits ECTS</span>
-            <strong>{{ c.credits }} crédits</strong>
+            <span class="label">ECTS Credits</span>
+            <strong>{{ c.credits }} credits</strong>
           </div>
           <div class="info-block">
-            <span class="label">Salle assignée</span>
+            <span class="label">Assigned Room</span>
             <strong>{{ c.room }}</strong>
           </div>
           <div class="info-block">
-            <span class="label">Créneau hebdomadaire</span>
+            <span class="label">Weekly Schedule</span>
             <strong>{{ c.schedule }}</strong>
           </div>
         </div>
 
         <div class="syllabus-desc">
-          <h4>Programme & Syllabus</h4>
-          <p>{{ c.description || 'Ce module approfondit les concepts théoriques et pratiques nécessaires à la validation du cycle ingénieur.' }}</p>
+          <h4>Course Syllabus & Objectives</h4>
+          <p>{{ c.description || 'This course explores advanced theoretical foundations and applied engineering principles required for graduation.' }}</p>
         </div>
 
         <div class="feedback-toast" *ngIf="enrollmentFeedback">
@@ -551,13 +560,13 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeCourseModal()">Fermer</button>
+        <button class="btn-secondary" (click)="closeCourseModal()">Close</button>
         <button
           class="btn-primary"
           [class.btn-danger]="c.enrolled"
           (click)="toggleEnrollment(c)"
         >
-          {{ c.enrolled ? 'Confirmer la désinscription' : 'Confirmer mon inscription au cours' }}
+          {{ c.enrolled ? 'Confirm Course Drop' : 'Confirm Course Enrollment' }}
         </button>
       </div>
     </div>
@@ -570,8 +579,8 @@
     <div class="modal-window scanner-modal">
       <div class="modal-header">
         <div>
-          <span class="modal-kicker">ÉMARGEMENT INSTANTANÉ</span>
-          <h3>Scanner le QR Code de présence</h3>
+          <span class="modal-kicker">INSTANT CHECK-IN</span>
+          <h3>Scan Attendance QR Code</h3>
         </div>
         <button class="btn-close-modal" (click)="closeScanner()">✕</button>
       </div>
@@ -590,7 +599,7 @@
         </div>
 
         <div class="camera-fallback-msg" *ngIf="!isCameraActive">
-          <p>Caméra non connectée ou accès refusé. Vous pouvez saisir le token du QR code ou importer une capture :</p>
+          <p>Camera not connected or permission denied. You can enter the dynamic token or upload a QR image:</p>
         </div>
 
         <!-- Token Input Box -->
@@ -598,18 +607,18 @@
           <input
             type="text"
             [(ngModel)]="scanInputToken"
-            placeholder="Ex : PLN-1-ARCH-DEMO2026"
+            placeholder="e.g.: PLN-1-ARCH-DEMO2026"
             class="input-token"
           />
           <button class="btn-submit-token" (click)="submitScan()" [disabled]="scanStatus === 'validating'">
-            {{ scanStatus === 'validating' ? 'Validation...' : 'Valider Présence' }}
+            {{ scanStatus === 'validating' ? 'Validating...' : 'Submit Attendance' }}
           </button>
         </div>
 
         <!-- File Upload Option -->
         <div class="file-upload-row">
           <label class="file-label">
-            <span>📁 Importer une capture d'écran du QR Code</span>
+            <span>📁 Upload a QR Code Screenshot</span>
             <input type="file" accept="image/*" (change)="onFileUpload($event)" hidden />
           </label>
         </div>
@@ -622,17 +631,135 @@
           <div>
             <strong>{{ scanFeedback }}</strong>
             <p *ngIf="lastScannedRecord">
-              Horodatage : {{ lastScannedRecord.scannedAt | date:'HH:mm:ss' }} • Statut : {{ lastScannedRecord.status }}
+              Timestamp: {{ lastScannedRecord.scannedAt | date:'HH:mm:ss' }} • Status: {{ lastScannedRecord.status }}
             </p>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeScanner()">Fermer</button>
+        <button class="btn-secondary" (click)="closeScanner()">Close</button>
         <button class="btn-primary" (click)="submitScan()" *ngIf="scanStatus !== 'success'">
-          Valider
+          Verify & Sign
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: QUICK STATS BREAKDOWN                             -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" *ngIf="quickStatsModalType" (click)="closeStatsModal()">
+    <div class="modal-window stats-breakdown-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-kicker">DETAILED BREAKDOWN</span>
+          <h3 *ngIf="quickStatsModalType === 'courses'">Course Details & ECTS Credit Progress</h3>
+          <h3 *ngIf="quickStatsModalType === 'attendance'">Academic Attendance Breakdown</h3>
+          <h3 *ngIf="quickStatsModalType === 'sessions'">Active Live Sessions Today</h3>
+          <h3 *ngIf="quickStatsModalType === 'classes'">Completed Lectures & Status</h3>
+        </div>
+        <button class="btn-close-modal" (click)="closeStatsModal()">✕</button>
+      </div>
+
+      <div class="modal-body" *ngIf="dashboardData as d">
+        <!-- 1. Courses Breakdown -->
+        <div *ngIf="quickStatsModalType === 'courses'">
+          <div class="stats-summary-strip">
+            <div class="sub-stat">
+              <span>Total Courses</span>
+              <strong>{{ d.overview.totalCourses }}</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Cumulative Credits</span>
+              <strong>{{ d.overview.credits }} ECTS</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Semester Target</span>
+              <strong>60 ECTS</strong>
+            </div>
+          </div>
+          <div class="stats-list">
+            <div class="stats-item-card" *ngFor="let c of d.courses">
+              <div>
+                <strong>{{ c.code }} - {{ c.title }}</strong>
+                <small>{{ c.teacherName }} • Room {{ c.room }}</small>
+              </div>
+              <span class="pill primary">{{ c.credits }} ECTS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Attendance Breakdown -->
+        <div *ngIf="quickStatsModalType === 'attendance'">
+          <div class="stats-summary-strip">
+            <div class="sub-stat">
+              <span>Overall Rate</span>
+              <strong class="text-success">{{ d.overview.attendanceRate }}%</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Exam Threshold</span>
+              <strong>75%</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Jury Status</span>
+              <strong class="text-success">Eligible</strong>
+            </div>
+          </div>
+          <div class="stats-list">
+            <div class="stats-item-card" *ngFor="let a of d.attendance">
+              <div>
+                <strong>{{ a.course }}</strong>
+                <small>{{ a.date || 'Recent' }} • Certified Digital Timestamp</small>
+              </div>
+              <span class="status-tag" [ngClass]="a.status.toLowerCase()">{{ a.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Sessions Breakdown -->
+        <div *ngIf="quickStatsModalType === 'sessions'">
+          <p class="desc">Active lecture sessions currently open for student check-in:</p>
+          <div class="stats-list" *ngIf="activeSessions.length > 0; else noActiveInModal">
+            <div class="stats-item-card" *ngFor="let s of activeSessions">
+              <div>
+                <strong>{{ s.courseCode }} - {{ s.title }}</strong>
+                <small>👨‍🏫 {{ s.teacherName }} • Room {{ s.room || 'Hall 3' }}</small>
+              </div>
+              <button class="btn-scan-primary sm" (click)="closeStatsModal(); openScannerForSession(s)">
+                📷 Check-in
+              </button>
+            </div>
+          </div>
+          <ng-template #noActiveInModal>
+            <div class="empty-panel">
+              <p>No active sessions right now. Please return at scheduled lecture time.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- 4. Completed Classes Breakdown -->
+        <div *ngIf="quickStatsModalType === 'classes'">
+          <div class="stats-summary-strip">
+            <div class="sub-stat">
+              <span>Completed Lectures</span>
+              <strong>{{ d.overview.completedClasses || 28 }}</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Allowed Absences</span>
+              <strong>3 max</strong>
+            </div>
+            <div class="sub-stat">
+              <span>Unexcused Absences</span>
+              <strong class="text-success">0</strong>
+            </div>
+          </div>
+          <p class="desc">All mandatory lectures for your registered course units have been validated via QR signature.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeStatsModal()">Close</button>
       </div>
     </div>
   </div>

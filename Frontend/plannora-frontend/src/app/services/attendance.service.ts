@@ -275,8 +275,8 @@ export class AttendanceService {
           id: String(res.id ?? Date.now()),
           sessionId: String(res.sessionId ?? sessionId ?? 'session-1'),
           studentId,
-          studentName: res.studentName ?? 'Étudiant Planora',
-          studentEmail: res.studentEmail,
+          studentName: res.studentName ?? 'Planora Student',
+          studentEmail: res.studentEmail ?? 'student@planora.cm',
           courseId: String(res.courseId ?? ''),
           courseCode: res.courseCode,
           courseTitle: res.courseTitle,
@@ -334,6 +334,43 @@ export class AttendanceService {
     );
   }
 
+  getCourseStudentsHttp(courseId: number | string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/courses/${courseId}/students`).pipe(
+      catchError(() => {
+        return of(this.getTeacherRoster('TEACH-01'));
+      })
+    );
+  }
+
+  getCourseSessionsHttp(courseId: number | string): Observable<AttendanceSession[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/courses/${courseId}/sessions`).pipe(
+      map((items) =>
+        items.map((s) => ({
+          id: String(s.id),
+          courseId: String(s.courseId),
+          courseCode: s.courseCode,
+          title: s.courseTitle,
+          teacherId: s.teacherId,
+          teacherName: s.teacherName,
+          startedAt: s.startedAt,
+          expiresAt: s.expiresAt,
+          isActive: s.isActive,
+          qrToken: s.qrToken,
+          scannedBy: [],
+          room: s.room,
+          sessionType: s.sessionType,
+          attendeesCount: s.attendeesCount,
+          enrolledCount: s.enrolledCount,
+          remainingSeconds: s.remainingSeconds
+        }))
+      ),
+      catchError(() => {
+        const state = this.getState();
+        return of(state.sessions.filter(s => String(s.courseId) === String(courseId)));
+      })
+    );
+  }
+
   enrollStudentHttp(courseId: number | string, studentId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/courses/${courseId}/enroll?studentId=${studentId}`, {}).pipe(
       tap(() => this.enrollInCourse(studentId, String(courseId))),
@@ -388,8 +425,8 @@ export class AttendanceService {
           id: 'rec-1',
           sessionId: 'session-demo-1',
           studentId: 'STU-1001',
-          studentName: 'Étudiant Planora',
-          studentEmail: 'etudiant@planora.cm',
+          studentName: 'Planora Student',
+          studentEmail: 'student@planora.cm',
           courseId: 'course-1',
           courseCode: 'CS301',
           courseTitle: 'Advanced Software Architecture',
@@ -400,8 +437,8 @@ export class AttendanceService {
           id: 'rec-2',
           sessionId: 'session-past-1',
           studentId: 'STU-1001',
-          studentName: 'Étudiant Planora',
-          studentEmail: 'etudiant@planora.cm',
+          studentName: 'Planora Student',
+          studentEmail: 'student@planora.cm',
           courseId: 'course-2',
           courseCode: 'CS304',
           courseTitle: 'Distributed Systems & Cloud',
@@ -412,8 +449,8 @@ export class AttendanceService {
           id: 'rec-3',
           sessionId: 'session-past-2',
           studentId: 'STU-1001',
-          studentName: 'Étudiant Planora',
-          studentEmail: 'etudiant@planora.cm',
+          studentName: 'Planora Student',
+          studentEmail: 'student@planora.cm',
           courseId: 'course-3',
           courseCode: 'CS308',
           courseTitle: 'Artificial Intelligence & Deep Learning',
@@ -759,7 +796,7 @@ export class AttendanceService {
 
   getTeacherRoster(teacherId: string): TeacherStudentRecord[] {
     const students = [
-      { id: 'STU-1001', name: 'Étudiant Planora', email: 'etudiant@planora.cm', spec: 'Software Engineering', rate: 94, status: 'Present' as const },
+      { id: 'STU-1001', name: 'Planora Student', email: 'student@planora.cm', spec: 'Software Engineering', rate: 94, status: 'Present' as const },
       { id: 'STU-1002', name: 'Alexandre Mbida', email: 'alex.mbida@planora.cm', spec: 'Software Engineering', rate: 88, status: 'Present' as const },
       { id: 'STU-1003', name: 'Carine Ngo', email: 'carine.ngo@planora.cm', spec: 'Software Engineering', rate: 72, status: 'Late' as const },
       { id: 'STU-1004', name: 'David Fokam', email: 'david.fokam@planora.cm', spec: 'Software Engineering', rate: 45, status: 'Absent' as const },
@@ -847,18 +884,18 @@ export class AttendanceService {
     const session = state.sessions.find((s) => s.id === sessionId || s.qrToken === sessionId);
 
     if (!session || !session.isActive) {
-      return { success: false, message: 'La session est fermée ou inexistante.' };
+      return { success: false, message: 'The session is closed or does not exist.' };
     }
 
     const now = new Date();
     if (now > new Date(session.expiresAt)) {
       session.isActive = false;
       this.saveState(state);
-      return { success: false, message: 'Le code QR a expiré.' };
+      return { success: false, message: 'The QR code has expired.' };
     }
 
     if (session.scannedBy.includes(studentId)) {
-      return { success: true, message: 'Votre présence est déjà confirmée.' };
+      return { success: true, message: 'Your attendance has already been confirmed.' };
     }
 
     session.scannedBy.push(studentId);
@@ -866,8 +903,8 @@ export class AttendanceService {
       id: `rec-${Date.now()}`,
       sessionId: session.id,
       studentId,
-      studentName: 'Étudiant Planora',
-      studentEmail: 'etudiant@planora.cm',
+      studentName: 'Planora Student',
+      studentEmail: 'student@planora.cm',
       courseId: session.courseId,
       courseCode: session.courseCode,
       courseTitle: session.title,
@@ -877,6 +914,6 @@ export class AttendanceService {
 
     state.records = [record, ...state.records];
     this.saveState(state);
-    return { success: true, message: 'Présence enregistrée avec succès !', record };
+    return { success: true, message: 'Attendance recorded successfully!', record };
   }
 }

@@ -3,6 +3,7 @@ package com.isi4.planningservice.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -26,7 +27,15 @@ public class EmploiDuTempsDTO {
     private Integer semaine;
     private Integer jourSemaine;
     private String creneau;
-    
+
+    private LocalDate dateJour;
+    private String jour;
+    private Integer heureDebut;
+    private Integer heureFin;
+    private String classe;
+    private String ue;
+    private String salle;
+
     // Explicit setter for nomEnseignant to ensure compilation
     public void setNomEnseignant(String nomEnseignant) {
         this.nomEnseignant = nomEnseignant;

@@ -1,4 +1,4 @@
-<div class="enseignants-container">
+﻿<div class="enseignants-container">
   <!-- Messages -->
   @if (successMessage) {
     <div class="alert alert-success alert-dismissible">
@@ -446,13 +446,13 @@
         @if (edtMode === 'view') {
           <div class="week-nav">
             <button class="btn-nav" (click)="changeWeek(-1)">
-              <img src="https://cdn-icons-png.flaticon.com/512/271/271218.png" alt="Previous" style="width: 16px; height: 16px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
               Semaine précédente
             </button>
             <span class="week-label">{{ getWeekLabel() }}</span>
             <button class="btn-nav" (click)="changeWeek(1)">
               Semaine suivante
-              <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Next" style="width: 16px; height: 16px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
           </div>
@@ -485,13 +485,13 @@
                           [class.past-slot]="isPastSlot(day, slot)">
                         @if (hasEdtSlot(day, slot)) {
                           @if (getEdtSlot(day, slot); as course) {
-                            <div class="course-card" [class.past-course]="isPastSlot(day, slot)">
-                              <div class="course-ue">{{ course.ue }}</div>
+                            <div [class]="'course-card type-' + (course.type ? course.type.toLowerCase() : 'cm')" [class.past-course]="isPastSlot(day, slot)">
+                              <div class="course-ue" [title]="course.ue">{{ course.ue }}</div>
                               <div class="course-details">
-                                <span class="course-type">{{ course.type }}</span>
-                                <span class="course-classe">{{ course.classe }}</span>
+                                <span [class]="'course-type badge-' + (course.type ? course.type.toLowerCase() : 'cm')">{{ course.type }}</span>
+                                <span class="course-classe" [title]="course.classe">{{ course.classe }}</span>
                               </div>
-                              <div class="course-salle">📍 {{ course.salle }}</div>
+                              <div class="course-salle">📍 {{ course.salle || 'À définir' }}</div>
                             </div>
                           }
                         }

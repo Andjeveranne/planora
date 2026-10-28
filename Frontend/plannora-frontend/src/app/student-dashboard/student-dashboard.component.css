@@ -1297,6 +1297,88 @@
 /* RESPONSIVENESS                                          */
 /* ======================================================== */
 
+.kpi-card.clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.kpi-card.clickable:hover {
+  transform: translateY(-3px);
+  border-color: #94a3b8;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.stats-breakdown-modal {
+  max-width: 580px;
+}
+
+.stats-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.sub-stat {
+  text-align: center;
+}
+
+.sub-stat span {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.sub-stat strong {
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.text-success {
+  color: #16a34a !important;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.stats-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.stats-item-card strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+.stats-item-card small {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.btn-scan-primary.sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+}
+
 @media (max-width: 1024px) {
   .overview-split {
     grid-template-columns: 1fr;

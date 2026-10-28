@@ -1,4 +1,4 @@
-package com.isi4.planningservice.service;
+﻿package com.isi4.planningservice.service;
 
 import com.isi4.planningservice.algorithm.FordFulkersonScheduler;
 import com.isi4.planningservice.dto.DisponibiliteDTO;
@@ -705,18 +705,28 @@ public class EmploiDuTempsServiceV2 {
                     dto.setJourSemaine(emploi.getJourSemaine());
                     dto.setCreneau(emploi.getCreneau());
 
+                    dto.setDateJour(emploi.getDateJour() != null ? emploi.getDateJour() : (emploi.getDateHeureDebut() != null ? emploi.getDateHeureDebut().toLocalDate() : null));
+                    dto.setJour(emploi.getJour());
+                    dto.setHeureDebut(emploi.getHeureDebut() != null ? emploi.getHeureDebut() : (emploi.getDateHeureDebut() != null ? emploi.getDateHeureDebut().getHour() : null));
+                    dto.setHeureFin(emploi.getHeureFin() != null ? emploi.getHeureFin() : (emploi.getDateHeureFin() != null ? emploi.getDateHeureFin().getHour() : null));
+                    dto.setClasse(emploi.getClasse());
+                    dto.setSalle(emploi.getSalle());
+                    dto.setUe(emploi.getUe());
+
                     if (!"TPE".equals(emploi.getTypeCours())) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> classeInfo = (Map<String, Object>) classesData.get(emploi.getClasseId());
                         if (classeInfo != null) {
                             dto.setNomClasse((String) classeInfo.get("nomClasse"));
                             dto.setIdEcole((String) classeInfo.get("idEcole"));
+                            dto.setClasse((String) classeInfo.get("nomClasse"));
                         }
 
                         @SuppressWarnings("unchecked")
                         Map<String, Object> salleInfo = (Map<String, Object>) sallesData.get(emploi.getSalleId());
                         if (salleInfo != null) {
                             dto.setNomSalle((String) salleInfo.get("nomSalle"));
+                            dto.setSalle((String) salleInfo.get("nomSalle"));
                         }
 
                         @SuppressWarnings("unchecked")
@@ -724,6 +734,9 @@ public class EmploiDuTempsServiceV2 {
                         if (ueInfo != null) {
                             dto.setCodeUE((String) ueInfo.get("codeUE"));
                             dto.setNomUE((String) ueInfo.get("nomUE"));
+                            String label = (String) ueInfo.get("nomUE");
+                            if (label == null || label.isBlank()) label = (String) ueInfo.get("codeUE");
+                            dto.setUe(label);
                         }
 
                         @SuppressWarnings("unchecked")
@@ -738,6 +751,9 @@ public class EmploiDuTempsServiceV2 {
                         dto.setNomUE("Temps Personnel Étudiant");
                         dto.setNomSalle("Libre");
                         dto.setNomEnseignant("Autonomie");
+                        dto.setClasse(emploi.getClasse());
+                        dto.setSalle("Libre");
+                        dto.setUe("Temps Personnel Étudiant");
                     }
 
                     return dto;

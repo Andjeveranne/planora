@@ -138,6 +138,18 @@ public class AttendanceController {
         return ResponseEntity.ok(enrollments);
     }
 
+    @GetMapping("/courses/{courseId}/students")
+    public ResponseEntity<List<CourseEnrollmentDTO>> getCourseEnrolledStudents(@PathVariable Long courseId) {
+        List<CourseEnrollmentDTO> students = attendanceService.getCourseEnrolledStudents(courseId);
+        return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/courses/{courseId}/sessions")
+    public ResponseEntity<List<AttendanceSessionDTO>> getCourseSessions(@PathVariable Long courseId) {
+        List<AttendanceSessionDTO> sessions = attendanceService.getCourseSessions(courseId);
+        return ResponseEntity.ok(sessions);
+    }
+
     private String resolveUserId(String headerUserId) {
         if (headerUserId != null && !headerUserId.isBlank()) {
             return headerUserId;

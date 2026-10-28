@@ -15,22 +15,22 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
           <div class="brand-mark">P</div>
           <div>
             <h2>PLANORA</h2>
-            <small>Portail étudiant</small>
+            <small>Student Portal</small>
           </div>
         </div>
 
         <nav class="student-nav">
           <a routerLink="/student-dashboard" class="nav-link">
             <span>⌂</span>
-            <span>Vue d'ensemble</span>
+            <span>Overview</span>
           </a>
           <a routerLink="/student-course-enrollment" class="nav-link">
             <span>◫</span>
-            <span>Catalogue UE</span>
+            <span>Course Catalog</span>
           </a>
           <a routerLink="/student-attendance-qr" class="nav-link active">
             <span>◌</span>
-            <span>Scanner le QR</span>
+            <span>Scan QR</span>
           </a>
         </nav>
 
@@ -38,7 +38,7 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
           <div class="mini-profile">
             <div class="avatar">ST</div>
             <div>
-              <strong>Étudiant Planora</strong>
+              <strong>Planora Student</strong>
               <small>Software Engineering</small>
             </div>
           </div>
@@ -48,19 +48,19 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
       <main class="attendance-qr-page">
         <div class="page-header">
           <div>
-            <p class="eyebrow">Présence</p>
-            <h2>Scanner le QR de présence</h2>
+            <p class="eyebrow">Attendance</p>
+            <h2>Scan Attendance QR Code</h2>
           </div>
-          <button class="primary-btn" (click)="refreshCourses()">Actualiser</button>
+          <button class="primary-btn" (click)="refreshCourses()">Refresh</button>
         </div>
 
         <div class="summary-grid">
           <div class="summary-card primary">
-            <span>Cours de la spécialité</span>
+            <span>Enrolled Specialty Courses</span>
             <strong>{{ enrolledCourses.length }}</strong>
           </div>
           <div class="summary-card success">
-            <span>Présences validées</span>
+            <span>Validated Attendances</span>
             <strong>{{ validatedCount }}</strong>
           </div>
         </div>
@@ -75,7 +75,7 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
 
             <div class="course-actions">
               <button class="secondary-btn" [disabled]="!activeSession || activeSession.courseId !== course.id" (click)="openCameraFor(course)">
-                {{ activeSession && activeSession.courseId === course.id ? 'Scanner maintenant' : 'Pas de QR actif' }}
+                {{ activeSession && activeSession.courseId === course.id ? 'Scan Now' : 'No Active QR' }}
               </button>
             </div>
           </div>
@@ -83,15 +83,15 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
 
         <ng-template #emptyState>
           <div class="empty-state">
-            <h3>Aucun cours inscrit</h3>
-            <p>Inscrivez-vous à une UE pour accéder au scan de présence.</p>
+            <h3>No Enrolled Courses</h3>
+            <p>Enroll in a course unit to enable attendance scanning.</p>
           </div>
         </ng-template>
 
         <div class="scanner-panel" *ngIf="isCameraOpen">
           <div class="scanner-header">
-            <h3>Caméra de scan</h3>
-            <button class="ghost-btn" (click)="closeCamera()">Fermer</button>
+            <h3>Scan Camera</h3>
+            <button class="ghost-btn" (click)="closeCamera()">Close</button>
           </div>
 
           <video #video autoplay playsinline muted class="scanner-video"></video>
@@ -101,7 +101,7 @@ import { AttendanceService, CourseCatalogItem } from '../services/attendance.ser
             {{ scanMessage }}
           </div>
 
-          <button class="primary-btn full-width" (click)="captureAndScan()">Valider la présence</button>
+          <button class="primary-btn full-width" (click)="captureAndScan()">Submit Attendance</button>
         </div>
       </main>
     </div>
@@ -343,12 +343,12 @@ export class StudentAttendanceQrComponent implements OnInit {
   openCameraFor(course: CourseCatalogItem): void {
     this.activeSession = this.attendanceService.getActiveSessionForCourse(course.id);
     if (!this.activeSession) {
-      this.scanMessage = 'Aucune séance active pour ce cours pour le moment.';
+      this.scanMessage = 'No active attendance session for this course at the moment.';
       return;
     }
 
     this.isCameraOpen = true;
-    this.scanMessage = 'Camera prête. Scannez le QR code du cours.';
+    this.scanMessage = 'Camera ready. Scan the lecturer’s QR code.';
     this.startCamera();
   }
 
@@ -385,7 +385,7 @@ export class StudentAttendanceQrComponent implements OnInit {
         await video.play();
       }
     } catch (error) {
-      this.scanMessage = 'Impossible d’accéder à la caméra. Vérifiez les autorisations.';
+      this.scanMessage = 'Unable to access camera. Please check browser permissions.';
     }
   }
 }

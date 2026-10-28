@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService, Enseignant, EnseignantRequest } from '../../services/user.service';
@@ -197,6 +197,14 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     this.currentWeekStart = new Date(now.setDate(diff));
     this.currentWeekStart.setHours(0, 0, 0, 0);
     this.updateWeekDays();
+    if (this.selectedEnseignant) {
+      if (this.showDisponibilitesModal) {
+        this.loadEnseignantDisponibilites(this.selectedEnseignant);
+      }
+      if (this.showEdtModal && this.edtMode === 'view') {
+        this.loadEdt(this.selectedEnseignant, false);
+      }
+    }
   }
 
   changeWeek(offset: number) {
@@ -209,7 +217,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
         this.loadEnseignantDisponibilites(this.selectedEnseignant);
       }
       if (this.showEdtModal && this.edtMode === 'view') {
-        this.loadEdt(this.selectedEnseignant);
+        this.loadEdt(this.selectedEnseignant, false);
       }
     }
   }
@@ -566,7 +574,7 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadEdt(enseignant: Enseignant): void {
+  loadEdt(enseignant: Enseignant, autoDetectWeek: boolean = true): void {
     if (!enseignant.idUser) return;
     
     this.edtMap.clear();
@@ -574,27 +582,64 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
     const dateDebut = this.formatDate(this.currentWeekStart);
     const weekEnd = new Date(this.currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
     const dateFin = this.formatDate(weekEnd);
     
     this.planningService.getEdtFromUserService(enseignant.idUser).subscribe({
       next: (edtData: EmploiDuTempsDTO[]) => {
-        const filteredData = edtData.filter(edt => {
-          const dateJour = edt.dateJour ?? '';
+        const allData = edtData || [];
+        const filteredData = allData.filter(edt => {
+          const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut) : null;
+          const dateJour = edt.dateJour || (start ? this.formatDate(start) : "");
           if (!dateJour) return false;
           const edtDate = new Date(dateJour);
           return !isNaN(edtDate.getTime()) && edtDate >= this.currentWeekStart && edtDate <= weekEnd;
         });
         
         if (filteredData.length > 0) {
-          console.log('EDT chargé depuis UserService:', filteredData);
+          console.log("EDT chargé depuis UserService (filtré):", filteredData);
           this.processEdtData(filteredData);
+        } else if (autoDetectWeek && allData.length > 0) {
+          const datesWithCourses = allData
+            .map(e => e.dateHeureDebut ? new Date(e.dateHeureDebut) : (e.dateJour ? new Date(e.dateJour) : null))
+            .filter((d): d is Date => d !== null && !isNaN(d.getTime()))
+            .sort((a, b) => a.getTime() - b.getTime());
+
+          if (datesWithCourses.length > 0) {
+            const targetDate = datesWithCourses[0];
+            const day = targetDate.getDay();
+            const diff = targetDate.getDate() - day + (day === 0 ? -6 : 1);
+            const targetMonday = new Date(targetDate);
+            targetMonday.setDate(diff);
+            targetMonday.setHours(0, 0, 0, 0);
+
+            this.currentWeekStart = targetMonday;
+            this.updateWeekDays();
+
+            const newEnd = new Date(this.currentWeekStart);
+            newEnd.setDate(newEnd.getDate() + 6);
+            newEnd.setHours(23, 59, 59, 999);
+
+            const reFiltered = allData.filter(edt => {
+              const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut) : null;
+              const dateJour = edt.dateJour || (start ? this.formatDate(start) : "");
+              if (!dateJour) return false;
+              const edtDate = new Date(dateJour);
+              return !isNaN(edtDate.getTime()) && edtDate >= this.currentWeekStart && edtDate <= newEnd;
+            });
+
+            this.processEdtData(reFiltered.length > 0 ? reFiltered : allData);
+            this.cdr.markForCheck();
+            return;
+          }
+          this.loadEdtFromPlanningService(enseignant.idUser || "", dateDebut, dateFin);
         } else {
-          this.loadEdtFromPlanningService(enseignant.idUser || '', dateDebut, dateFin);
+          this.loadEdtFromPlanningService(enseignant.idUser || "", dateDebut, dateFin);
         }
       },
       error: (error) => {
-        console.warn('Erreur lors du chargement depuis UserService, fallback vers PlanningService:', error);
-        this.loadEdtFromPlanningService(enseignant.idUser || '', dateDebut, dateFin);
+        console.warn("Erreur chargement depuis UserService, fallback:", error);
+        this.loadEdtFromPlanningService(enseignant.idUser || "", dateDebut, dateFin);
       }
     });
   }
@@ -602,30 +647,40 @@ export class GestionEnseignantsComponent implements OnInit, OnDestroy {
   private loadEdtFromPlanningService(enseignantId: string, dateDebut: string, dateFin: string): void {
     this.planningService.getEdtByEnseignantAndWeek(enseignantId, dateDebut, dateFin).subscribe({
       next: (edtData: EmploiDuTempsDTO[]) => {
-        console.log('EDT chargé depuis PlanningService:', edtData);
+        console.log("EDT chargé depuis PlanningService:", edtData);
         this.processEdtData(edtData);
       },
       error: (error) => {
-        console.error('Erreur lors du chargement de l\'EDT:', error);
+        console.error("Erreur chargement EDT:", error);
       }
     });
   }
 
   private processEdtData(edtData: EmploiDuTempsDTO[]): void {
-    edtData.forEach(edt => {
-      const dateKey = `${edt.dateJour}_${edt.heureDebut}h`;
+    this.edtMap.clear();
+    (edtData || []).forEach(edt => {
+      const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut) : null;
+      const end = edt.dateHeureFin ? new Date(edt.dateHeureFin) : null;
+      const dateJour = edt.dateJour || (start ? this.formatDate(start) : "");
+      const heureDebut = edt.heureDebut ?? (start ? start.getHours() : null);
+      const heureFin = edt.heureFin ?? (end ? end.getHours() : null);
+
+      if (!dateJour || heureDebut == null) return;
+
+      const dateKey = `${dateJour}_${heureDebut}h`;
       const slot: EdtSlot = {
-        jour: edt.jour ?? '',
-        heureDebut: `${edt.heureDebut ?? ''}h`,
-        heureFin: `${edt.heureFin ?? ''}h`,
-        ue: edt.ue ?? '',
-        classe: edt.classe ?? '',
-        salle: edt.salle ?? '',
-        type: edt.typeCours ?? '',
+        jour: edt.jour || (start ? ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"][start.getDay()] : ""),
+        heureDebut: `${heureDebut}h`,
+        heureFin: `${heureFin ?? (heureDebut + 2)}h`,
+        ue: edt.nomUE || edt.codeUE || edt.ue || edt.typeCours || "Cours",
+        classe: edt.nomClasse || edt.classe || edt.classeId || "Classe",
+        salle: edt.nomSalle || edt.salle || "Salle",
+        type: edt.typeCours ?? "",
         dateKey: dateKey
       };
       this.edtMap.set(dateKey, slot);
     });
+    this.cdr.markForCheck();
   }
 
   // Utility functions
