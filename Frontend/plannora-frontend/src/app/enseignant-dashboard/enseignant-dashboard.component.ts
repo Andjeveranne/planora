@@ -211,6 +211,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   isLoadingEdt: boolean = false;
   private ecolesById = new Map<string, string>();
   private lastTeacherEdtData: EmploiDuTempsDTO[] = [];
+  allTeacherEdtData: EmploiDuTempsDTO[] = [];
   assignedCourses: UEEnseignantDTO[] = [];
   isLoadingCourses = false;
   teacherNotifications: TeacherNotification[] = [];
@@ -335,6 +336,11 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     this.currentWeekStart = new Date(now.setDate(diff));
     this.currentWeekStart.setHours(0, 0, 0, 0);
     this.updateWeekDays();
+    if (this.allTeacherEdtData && this.allTeacherEdtData.length > 0) {
+      this.processEdtDataTeacher(this.allTeacherEdtData);
+    } else {
+      this.loadEdt();
+    }
   }
 
   changeWeek(offset: number): void {
@@ -342,7 +348,11 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     newDate.setDate(newDate.getDate() + (offset * 7));
     this.currentWeekStart = newDate;
     this.updateWeekDays();
-    this.loadEdt(); // Recharger l'EDT pour la nouvelle semaine
+    if (this.allTeacherEdtData && this.allTeacherEdtData.length > 0) {
+      this.processEdtDataTeacher(this.allTeacherEdtData);
+    } else {
+      this.loadEdt();
+    }
   }
 
   updateWeekDays(): void {
@@ -372,104 +382,215 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadEdt(): void {
-    // Charger l'EDT depuis l'API (généré par l'admin)
     const user = this.authService.getCurrentUser();
     this.edtMap.clear();
     this.hasEdt = false;
     
-    if (!user || !(user as any).userId) {
-      console.warn('Utilisateur non connecté ou sans ID');
+    if (!user) {
+      console.warn('Utilisateur non connecté');
       return;
     }
 
-    const userId = (user as any).userId;
+    const rawUserId = (user as any).userId || (user as any).idUser || (user as any).id;
+    if (!rawUserId) {
+      console.warn('Utilisateur sans ID');
+      return;
+    }
+
+    const userId = String(rawUserId);
     this.isLoadingEdt = true;
-    
-    // Calculer les dates de début et fin de semaine
-    const dateDebut = this.formatDate(this.currentWeekStart);
-    const weekEnd = new Date(this.currentWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    const dateFin = this.formatDate(weekEnd);
-    
-    this.planningService.getEdtByEnseignantAndWeek(userId, dateDebut, dateFin).subscribe({
-      next: (edtData: EmploiDuTempsDTO[]) => {
-        const weekStart = this.currentWeekStart.getTime();
-        const weekEndTime = new Date(dateFin).getTime() + 86400000;
-        this.processEdtDataTeacher(edtData.filter(edt => {
-          const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut).getTime() : NaN;
-          return Number.isFinite(start) && start >= weekStart && start < weekEndTime;
-        }));
+
+    this.planningService.getEdtFromUserService(userId).subscribe({
+      next: (allData: EmploiDuTempsDTO[]) => {
+        this.allTeacherEdtData = allData || [];
+        this.populatePlanningsList(this.allTeacherEdtData);
+
+        if (this.allTeacherEdtData.length > 0) {
+          const weekStartStr = this.formatDate(this.currentWeekStart);
+          const weekEnd = new Date(this.currentWeekStart);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          const weekEndStr = this.formatDate(weekEnd);
+
+          const hasCourseInCurrentWeek = this.allTeacherEdtData.some(edt => {
+            const d = edt.dateJour ? String(edt.dateJour) : (edt.dateHeureDebut ? this.formatDate(new Date(edt.dateHeureDebut)) : '');
+            return d >= weekStartStr && d <= weekEndStr;
+          });
+
+          if (!hasCourseInCurrentWeek) {
+            const firstWithDate = this.allTeacherEdtData.find(edt => edt.dateJour || edt.dateHeureDebut);
+            if (firstWithDate) {
+              const dateStr = firstWithDate.dateJour ? String(firstWithDate.dateJour) : String(firstWithDate.dateHeureDebut);
+              const firstDate = new Date(dateStr);
+              if (!isNaN(firstDate.getTime())) {
+                const day = firstDate.getDay();
+                const diff = firstDate.getDate() - day + (day === 0 ? -6 : 1);
+                this.currentWeekStart = new Date(firstDate.setDate(diff));
+                this.currentWeekStart.setHours(0, 0, 0, 0);
+                this.updateWeekDays();
+              }
+            }
+          }
+        }
+
+        this.processEdtDataTeacher(this.allTeacherEdtData);
       },
-      error: (error) => {
-        console.error('Erreur chargement EDT:', error);
-        this.hasEdt = false;
-        this.isLoadingEdt = false;
+      error: (err) => {
+        console.warn('Fallback vers getEdtByEnseignantAndWeek:', err);
+        const dateDebut = this.formatDate(this.currentWeekStart);
+        const weekEnd = new Date(this.currentWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const dateFin = this.formatDate(weekEnd);
+        this.planningService.getEdtByEnseignantAndWeek(userId, dateDebut, dateFin).subscribe({
+          next: (data: EmploiDuTempsDTO[]) => {
+            this.allTeacherEdtData = data || [];
+            this.populatePlanningsList(this.allTeacherEdtData);
+            this.processEdtDataTeacher(this.allTeacherEdtData);
+          },
+          error: (error) => {
+            console.error('Erreur chargement EDT:', error);
+            this.hasEdt = false;
+            this.isLoadingEdt = false;
+          }
+        });
       }
     });
   }
 
-  private loadEdtFromPlanningServiceTeacher(userId: string, dateDebut: string, dateFin: string): void {
-    this.planningService.getEdtByEnseignantAndWeek(userId, dateDebut, dateFin).subscribe({
-      next: (edtData: EmploiDuTempsDTO[]) => {
-        console.log('EDT chargé depuis PlanningService:', edtData);
-        this.processEdtDataTeacher(edtData);
-      },
-      error: (err) => {
-        console.error('Erreur chargement EDT:', err);
-        this.hasEdt = false;
-        this.isLoadingEdt = false;
-      }
-    });
+  private populatePlanningsList(edtData: EmploiDuTempsDTO[]): void {
+    this.plannings = (edtData || [])
+      .filter(edt => edt.typeCours !== 'TPE')
+      .map((edt, idx) => {
+        let dateJour = edt.dateJour ? String(edt.dateJour) : '';
+        let heureDebutNum: number | null = null;
+        let heureFinNum: number | null = null;
+        if (edt.dateHeureDebut) {
+          const d = new Date(edt.dateHeureDebut);
+          if (!isNaN(d.getTime())) {
+            if (!dateJour) dateJour = this.formatDate(d);
+            heureDebutNum = d.getHours();
+          }
+        }
+        if (edt.dateHeureFin) {
+          const d = new Date(edt.dateHeureFin);
+          if (!isNaN(d.getTime())) {
+            heureFinNum = d.getHours();
+          }
+        }
+        if (heureDebutNum === null && edt.heureDebut != null) {
+          heureDebutNum = parseInt(String(edt.heureDebut).replace(/\D+/g, ''), 10);
+        }
+        if (heureFinNum === null && edt.heureFin != null) {
+          heureFinNum = parseInt(String(edt.heureFin).replace(/\D+/g, ''), 10);
+        }
+        if (heureFinNum == null && heureDebutNum != null) heureFinNum = heureDebutNum + 2;
+
+        const ueLabel = edt.codeUE ? `${edt.codeUE}${edt.nomUE ? ' - ' + edt.nomUE : ''}` : (edt.ue ?? edt.typeCours ?? 'Cours');
+        const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
+        const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
+        const ecoleLabel = edt.idEcole ? (this.ecolesById.get(edt.idEcole) ?? edt.idEcole) : 'École non renseignée';
+
+        let jourLabel = edt.jour || '';
+        if (!jourLabel && dateJour) {
+          const d = new Date(dateJour + 'T12:00:00');
+          if (!isNaN(d.getTime())) {
+            jourLabel = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][d.getDay()];
+          }
+        }
+
+        return {
+          id: edt.id ?? idx,
+          cours: `${ueLabel} (${edt.typeCours || 'CM'}) - ${classeLabel}`,
+          salle: salleLabel,
+          ecole: ecoleLabel,
+          jour: jourLabel,
+          heureDebut: heureDebutNum != null ? `${heureDebutNum}h` : '8h',
+          heureFin: heureFinNum != null ? `${heureFinNum}h` : '10h'
+        };
+      });
   }
 
   private processEdtDataTeacher(edtData: EmploiDuTempsDTO[]): void {
     this.lastTeacherEdtData = edtData;
     this.edtMap.clear();
-    this.plannings = [];
+
+    const weekStartStr = this.formatDate(this.currentWeekStart);
+    const weekEnd = new Date(this.currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekEndStr = this.formatDate(weekEnd);
+
+    let matchingCount = 0;
+
     edtData.forEach(edt => {
-      const start = edt.dateHeureDebut ? new Date(edt.dateHeureDebut) : null;
-      const end = edt.dateHeureFin ? new Date(edt.dateHeureFin) : null;
-      const dateJour = start ? this.formatDate(start) : edt.dateJour;
-      const heureDebut = start?.getHours() ?? edt.heureDebut;
-      const heureFin = end?.getHours() ?? edt.heureFin;
-      if (!dateJour || heureDebut == null || heureFin == null) return;
-      const dateKey = `${dateJour}_${heureDebut}h`;
+      let dateJour = edt.dateJour ? String(edt.dateJour) : '';
+      let heureDebutNum: number | null = null;
+      let heureFinNum: number | null = null;
+
+      if (edt.dateHeureDebut) {
+        const d = new Date(edt.dateHeureDebut);
+        if (!isNaN(d.getTime())) {
+          if (!dateJour) dateJour = this.formatDate(d);
+          heureDebutNum = d.getHours();
+        }
+      }
+      if (edt.dateHeureFin) {
+        const d = new Date(edt.dateHeureFin);
+        if (!isNaN(d.getTime())) {
+          heureFinNum = d.getHours();
+        }
+      }
+
+      if (heureDebutNum === null && edt.heureDebut != null) {
+        heureDebutNum = parseInt(String(edt.heureDebut).replace(/\D+/g, ''), 10);
+      }
+      if (heureFinNum === null && edt.heureFin != null) {
+        heureFinNum = parseInt(String(edt.heureFin).replace(/\D+/g, ''), 10);
+      }
+
+      if (!dateJour || heureDebutNum == null) return;
+      if (heureFinNum == null) heureFinNum = heureDebutNum + 2;
+
+      // Filter by current week
+      if (dateJour < weekStartStr || dateJour > weekEndStr) return;
+
+      matchingCount++;
+
       const ueLabel = edt.codeUE
-        ? `${edt.codeUE}${edt.nomUE ? ` - ${edt.nomUE}` : ''}`
-        : edt.ue ?? edt.typeCours;
+        ? `${edt.codeUE}${edt.nomUE ? ' - ' + edt.nomUE : ''}`
+        : edt.ue ?? edt.typeCours ?? 'Cours';
       const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
       const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
       const ecoleLabel = edt.idEcole
         ? this.ecolesById.get(edt.idEcole) ?? edt.idEcole
         : 'École non renseignée';
-      const jourLabel = start
-        ? ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][start.getDay()]
-        : edt.jour ?? '';
+
+      let jourLabel = edt.jour || '';
+      if (!jourLabel && dateJour) {
+        const d = new Date(dateJour + 'T12:00:00');
+        if (!isNaN(d.getTime())) {
+          jourLabel = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][d.getDay()];
+        }
+      }
+
+      const dateKey = `${dateJour}_${heureDebutNum}h`;
       const slot: EdtSlot = {
         jour: jourLabel,
-        heureDebut: `${heureDebut}h`,
-        heureFin: `${heureFin}h`,
+        heureDebut: `${heureDebutNum}h`,
+        heureFin: `${heureFinNum}h`,
         ue: ueLabel,
         classe: classeLabel,
         salle: salleLabel,
         ecole: ecoleLabel,
-        type: edt.typeCours,
+        type: edt.typeCours || 'CM',
         dateKey
       };
+
       this.edtMap.set(dateKey, slot);
-      if (edt.typeCours !== 'TPE') {
-        this.plannings.push({
-          id: edt.id ?? 0,
-          cours: `${ueLabel} (${edt.typeCours}) - ${classeLabel}`,
-          salle: salleLabel,
-          ecole: ecoleLabel,
-          jour: jourLabel,
-          heureDebut: `${heureDebut}h`,
-          heureFin: `${heureFin}h`
-        });
+      if (jourLabel) {
+        this.edtMap.set(`${jourLabel}_${heureDebutNum}h`, slot);
       }
     });
-    this.hasEdt = edtData.length > 0;
+
+    this.hasEdt = matchingCount > 0;
     this.calculerTotalHeures();
     this.isLoadingEdt = false;
   }

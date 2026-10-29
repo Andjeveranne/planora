@@ -426,16 +426,16 @@
         <div class="modal-title-section">
           <h2>
             @if (edtMode === 'view') {
-              📊 Emploi du temps de {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}
+              📊 Timetable for {{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}
             } @else {
-              🔄 Génération de l'emploi du temps
+              🔄 Timetable generation
             }
           </h2>
           <p class="modal-subtitle">
             @if (edtMode === 'view') {
-              Consultation et gestion des cours programmés
+              Review and manage scheduled courses
             } @else {
-              Configuration et génération automatique
+              Automatic configuration and generation
             }
           </p>
         </div>
@@ -447,28 +447,28 @@
           <div class="week-nav">
             <button class="btn-nav" (click)="changeWeek(-1)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              Semaine précédente
+              Previous week
             </button>
             <span class="week-label">{{ getWeekLabel() }}</span>
             <button class="btn-nav" (click)="changeWeek(1)">
-              Semaine suivante
+              Next week
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
-            <button class="btn-today" (click)="setWeekToCurrent()">Aujourd'hui</button>
+            <button class="btn-today" (click)="setWeekToCurrent()">Today</button>
           </div>
 
           <div class="calendar-grid">
             <table class="edt-table">
               <thead>
                 <tr>
-                  <th class="time-col">Horaire</th>
+                  <th class="time-col">Time</th>
                   @for (day of weekDays; track day.name) {
                     <th [class.past-day]="isPastDay(day)">
                       <div class="day-header">
                         <span class="day-name">{{ day.name }}</span>
                         <span class="day-date">{{ day.date | date:'dd/MM' }}</span>
                         @if (isPastDay(day)) {
-                          <span class="past-label">(passé)</span>
+                          <span class="past-label">(past)</span>
                         }
                       </div>
                     </th>
@@ -488,10 +488,12 @@
                             <div [class]="'course-card type-' + (course.type ? course.type.toLowerCase() : 'cm')" [class.past-course]="isPastSlot(day, slot)">
                               <div class="course-ue" [title]="course.ue">{{ course.ue }}</div>
                               <div class="course-details">
-                                <span [class]="'course-type badge-' + (course.type ? course.type.toLowerCase() : 'cm')">{{ course.type }}</span>
+                                <span [class]="'course-type badge-' + (course.type ? course.type.toLowerCase() : 'cm')">
+                                  {{ course.type === 'CM' ? 'Lecture (CM)' : course.type === 'TD' ? 'Tutorial (TD)' : course.type === 'TP' ? 'Practical Lab (TP)' : course.type }}
+                                </span>
                                 <span class="course-classe" [title]="course.classe">{{ course.classe }}</span>
                               </div>
-                              <div class="course-salle">📍 {{ course.salle || 'À définir' }}</div>
+                              <div class="course-salle">📍 {{ course.salle || 'To be defined' }}</div>
                             </div>
                           }
                         }
@@ -506,15 +508,15 @@
           <div class="legend-row">
             <div class="legend-item">
               <div class="legend-box course"></div>
-              <span>Cours programmé</span>
+              <span>Scheduled course</span>
             </div>
             <div class="legend-item">
               <div class="legend-box"></div>
-              <span>Libre</span>
+              <span>Free</span>
             </div>
             <div class="legend-item">
               <div class="legend-box past"></div>
-              <span>Passé</span>
+              <span>Past</span>
             </div>
           </div>
         } @else {
@@ -525,22 +527,22 @@
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
             <div>
-              <strong>Génération intelligente de l'emploi du temps</strong>
-              <p>L'algorithme va créer automatiquement l'emploi du temps en tenant compte des disponibilités de l'enseignant, des cours assignés et des contraintes de salles.</p>
+              <strong>Intelligent timetable generation</strong>
+              <p>The algorithm will automatically generate the timetable by considering teacher availability, assigned courses, and room constraints.</p>
             </div>
           </div>
 
           <div class="generate-section">
-            <h4>Paramètres de génération</h4>
+            <h4>Generation settings</h4>
             <div class="form-row">
               <div class="form-group">
-                <label>Nombre de semaines</label>
+                <label>Number of weeks</label>
                 <select class="form-control" [(ngModel)]="nombreSemainesGeneration">
-                  <option value="1">1 semaine</option>
-                  <option value="2">2 semaines</option>
-                  <option value="4" selected>4 semaines</option>
-                  <option value="8">8 semaines</option>
-                  <option value="12">12 semaines (trimestre)</option>
+                  <option value="1">1 week</option>
+                  <option value="2">2 weeks</option>
+                  <option value="4" selected>4 weeks</option>
+                  <option value="8">8 weeks</option>
+                  <option value="12">12 weeks (trimester)</option>
                 </select>
               </div>
             </div>
@@ -549,22 +551,22 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeEdtModal()">Fermer</button>
+        <button class="btn-secondary" (click)="closeEdtModal()">Close</button>
         @if (edtMode === 'view') {
           <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()">
             @if (isGeneratingEdt) {
               <span class="loading-spinner-small"></span>
             }
             <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="Generate" style="width: 16px; height: 16px; margin-right: 8px;">
-            Générer l'emploi du temps
+            Generate timetable
           </button>
         } @else {
           <button class="btn-primary btn-generate" (click)="generateScheduleFromAvailabilities()" [disabled]="isGeneratingEdt">
             @if (isGeneratingEdt) {
               <span class="loading-spinner-small"></span>
-              Génération en cours...
+              Generating...
             } @else {
-              Lancer la génération
+              Start generation
             }
           </button>
         }
@@ -579,8 +581,8 @@
     <div class="modal-content modal-info" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-section">
-          <h2>👤 Informations de l'enseignant</h2>
-          <p class="modal-subtitle">Profil détaillé</p>
+          <h2>👤 Teacher information</h2>
+          <p class="modal-subtitle">Detailed profile</p>
         </div>
         <button class="btn-close" (click)="closeInfoModal()">×</button>
       </div>
@@ -593,7 +595,7 @@
             </div>
             <div class="info-name-section">
               <h3 class="info-full-name">{{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</h3>
-              <span class="info-role-badge">{{ selectedEnseignant.role || 'ENSEIGNANT' }}</span>
+              <span class="info-role-badge">{{ selectedEnseignant.role || 'TEACHER' }}</span>
             </div>
           </div>
 
@@ -601,7 +603,7 @@
             <div class="info-section">
               <h4 class="info-section-title">
                 <img src="https://cdn-icons-png.flaticon.com/512/561/561127.png" alt="Contact" class="section-icon">
-                Coordonnées
+                Contact details
               </h4>
               <div class="info-grid">
                 <div class="info-item">
@@ -614,9 +616,9 @@
                 <div class="info-item">
                   <span class="info-label">
                     <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Phone" class="info-icon">
-                    Téléphone
+                    Phone
                   </span>
-                  <span class="info-value">{{ selectedEnseignant.telephone || 'Non renseigné' }}</span>
+                  <span class="info-value">{{ selectedEnseignant.telephone || 'Not provided' }}</span>
                 </div>
               </div>
             </div>
@@ -624,22 +626,22 @@
             <div class="info-section">
               <h4 class="info-section-title">
                 <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Academic" class="section-icon">
-                Informations académiques
+                Academic information
               </h4>
               <div class="info-grid">
                 <div class="info-item">
                   <span class="info-label">
                     <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" alt="Specialty" class="info-icon">
-                    Spécialité
+                    Specialty
                   </span>
-                  <span class="info-value">{{ selectedEnseignant.specialite || 'Non définie' }}</span>
+                  <span class="info-value">{{ selectedEnseignant.specialite || 'Not defined' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-label">
                     <img src="https://cdn-icons-png.flaticon.com/512/3281/3281289.png" alt="Department" class="info-icon">
-                    Département
+                    Department
                   </span>
-                  <span class="info-value">{{ selectedEnseignant.departement || 'Non défini' }}</span>
+                  <span class="info-value">{{ selectedEnseignant.departement || 'Not defined' }}</span>
                 </div>
               </div>
             </div>
@@ -647,29 +649,28 @@
             <div class="info-section">
               <h4 class="info-section-title">
                 <img src="https://cdn-icons-png.flaticon.com/512/2920/2920349.png" alt="System" class="section-icon">
-                Informations système
+                System information
               </h4>
               <div class="info-grid">
                 <div class="info-item">
                   <span class="info-label">
                     <img src="https://cdn-icons-png.flaticon.com/512/2920/2920235.png" alt="ID" class="info-icon">
-                    Identifiant
+                    Identifier
                   </span>
                   <span class="info-value info-id">{{ selectedEnseignant.idUser || 'N/A' }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- UEs enseignées -->
             <div class="info-section">
               <h4 class="info-section-title">
                 <img src="https://cdn-icons-png.flaticon.com/512/3002/3002543.png" alt="UEs" class="section-icon">
-                UEs déclarées
+                Declared UEs
               </h4>
               @if (loadingUEs) {
-                <p class="info-loading">Chargement des UEs...</p>
+                <p class="info-loading">Loading UEs...</p>
               } @else if (selectedEnseignantUEs.length === 0) {
-                <p class="info-empty">Aucune UE déclarée pour cet enseignant.</p>
+                <p class="info-empty">No UE declared for this teacher.</p>
               } @else {
                 <div class="ue-enseignant-list">
                   @for (ue of selectedEnseignantUEs; track ue.id) {
@@ -679,11 +680,11 @@
                         @if (ue.nomUE) { <span class="ue-nom">{{ ue.nomUE }}</span> }
                       </div>
                       <div class="ue-types">
-                        @if (ue.peutCM) { <span class="type-badge cm">CM</span> }
-                        @if (ue.peutTD) { <span class="type-badge td">TD</span> }
-                        @if (ue.peutTP) { <span class="type-badge tp">TP</span> }
+                        @if (ue.peutCM) { <span class="type-badge cm">Lecture (CM)</span> }
+                        @if (ue.peutTD) { <span class="type-badge td">Tutorial (TD)</span> }
+                        @if (ue.peutTP) { <span class="type-badge tp">Practical Lab (TP)</span> }
                       </div>
-                      <button class="btn-remove-ue" (click)="removeUEAssignment(ue)" title="Retirer cette UE">
+                      <button class="btn-remove-ue" (click)="removeUEAssignment(ue)" title="Remove this UE">
                         ✕
                       </button>
                     </div>
@@ -696,10 +697,10 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeInfoModal()">Fermer</button>
+        <button class="btn-secondary" (click)="closeInfoModal()">Close</button>
         <button class="btn-primary" (click)="editEnseignant(selectedEnseignant); closeInfoModal()">
           <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" style="width: 16px; height: 16px; margin-right: 8px;">
-          Modifier
+          Edit
         </button>
       </div>
     </div>
@@ -712,7 +713,7 @@
     <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-section">
-          <h2>✏️ Modifier l'enseignant</h2>
+          <h2>✏️ Edit teacher</h2>
           <p class="modal-subtitle">{{ editingEnseignant.prenomUser }} {{ editingEnseignant.nomUser }}</p>
         </div>
         <button class="btn-close" (click)="closeEditModal()">×</button>
@@ -725,11 +726,11 @@
         <form class="enseignant-form teacher-edit-form" (ngSubmit)="saveEditEnseignant()">
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-nom">Nom *</label>
+              <label for="edit-nom">Last name *</label>
               <input class="field-control" type="text" id="edit-nom" [(ngModel)]="editForm.nomUser" name="nomUser" required>
             </div>
             <div class="form-group">
-              <label for="edit-prenom">Prénom *</label>
+              <label for="edit-prenom">First name *</label>
               <input class="field-control" type="text" id="edit-prenom" [(ngModel)]="editForm.prenomUser" name="prenomUser" required>
             </div>
           </div>
@@ -739,27 +740,27 @@
               <input class="field-control" type="email" id="edit-email" [(ngModel)]="editForm.email" name="email" required>
             </div>
             <div class="form-group">
-              <label for="edit-telephone">Téléphone</label>
+              <label for="edit-telephone">Phone</label>
               <input class="field-control" type="tel" id="edit-telephone" [(ngModel)]="editForm.telephone" name="telephone" placeholder="+221 XX XXX XX XX">
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-departement">Département *</label>
+              <label for="edit-departement">Department *</label>
               <select class="field-control" id="edit-departement" [(ngModel)]="editForm.departement"
                 (ngModelChange)="onEditedTeacherDepartmentChange()" name="departement"
                 [disabled]="!editForm.idEcoles?.length">
-                <option value="">Sélectionner un département</option>
+                <option value="">Select a department</option>
                 @for (departement of departmentsForEditedTeacherSchools; track departement.idFiliere) {
                   <option [value]="departement.nom">{{ departement.nom }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
-              <label for="edit-specialite">Spécialité *</label>
+              <label for="edit-specialite">Specialty *</label>
               <select class="field-control" id="edit-specialite" [(ngModel)]="editForm.specialite" name="specialite"
                 [disabled]="!editForm.departement || specialtiesForEditedTeacherDepartment.length === 0">
-                <option value="">Sélectionner une spécialité</option>
+                <option value="">Select a specialty</option>
                 @for (specialite of specialtiesForEditedTeacherDepartment; track specialite.idSpecialite) {
                   <option [value]="specialite.nom">{{ specialite.nom }}</option>
                 }
@@ -768,7 +769,7 @@
           </div>
           <div class="form-row single-row">
             <div class="form-group full-width">
-              <label for="edit-ecole">Écoles *</label>
+              <label for="edit-ecole">Schools *</label>
               <select class="field-control" id="edit-ecole" [(ngModel)]="editForm.idEcoles"
                 (ngModelChange)="onEditedTeacherSchoolsChange()" name="idEcoles" multiple required>
                 @for (ecole of ecoles; track ecole.idEcole) {
@@ -781,10 +782,10 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeEditModal()">Annuler</button>
+        <button class="btn-secondary" (click)="closeEditModal()">Cancel</button>
         <button class="btn-primary" (click)="saveEditEnseignant()">
           <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Save" style="width: 16px; height: 16px; margin-right: 8px;">
-          Enregistrer
+          Save
         </button>
       </div>
     </div>
@@ -797,7 +798,7 @@
     <div class="modal-content modal-large" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-section">
-          <h2>📚 Assigner une UE</h2>
+          <h2>📚 Assign a UE</h2>
           <p class="modal-subtitle">{{ selectedEnseignant.prenomUser }} {{ selectedEnseignant.nomUser }}</p>
         </div>
         <button class="btn-close" (click)="closeUEAssignmentModal()">×</button>
@@ -805,9 +806,8 @@
 
       <div class="modal-body">
         <div class="assignment-container">
-          <!-- Liste des UEs disponibles -->
           <div class="ue-selection-section">
-            <h4>Sélectionner une UE</h4>
+            <h4>Select a UE</h4>
             <div class="ue-list">
               @for (ue of allUEs; track ue.id) {
                 <div class="ue-item" 
@@ -826,17 +826,16 @@
             </div>
           </div>
 
-          <!-- Formulaire d'assignation -->
           @if (selectedUEForAssignment) {
             <div class="assignment-form-section">
-              <h4>Configuration des compétences</h4>
+              <h4>Course capability setup</h4>
               <div class="selected-ue-info">
                 <strong>{{ selectedUEForAssignment.codeUE }} - {{ selectedUEForAssignment.nomUE }}</strong>
               </div>
               
               <form class="assignment-form">
                 <div class="form-group">
-                  <label for="assignment-school">École de l'assignation</label>
+                  <label for="assignment-school">Assignment school</label>
                   <select id="assignment-school" [(ngModel)]="assignmentForm.idEcole" name="assignmentSchool" class="form-control">
                     @for (ecole of ecoles; track ecole.idEcole) {
                       @if (selectedEnseignant.idEcoles?.includes(ecole.idEcole || '') || selectedEnseignant.idEcole === ecole.idEcole) {
@@ -846,47 +845,47 @@
                   </select>
                 </div>
                 <div class="competences-section">
-                  <h5>Types de cours autorisés</h5>
+                  <h5>Allowed course types</h5>
                   <div class="checkbox-group">
                     <label class="checkbox-item">
                       <input type="checkbox" [(ngModel)]="assignmentForm.peutCM" name="peutCM">
                       <span class="checkmark"></span>
-                      <span class="checkbox-label">Cours Magistral (CM)</span>
+                      <span class="checkbox-label">Lecture (CM)</span>
                     </label>
                     <label class="checkbox-item">
                       <input type="checkbox" [(ngModel)]="assignmentForm.peutTD" name="peutTD">
                       <span class="checkmark"></span>
-                      <span class="checkbox-label">Travaux Dirigés (TD)</span>
+                      <span class="checkbox-label">Tutorial (TD)</span>
                     </label>
                     <label class="checkbox-item">
                       <input type="checkbox" [(ngModel)]="assignmentForm.peutTP" name="peutTP">
                       <span class="checkmark"></span>
-                      <span class="checkbox-label">Travaux Pratiques (TP)</span>
+                      <span class="checkbox-label">Practical Lab (TP)</span>
                     </label>
                   </div>
                 </div>
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="preference">Niveau de préférence</label>
+                    <label for="preference">Preference level</label>
                     <select id="preference" [(ngModel)]="assignmentForm.preference" name="preference" class="form-control">
-                      <option value="1">1 - Très faible</option>
-                      <option value="2">2 - Faible</option>
-                      <option value="3">3 - Moyen</option>
-                      <option value="4">4 - Élevé</option>
-                      <option value="5">5 - Très élevé</option>
+                      <option value="1">1 - Very low</option>
+                      <option value="2">2 - Low</option>
+                      <option value="3">3 - Medium</option>
+                      <option value="4">4 - High</option>
+                      <option value="5">5 - Very high</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="commentaire">Commentaire (optionnel)</label>
+                  <label for="commentaire">Comment (optional)</label>
                   <textarea id="commentaire" 
                            [(ngModel)]="assignmentForm.commentaire" 
                            name="commentaire" 
                            class="form-control"
                            rows="3"
-                           placeholder="Notes ou commentaires sur cette assignation..."></textarea>
+                           placeholder="Notes or comments for this assignment..."></textarea>
                 </div>
               </form>
             </div>
@@ -895,11 +894,11 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeUEAssignmentModal()">Annuler</button>
+        <button class="btn-secondary" (click)="closeUEAssignmentModal()">Cancel</button>
         @if (selectedUEForAssignment) {
           <button class="btn-primary" (click)="saveUEAssignment()">
             <img src="https://cdn-icons-png.flaticon.com/512/3002/3002543.png" alt="Assign" style="width: 16px; height: 16px; margin-right: 8px;">
-            Assigner l'UE
+            Assign UE
           </button>
         }
       </div>

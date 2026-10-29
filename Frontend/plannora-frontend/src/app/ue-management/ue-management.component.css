@@ -421,11 +421,15 @@
 /* Modals : utilisent les styles globaux, surcharge header si besoin */
 .ue-management-container .modal-content {
   max-width: 560px;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35);
+  animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ue-management-container .modal-header {
-  background: #3b4c96;
+  background: linear-gradient(135deg, #2D3561 0%, #4a5299 100%);
   color: white;
+  border-radius: 20px 20px 0 0;
 }
 
 .ue-management-container .ue-form {
@@ -532,12 +536,16 @@
 
 .ue-management-container .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1050;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1.5rem;
+  animation: fadeInOverlay 0.22s ease-out;
 }
 
 .ue-management-container .modal-close {
@@ -561,10 +569,10 @@
 .ue-management-container .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f8f9fc;
+  gap: 0.85rem;
+  padding: 1.1rem 1.75rem;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 /* Badges filière / niveau */

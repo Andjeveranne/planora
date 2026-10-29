@@ -1,4 +1,4 @@
-﻿package com.isi4.planningservice.service;
+package com.isi4.planningservice.service;
 
 import com.isi4.planningservice.algorithm.FordFulkersonScheduler;
 import com.isi4.planningservice.dto.DisponibiliteDTO;
