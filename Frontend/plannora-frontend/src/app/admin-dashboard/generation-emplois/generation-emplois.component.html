@@ -128,7 +128,14 @@
     <div class="results-section">
       <div class="results-header">
         <h2 class="panel-title">Generated Timetable</h2>
-        <button class="btn-export-pdf" (click)="exporterPdf()" title="Print or save as PDF">Export PDF</button>
+        <div class="export-actions">
+          <button class="btn-export-pdf" (click)="exporterPdf()" title="Open a print-ready PDF in a new tab">
+            📄 Export PDF
+          </button>
+          <button class="btn-export-excel" (click)="exporterExcel()" title="Download as CSV (opens in Excel)">
+            📊 Export Excel/CSV
+          </button>
+        </div>
         <div class="legend">
           <span class="legend-item slot-cm">Lecture</span>
           <span class="legend-item slot-td">Tutorial</span>

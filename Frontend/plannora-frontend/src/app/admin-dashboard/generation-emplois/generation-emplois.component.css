@@ -1,18 +1,58 @@
-.btn-export-pdf {
+.export-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-export-pdf {
   border: 1px solid #2563eb;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
-  padding: .6rem .9rem;
+  padding: .6rem 1.1rem;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, .18);
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-export-pdf:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, .35);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+.btn-export-excel {
+  border: 1px solid #059669;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #fff;
+  padding: .6rem 1.1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, .25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-export-excel:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, .35);
+  background: linear-gradient(135deg, #047857, #065f46);
 }
 
 @media print {
   :host, .gen-container { background: #fff !important; }
-  .page-header, .top-grid, .alert, .btn-export-pdf, .legend, .results-stats { display: none !important; }
+  .page-header, .top-grid, .alert, .export-actions, .btn-export-pdf, .btn-export-excel, .legend, .results-stats { display: none !important; }
   .results-section { display: block !important; padding: 0 !important; }
   .timetable-block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 18px; }
   .timetable-scroll { overflow: visible !important; }

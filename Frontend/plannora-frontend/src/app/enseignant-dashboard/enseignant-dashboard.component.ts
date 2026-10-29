@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { PlanningService, EmploiDuTempsDTO, DisponibiliteDTO } from '../services/planning.service';
 import { EmploiDuTempsService, UEEnseignantDTO } from '../services/emploi-du-temps.service';
@@ -9,6 +10,9 @@ import { NotificationApiService, TeacherNotification } from '../services/notific
 import { GestionDisponibilitesComponent } from './gestion-disponibilites/gestion-disponibilites.component';
 import { EcoleService } from '../services/ecole.service';
 import { TeacherAttendanceComponent } from '../teacher-attendance/teacher-attendance.component';
+import { UEService, UEDTO } from '../services/ue.service';
+import { CourseService, CourseDTO } from '../services/course.service';
+import { AttendanceService } from '../services/attendance.service';
 
 interface UserInfo {
   nom: string;
@@ -57,6 +61,39 @@ interface EdtSlot {
   dateKey?: string; // Clé avec date complète pour filtrage par semaine
 }
 
+interface TeacherCourseCard {
+  id?: number;
+  ueId: number;
+  codeUE?: string;
+  nomUE?: string;
+  idEcole?: string;
+  schoolName: string;
+  department: string;
+  specialty: string;
+  teachingModes: string[];
+  attendanceRate: number;
+  enrolledStudents: number;
+  totalSessions: number;
+  completedSessions: number;
+  progressPercent: number;
+  nextSession: string;
+  room: string;
+  canCM: boolean;
+  canTD: boolean;
+  canTP: boolean;
+}
+
+interface TeacherCourseGroup {
+  school: string;
+  departments: {
+    name: string;
+    specialties: {
+      name: string;
+      courses: TeacherCourseCard[];
+    }[];
+  }[];
+}
+
 @Component({
   selector: 'app-enseignant-dashboard',
   standalone: true,
@@ -78,7 +115,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     heureDebut: '',
     heureFin: ''
   };
-  joursSemaine: string[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  joursSemaine: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   isLoadingDisponibilites: boolean = false;
   isSendingDisponibilites: boolean = false;
   justAdded: boolean = false;
@@ -91,7 +128,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   onDateChange(): void {
     if (this.nouvelleDispo.date) {
       const selectedDate = new Date(this.nouvelleDispo.date);
-      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       this.nouvelleDispo.jour = dayNames[selectedDate.getDay()];
       
       // Validate the selected date
@@ -128,7 +165,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
    */
   isValidDay(jour: string): boolean {
     if (!jour) return false;
-    return jour !== 'Dimanche';
+    return jour !== 'Sunday';
   }
 
   /**
@@ -213,10 +250,26 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
   private lastTeacherEdtData: EmploiDuTempsDTO[] = [];
   allTeacherEdtData: EmploiDuTempsDTO[] = [];
   assignedCourses: UEEnseignantDTO[] = [];
+  teacherCourseGroups: TeacherCourseGroup[] = [];
+  selectedCourseDetail: TeacherCourseCard | null = null;
+  courseDetailTab: 'overview' | 'students' | 'sessions' = 'overview';
+  selectedSchoolFilter = 'all';
+  selectedDepartmentFilter = 'all';
+  selectedSpecialtyFilter = 'all';
+  allTeacherCourses: TeacherCourseCard[] = [];
   isLoadingCourses = false;
+  overviewInsight: { title: string; subtitle: string; badge: string; details: string[] } | null = null;
   teacherNotifications: TeacherNotification[] = [];
   isLoadingNotifications = false;
   private notificationRefreshHandle?: number;
+
+  private attendanceSessionMap = new Map<string, { attended: number; planned: number; attendanceRate: number; students: any[]; sessions: any[] }>();
+
+  liveCourseRoster: Record<number, any[]> = {};
+  liveCourseSessions: Record<number, any[]> = {};
+  liveCourseReports: Record<number, { totalSessions: number; totalEnrolledStudents: number; overallAttendanceRate: number }> = {};
+
+  private readonly fallbackCourseNames = ['Software Engineering', 'Database Design', 'Operating Systems', 'Networks', 'Algorithms'];
 
   constructor(
     private authService: AuthService,
@@ -224,7 +277,10 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     private emploiDuTempsService: EmploiDuTempsService,
     private notificationApi: NotificationApiService,
     private notification: NotificationService,
-    private ecoleService: EcoleService
+    private ecoleService: EcoleService,
+    private ueService: UEService,
+    private courseService: CourseService,
+    private attendanceService: AttendanceService
   ) {
     this.initTimeSlots();
   }
@@ -357,7 +413,7 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
 
   updateWeekDays(): void {
     this.weekDays = [];
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     for (let i = 0; i < 6; i++) {
       const date = new Date(this.currentWeekStart);
       date.setDate(date.getDate() + i);
@@ -456,6 +512,24 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  private formatHourForDisplay(hourNumber: number | null): string {
+    if (hourNumber == null) return '08:00 AM';
+    const date = new Date();
+    date.setHours(hourNumber, 0, 0, 0);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  private formatHourRange(startHour: number | null, endHour: number | null): string {
+    return `${this.formatHourForDisplay(startHour)} - ${this.formatHourForDisplay(endHour)}`;
+  }
+
+  private formatDayName(dateValue: string | Date): string {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return 'Monday';
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[d.getDay()];
+  }
+
   private populatePlanningsList(edtData: EmploiDuTempsDTO[]): void {
     this.plannings = (edtData || [])
       .filter(edt => edt.typeCours !== 'TPE')
@@ -484,16 +558,16 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
         }
         if (heureFinNum == null && heureDebutNum != null) heureFinNum = heureDebutNum + 2;
 
-        const ueLabel = edt.codeUE ? `${edt.codeUE}${edt.nomUE ? ' - ' + edt.nomUE : ''}` : (edt.ue ?? edt.typeCours ?? 'Cours');
-        const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
-        const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
-        const ecoleLabel = edt.idEcole ? (this.ecolesById.get(edt.idEcole) ?? edt.idEcole) : 'École non renseignée';
+        const ueLabel = edt.codeUE ? `${edt.codeUE}${edt.nomUE ? ' - ' + edt.nomUE : ''}` : (edt.ue ?? edt.typeCours ?? 'Course');
+        const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Class';
+        const salleLabel = edt.nomSalle ?? edt.salle ?? 'To be defined';
+        const ecoleLabel = edt.idEcole ? (this.ecolesById.get(edt.idEcole) ?? edt.idEcole) : 'School not specified';
 
         let jourLabel = edt.jour || '';
         if (!jourLabel && dateJour) {
           const d = new Date(dateJour + 'T12:00:00');
           if (!isNaN(d.getTime())) {
-            jourLabel = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][d.getDay()];
+            jourLabel = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
           }
         }
 
@@ -503,8 +577,8 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
           salle: salleLabel,
           ecole: ecoleLabel,
           jour: jourLabel,
-          heureDebut: heureDebutNum != null ? `${heureDebutNum}h` : '8h',
-          heureFin: heureFinNum != null ? `${heureFinNum}h` : '10h'
+          heureDebut: this.formatHourForDisplay(heureDebutNum),
+          heureFin: this.formatHourForDisplay(heureFinNum)
         };
       });
   }
@@ -556,26 +630,26 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
 
       const ueLabel = edt.codeUE
         ? `${edt.codeUE}${edt.nomUE ? ' - ' + edt.nomUE : ''}`
-        : edt.ue ?? edt.typeCours ?? 'Cours';
-      const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Classe';
-      const salleLabel = edt.nomSalle ?? edt.salle ?? 'À définir';
+        : edt.ue ?? edt.typeCours ?? 'Course';
+      const classeLabel = edt.nomClasse ?? edt.classe ?? edt.classeId ?? 'Class';
+      const salleLabel = edt.nomSalle ?? edt.salle ?? 'To be defined';
       const ecoleLabel = edt.idEcole
         ? this.ecolesById.get(edt.idEcole) ?? edt.idEcole
-        : 'École non renseignée';
+        : 'School not specified';
 
       let jourLabel = edt.jour || '';
       if (!jourLabel && dateJour) {
         const d = new Date(dateJour + 'T12:00:00');
         if (!isNaN(d.getTime())) {
-          jourLabel = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][d.getDay()];
+          jourLabel = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
         }
       }
 
       const dateKey = `${dateJour}_${heureDebutNum}h`;
       const slot: EdtSlot = {
         jour: jourLabel,
-        heureDebut: `${heureDebutNum}h`,
-        heureFin: `${heureFinNum}h`,
+        heureDebut: this.formatHourForDisplay(heureDebutNum),
+        heureFin: this.formatHourForDisplay(heureFinNum),
         ue: ueLabel,
         classe: classeLabel,
         salle: salleLabel,
@@ -595,110 +669,18 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingEdt = false;
   }
 
-  loadAssignedCourses(): void {
-    const user = this.authService.getCurrentUser();
-    if (!user?.userId) {
-      this.assignedCourses = [];
-      return;
-    }
-    this.isLoadingCourses = true;
-    this.emploiDuTempsService.getUEEnseignantsParEnseignant(String(user.userId)).subscribe({
-      next: courses => {
-        this.assignedCourses = courses;
-        this.isLoadingCourses = false;
-      },
-      error: error => {
-        console.error('Erreur lors du chargement des cours assignés:', error);
-        this.assignedCourses = [];
-        this.isLoadingCourses = false;
-      }
-    });
-  }
-
-  formatDate(date: Date): string {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-
-  getEdtSlot(day: Day, slot: TimeSlot): EdtSlot | null {
-    // Créer la clé avec la date complète
-    const dateKey = this.getDateKey(day.date, slot.startHour);
-    let edtSlot = this.edtMap.get(dateKey);
-    
-    // Fallback: chercher avec le nom du jour (ancienne méthode)
-    if (!edtSlot) {
-      const oldKey = `${day.name}_${slot.startHour}h`;
-      edtSlot = this.edtMap.get(oldKey);
-    }
-    
-    return edtSlot || null;
-  }
-
-  getDateKey(date: Date, hour: number): string {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    return `${y}-${m}-${d}_${hour}h`;
-  }
-
-  hasEdtSlot(day: Day, slot: TimeSlot): boolean {
-    return this.getEdtSlot(day, slot) !== null;
-  }
-
-  getTotalCoursWeek(): number {
-    let count = 0;
-    for (const day of this.weekDays) {
-      for (const slot of this.timeSlots) {
-        if (this.hasEdtSlot(day, slot)) {
-          count++;
-        }
-      }
-    }
-    return count;
-  }
-
-  getTotalHeuresWeek(): number {
-    return this.getTotalCoursWeek() * 2;
-  }
-
-  // Vérifie si un jour est passé (avant aujourd'hui)
-  isPastDay(day: Day): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayDate = new Date(day.date);
-    dayDate.setHours(0, 0, 0, 0);
-    return dayDate < today;
-  }
-
-  // Vérifie si un créneau spécifique est passé (jour passé OU heure passée aujourd'hui)
-  isPastSlot(day: Day, slot: TimeSlot): boolean {
-    const now = new Date();
-    const slotDate = new Date(day.date);
-    slotDate.setHours(slot.startHour, 0, 0, 0);
-    return slotDate < now;
-  }
-
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    if (section === 'planning') {
-      this.loadEdt();
-    }
-  }
-
   getSectionTitle(): string {
     const titles: { [key: string]: string } = {
-      'overview': 'Dashboard Enseignant',
-      'planning': 'Mon Planning',
-      'disponibilites': 'Mes Disponibilités',
-      'courses': 'Mes Cours',
-      'reservations': 'Réservations de Salles',
-      'students': 'Mes Étudiants',
-      'attendance': 'Présence QR',
+      'overview': 'Teacher Dashboard',
+      'planning': 'My Planning',
+      'disponibilites': 'My Availabilities',
+      'courses': 'My Courses',
+      'reservations': 'Room Reservations',
+      'students': 'My Students',
+      'attendance': 'QR Attendance',
       'notifications': 'Notifications'
     };
-    return titles[this.activeSection] || 'Dashboard Enseignant';
+    return titles[this.activeSection] || 'Teacher Dashboard';
   }
 
   calculerTotalHeures(): void {
@@ -950,18 +932,468 @@ export class EnseignantDashboardComponent implements OnInit, OnDestroy {
     const dateDebut = new Date(dto.dateHeureDebut);
     const dateFin = new Date(dto.dateHeureFin);
     
-    // Extraire le jour de la semaine
     const jourIndex = dateDebut.getDay();
-    const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    
-    // Extraire la date au format YYYY-MM-DD
+    const jours = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dateStr = dateDebut.toISOString().split('T')[0];
     
     return {
       date: dateStr,
       jour: jours[jourIndex],
-      heureDebut: dateDebut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      heureFin: dateFin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      heureDebut: dateDebut.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      heureFin: dateFin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
   }
+
+  loadAssignedCourses(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user || !(user as any).userId) {
+      this.assignedCourses = [];
+      this.teacherCourseGroups = [];
+      this.allTeacherCourses = [];
+      return;
+    }
+
+    this.isLoadingCourses = true;
+    const userId = String((user as any).userId);
+
+    this.emploiDuTempsService.getUEEnseignantsParEnseignant(userId).subscribe({
+      next: (data: UEEnseignantDTO[]) => {
+        this.assignedCourses = data || [];
+        this.buildTeacherCourseCards();
+        this.loadTeacherCourseDetailData();
+        this.isLoadingCourses = false;
+      },
+      error: () => {
+        this.assignedCourses = [];
+        this.teacherCourseGroups = [];
+        this.allTeacherCourses = [];
+        this.isLoadingCourses = false;
+      }
+    });
+  }
+
+  private buildTeacherCourseCards(): void {
+    const user = this.authService.getCurrentUser();
+    const teacherId = user && (user as any).userId ? String((user as any).userId) : '';
+
+    if (!teacherId || !this.assignedCourses || this.assignedCourses.length === 0) {
+      this.allTeacherCourses = [];
+      this.teacherCourseGroups = [];
+      return;
+    }
+
+    const ueMap = new Map<number, UEDTO>();
+    this.ueService.getAllUEs().subscribe({
+      next: (ues: UEDTO[]) => {
+        ues.forEach(ue => { if (ue.id != null) ueMap.set(ue.id, ue); });
+        const schoolMap = new Map<string, string>(Object.entries(this.ecolesById).map(([key, value]) => [key, value]));
+
+        forkJoin({
+          courses: this.courseService.getCoursesByEnseignant(teacherId),
+          attendance: this.attendanceService.getActiveSessionsHttp(teacherId)
+        }).subscribe({
+          next: ({ courses, attendance }) => {
+            const activeCourseIds = new Set(attendance.map(session => String(session.courseId)));
+
+            this.allTeacherCourses = (this.assignedCourses || []).map((entry, index) => {
+              const ue = ueMap.get(entry.ueId);
+              const schoolName = schoolMap.get(String(entry.idEcole)) || 'School not specified';
+              const department = ue?.nomFiliere || ue?.description || 'Department';
+              const specialty = ue?.specialite || 'General curriculum';
+              const assignedCourse = courses.find(course => Number(course.ueId) === Number(entry.ueId)) || courses[index] || null;
+              const courseId = (assignedCourse?.id ?? Number(entry.ueId)) || index + 1;
+              const isActiveCourse = activeCourseIds.has(String(courseId));
+              const sessionCount = assignedCourse ? Math.max(4, (assignedCourse.nombreHeures ?? 0) > 0 ? Math.ceil((assignedCourse.nombreHeures ?? 0) / 2) : 6) : 8;
+
+              const liveReport = this.liveCourseReports[courseId] ?? {
+                totalSessions: sessionCount,
+                totalEnrolledStudents: 0,
+                overallAttendanceRate: 0
+              };
+
+              const roster = this.liveCourseRoster[courseId] ?? [];
+              const sessionSummary = this.attendanceSessionMap.get(String(courseId)) ?? {
+                attended: Math.min(Math.max(0, Math.round((liveReport.overallAttendanceRate / 100) * sessionCount)), sessionCount),
+                planned: sessionCount,
+                attendanceRate: liveReport.overallAttendanceRate || 0,
+                students: roster,
+                sessions: this.liveCourseSessions[courseId] ?? []
+              };
+
+              const enforcedStudents = roster.length > 0 ? roster.length : Math.max(1, (liveReport.totalEnrolledStudents || sessionCount * 2));
+              const attendanceRate = sessionSummary.attendanceRate || Math.min(100, Math.max(0, Math.round(((sessionSummary.attended || 0) / Math.max(sessionSummary.planned || 1, 1)) * 100)) || 0);
+              const completedSessions = Math.min(sessionSummary.planned || sessionCount, sessionSummary.attended || Math.max(0, Math.round((attendanceRate / 100) * sessionCount)));
+              const totalSessions = sessionSummary.planned || sessionCount;
+              const nextSessionText = isActiveCourse ? 'Active session now' : (this.fallbackCourseNames[index % this.fallbackCourseNames.length] || 'Next session');
+
+              return {
+                id: entry.id ?? courseId,
+                ueId: entry.ueId,
+                codeUE: entry.codeUE || ue?.codeUE || `UE-${entry.ueId}`,
+                nomUE: entry.nomUE || ue?.nomUE || assignedCourse?.ueNom || 'Teaching Unit',
+                idEcole: entry.idEcole,
+                schoolName,
+                department,
+                specialty,
+                teachingModes: [
+                  entry.peutCM ? 'Lecture (CM)' : null,
+                  entry.peutTD ? 'Tutorial (TD)' : null,
+                  entry.peutTP ? 'Practical Lab (TP)' : null
+                ].filter(Boolean) as string[],
+                attendanceRate,
+                enrolledStudents: enforcedStudents,
+                totalSessions,
+                completedSessions,
+                progressPercent: Math.min(100, Math.round((completedSessions / Math.max(totalSessions, 1)) * 100)),
+                nextSession: nextSessionText,
+                room: (sessionSummary.sessions?.[0]?.room) || 'Room TBD',
+                canCM: entry.peutCM,
+                canTD: entry.peutTD,
+                canTP: entry.peutTP
+              };
+            });
+
+            this.teacherCourseGroups = this.buildCourseGroups(this.allTeacherCourses);
+            this.isLoadingCourses = false;
+          },
+          error: () => {
+            this.allTeacherCourses = (this.assignedCourses || []).map((entry, index) => ({
+              id: entry.id ?? index + 1,
+              ueId: entry.ueId,
+              codeUE: entry.codeUE || `UE-${entry.ueId}`,
+              nomUE: entry.nomUE || 'Teaching Unit',
+              idEcole: entry.idEcole,
+              schoolName: this.ecolesById.get(String(entry.idEcole)) || 'School not specified',
+              department: 'Department',
+              specialty: 'General curriculum',
+              teachingModes: [
+                entry.peutCM ? 'Lecture (CM)' : null,
+                entry.peutTD ? 'Tutorial (TD)' : null,
+                entry.peutTP ? 'Practical Lab (TP)' : null
+              ].filter(Boolean) as string[],
+              attendanceRate: 0,
+              enrolledStudents: 0,
+              totalSessions: 0,
+              completedSessions: 0,
+              progressPercent: 0,
+              nextSession: 'No session available',
+              room: 'Room TBD',
+              canCM: entry.peutCM,
+              canTD: entry.peutTD,
+              canTP: entry.peutTP
+            }));
+            this.teacherCourseGroups = this.buildCourseGroups(this.allTeacherCourses);
+            this.isLoadingCourses = false;
+          }
+        });
+      },
+      error: () => {
+        this.allTeacherCourses = (this.assignedCourses || []).map((entry, index) => ({
+          id: entry.id ?? index + 1,
+          ueId: entry.ueId,
+          codeUE: entry.codeUE || `UE-${entry.ueId}`,
+          nomUE: entry.nomUE || 'Teaching Unit',
+          idEcole: entry.idEcole,
+          schoolName: this.ecolesById.get(String(entry.idEcole)) || 'School not specified',
+          department: 'Department',
+          specialty: 'General curriculum',
+          teachingModes: [
+            entry.peutCM ? 'Lecture (CM)' : null,
+            entry.peutTD ? 'Tutorial (TD)' : null,
+            entry.peutTP ? 'Practical Lab (TP)' : null
+          ].filter(Boolean) as string[],
+          attendanceRate: 0,
+          enrolledStudents: 0,
+          totalSessions: 0,
+          completedSessions: 0,
+          progressPercent: 0,
+          nextSession: 'No session available',
+          room: 'Room TBD',
+          canCM: entry.peutCM,
+          canTD: entry.peutTD,
+          canTP: entry.peutTP
+        }));
+        this.teacherCourseGroups = this.buildCourseGroups(this.allTeacherCourses);
+        this.isLoadingCourses = false;
+      }
+    });
+  }
+
+  private buildCourseGroups(courses: TeacherCourseCard[]): TeacherCourseGroup[] {
+    const grouped = new Map<string, TeacherCourseGroup>();
+
+    courses.forEach(course => {
+      const schoolKey = course.schoolName || 'School not specified';
+      if (!grouped.has(schoolKey)) {
+        grouped.set(schoolKey, {
+          school: schoolKey,
+          departments: []
+        });
+      }
+
+      const schoolGroup = grouped.get(schoolKey)!;
+      let departmentEntry = schoolGroup.departments.find(item => item.name === course.department);
+      if (!departmentEntry) {
+        departmentEntry = { name: course.department, specialties: [] };
+        schoolGroup.departments.push(departmentEntry);
+      }
+
+      let specialtyEntry = departmentEntry.specialties.find(item => item.name === course.specialty);
+      if (!specialtyEntry) {
+        specialtyEntry = { name: course.specialty, courses: [] };
+        departmentEntry.specialties.push(specialtyEntry);
+      }
+
+      specialtyEntry.courses.push(course);
+    });
+
+    return Array.from(grouped.values());
+  }
+
+  get filteredTeacherCourseGroups(): TeacherCourseGroup[] {
+    const groups = this.teacherCourseGroups || [];
+    const schoolSelected = this.selectedSchoolFilter;
+    const departmentSelected = this.selectedDepartmentFilter;
+    const specialtySelected = this.selectedSpecialtyFilter;
+
+    return groups
+      .filter(group => schoolSelected === 'all' || group.school === schoolSelected)
+      .map(group => ({
+        ...group,
+        departments: group.departments
+          .filter(dept => departmentSelected === 'all' || dept.name === departmentSelected)
+          .map(dept => ({
+            ...dept,
+            specialties: dept.specialties
+              .filter(spec => specialtySelected === 'all' || spec.name === specialtySelected)
+              .map(spec => ({
+                ...spec,
+                courses: spec.courses
+              }))
+              .filter(spec => spec.courses.length > 0)
+          }))
+          .filter(dept => dept.specialties.length > 0)
+      }))
+      .filter(group => group.departments.length > 0);
+  }
+
+  get teacherCourseSchools(): string[] {
+    return [...new Set((this.teacherCourseGroups || []).map(group => group.school))];
+  }
+
+  get teacherCourseDepartments(): string[] {
+    const groups = this.filteredTeacherCourseGroups.length ? this.filteredTeacherCourseGroups : this.teacherCourseGroups;
+    return [...new Set((groups || []).flatMap(group => group.departments.map(dept => dept.name)))];
+  }
+
+  get teacherCourseSpecialties(): string[] {
+    const groups = this.filteredTeacherCourseGroups.length ? this.filteredTeacherCourseGroups : this.teacherCourseGroups;
+    return [...new Set((groups || []).flatMap(group => group.departments.flatMap(dept => dept.specialties.map(spec => spec.name))))];
+  }
+
+  openCourseDetail(course: TeacherCourseCard): void {
+    this.selectedCourseDetail = course;
+    this.courseDetailTab = 'overview';
+
+    const courseId = Number(course.id ?? course.ueId) || Number(course.ueId) || 1;
+    this.attendanceService.getCourseStudentsHttp(courseId).subscribe({
+      next: (students) => {
+        this.liveCourseRoster[courseId] = students;
+      }
+    });
+
+    this.attendanceService.getCourseSessionsHttp(courseId).subscribe({
+      next: (sessions) => {
+        this.liveCourseSessions[courseId] = sessions;
+        this.attendanceSessionMap.set(String(courseId), {
+          attended: Math.max(0, sessions.length),
+          planned: Math.max(1, sessions.length || course.totalSessions),
+          attendanceRate: course.attendanceRate,
+          students: this.liveCourseRoster[courseId] || [],
+          sessions
+        });
+      }
+    });
+
+    this.attendanceService.getCourseReportHttp(courseId).subscribe({
+      next: (report) => {
+        if (report) {
+          this.liveCourseReports[courseId] = {
+            totalSessions: report.totalSessions ?? course.totalSessions,
+            totalEnrolledStudents: report.totalEnrolledStudents ?? course.enrolledStudents,
+            overallAttendanceRate: report.overallAttendanceRate ?? course.attendanceRate
+          };
+        }
+      }
+    });
+  }
+
+  closeCourseDetail(): void {
+    this.selectedCourseDetail = null;
+  }
+
+  getCourseModeLabel(mode: string): string {
+    return mode || 'Lecture';
+  }
+
+  getCourseStudentRoster(course: TeacherCourseCard): any[] {
+    const courseId = Number(course.id ?? course.ueId) || Number(course.ueId) || 1;
+    const roster = this.liveCourseRoster[courseId] ?? [];
+    if (roster.length > 0) {
+      return roster.map((student, index) => ({
+        name: student.studentName || student.name || `Student ${index + 1}`,
+        studentId: student.studentId || student.id || `ST-${String(course.ueId).padStart(3, '0')}-${index + 1}`,
+        email: student.studentEmail || student.email || 'student@planora.edu',
+        attendanceRate: student.attendanceRate ?? student.percentage ?? 0,
+        status: student.status || 'Active'
+      }));
+    }
+
+    return Array.from({ length: Math.min(course.enrolledStudents || 0, 8) }, (_, index) => ({
+      name: `Student ${index + 1}`,
+      studentId: `ST-${String(course.ueId).padStart(3, '0')}-${index + 1}`,
+      email: `student${index + 1}@planora.edu`,
+      attendanceRate: 0,
+      status: 'Pending'
+    }));
+  }
+
+  getCourseSessionSummary(course: TeacherCourseCard): { attended: number; planned: number; attendanceRate: number } {
+    const courseId = Number(course.id ?? course.ueId) || Number(course.ueId) || 1;
+    const summary = this.attendanceSessionMap.get(String(courseId));
+    if (summary) {
+      return {
+        attended: summary.attended,
+        planned: summary.planned,
+        attendanceRate: summary.attendanceRate
+      };
+    }
+
+    const planned = course.totalSessions || 1;
+    const attended = course.completedSessions || 0;
+    const attendanceRate = Math.min(100, Math.round((attended / Math.max(planned, 1)) * 100));
+    return { attended, planned, attendanceRate };
+  }
+
+  private formatDate(date: Date | string): string {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+  }
+
+  getTotalCoursWeek(): number {
+    return this.plannings.length;
+  }
+
+  getTotalHeuresWeek(): number {
+    return this.totalHeures;
+  }
+
+  getEdtSlot(day: Day, slot: TimeSlot): EdtSlot | null {
+    const literalKey = `${day.name}_${slot.startHour}h`;
+    const dateKey = `${this.formatDate(day.date)}_${slot.startHour}h`;
+    return this.edtMap.get(literalKey) ?? this.edtMap.get(dateKey) ?? null;
+  }
+
+  hasEdtSlot(day: Day, slot: TimeSlot): boolean {
+    return this.getEdtSlot(day, slot) !== null;
+  }
+
+  isPastDay(day: Day): boolean {
+    const today = new Date();
+    const date = new Date(day.date);
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
+  }
+
+  isPastSlot(day: Day, slot: TimeSlot): boolean {
+    const slotCourse = this.getEdtSlot(day, slot);
+    if (!slotCourse) return false;
+    const courseDate = new Date(day.date);
+    courseDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return courseDate < today;
+  }
+
+  private loadTeacherCourseDetailData(): void {
+    const user = this.authService.getCurrentUser();
+    const userId = user && (user as any).userId ? String((user as any).userId) : '';
+    if (!userId || !this.assignedCourses.length) return;
+
+    const requests = this.assignedCourses.map((entry) => {
+      const courseTargetId = Number(entry.ueId) || Number(entry.id) || 0;
+      if (!courseTargetId) return null;
+
+      return forkJoin({
+        students: this.attendanceService.getCourseStudentsHttp(courseTargetId),
+        sessions: this.attendanceService.getCourseSessionsHttp(courseTargetId),
+        report: this.attendanceService.getCourseReportHttp(courseTargetId)
+      }).pipe();
+    }).filter(Boolean) as any[];
+
+    if (!requests.length) return;
+
+    forkJoin(requests).subscribe({
+      next: (results) => {
+        results.forEach((result, index) => {
+          const entry = this.assignedCourses[index];
+          if (!entry) return;
+          const courseId = Number(entry.ueId) || Number(entry.id) || index + 1;
+          const students = Array.isArray(result?.students) ? result.students : [];
+          const sessions = Array.isArray(result?.sessions) ? result.sessions : [];
+          const report = result?.report || null;
+
+          this.liveCourseRoster[courseId] = students;
+          this.liveCourseSessions[courseId] = sessions;
+          this.liveCourseReports[courseId] = {
+            totalSessions: report?.totalSessions ?? Math.max(1, sessions.length || 4),
+            totalEnrolledStudents: report?.totalEnrolledStudents ?? students.length,
+            overallAttendanceRate: report?.overallAttendanceRate ?? 0
+          };
+
+          this.attendanceSessionMap.set(String(courseId), {
+            attended: Math.min(Math.max(0, sessions.length), Math.max(1, sessions.length || 4)),
+            planned: Math.max(1, (report?.totalSessions ?? sessions.length) || 4),
+            attendanceRate: report?.overallAttendanceRate ?? 0,
+            students,
+            sessions
+          });
+        });
+
+        this.buildTeacherCourseCards();
+      }
+    });
+  }
+
+  getAverageAttendance(): number {
+    if (!this.allTeacherCourses || !this.allTeacherCourses.length) return 0;
+    const sum = this.allTeacherCourses.reduce((acc, item) => acc + (item.attendanceRate || 0), 0);
+    return Math.round(sum / this.allTeacherCourses.length);
+  }
+
+  getCompletedSessionsCount(): number {
+    if (!this.allTeacherCourses || !this.allTeacherCourses.length) return 0;
+    return this.allTeacherCourses.reduce((acc, item) => acc + (item.completedSessions || 0), 0);
+  }
+
+  getTotalSessionsCount(): number {
+    if (!this.allTeacherCourses || !this.allTeacherCourses.length) return 0;
+    return this.allTeacherCourses.reduce((acc, item) => acc + (item.totalSessions || 0), 0);
+  }
+
+  getSchoolCourseCount(schoolGroup: any): number {
+    if (!schoolGroup || !schoolGroup.departments || !schoolGroup.departments.length) return 0;
+    return schoolGroup.departments.reduce((sum: number, dept: any) =>
+      sum + ((dept.specialties && dept.specialties.reduce((s: number, spec: any) => s + (spec.courses ? spec.courses.length : 0), 0)) || 0), 0);
+  }
+
 }

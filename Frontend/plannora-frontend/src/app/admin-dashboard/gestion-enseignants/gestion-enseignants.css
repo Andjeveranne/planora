@@ -357,12 +357,12 @@
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 22px;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.22);
-  max-height: 90vh;
+  max-height: 94vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 700px;
+  width: min(96vw, 1400px);
+  max-width: 1400px;
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
@@ -942,18 +942,18 @@
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 22px;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.22);
-  max-height: 90vh;
+  max-height: 94vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 700px;
+  width: min(96vw, 1400px);
+  max-width: 1400px;
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .modal-large {
-  width: 95%;
-  max-width: 1100px;
+  width: min(96vw, 1400px);
+  max-width: 1400px;
 }
 
 .modal-info {
@@ -1195,10 +1195,12 @@
 }
 
 .calendar-grid {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
+  box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.06);
+  max-height: 72vh;
 }
 
 .dispo-table {
@@ -1606,7 +1608,7 @@ th.past-day {
   background: #ffffff !important;
   border-radius: 20px !important;
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
-  max-height: 90vh;
+  max-height: 94vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1734,9 +1736,6 @@ th.past-day {
   font-size: 0.9rem !important;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .btn-primary:hover, .btn-generate:hover {
@@ -1806,15 +1805,17 @@ th.past-day {
 }
 
 .calendar-grid {
-  overflow-x: auto;
+  overflow: auto;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.06);
+  max-height: 72vh;
 }
 
 .edt-table {
   width: 100%;
+  min-width: 1100px;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -1827,151 +1828,66 @@ th.past-day {
   border-bottom: 1px solid #f1f5f9;
   text-align: center;
   vertical-align: top;
-}
-
-.edt-table th:last-child,
-.edt-table td:last-child {
-  border-right: none;
-}
-
-.edt-table tr:last-child td {
-  border-bottom: none;
-}
-
-.edt-table th {
-  background: #f8fafc;
-  color: #1e293b;
-  padding: 0.9rem 0.5rem;
-  font-size: 0.88rem;
+  padding: 0.75rem 0.55rem;
 }
 
 .edt-table .time-col {
-  width: 95px;
-  min-width: 95px;
+  width: 110px;
+  min-width: 110px;
   background: #f8fafc;
   color: #475569;
   font-weight: 700;
   font-size: 0.82rem;
   vertical-align: middle;
-  padding: 0.75rem 0.4rem;
+  padding: 0.75rem 0.45rem;
 }
 
 .edt-cell {
-  height: 96px;
-  min-height: 96px;
-  padding: 0.35rem;
+  height: 120px;
+  min-height: 120px;
+  padding: 0.45rem;
   background: #fafcff;
   transition: background 0.15s ease;
 }
 
-.edt-cell:hover {
-  background: #f8fafc;
-}
-
-.edt-cell.has-course {
-  background: #ffffff;
-}
-
-/* Course Card */
 .course-card {
   background: #ffffff;
-  border-radius: 10px;
-  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  gap: 0.3rem;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
   text-align: left;
   border-left: 4px solid #6366f1;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-size: 0.85rem;
   box-sizing: border-box;
-}
-
-.course-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
-}
-
-.course-card.type-cm {
-  border-left-color: #6366f1;
-  background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);
-}
-
-.course-card.type-td {
-  border-left-color: #f59e0b;
-  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
-}
-
-.course-card.type-tp {
-  border-left-color: #10b981;
-  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
 }
 
 .course-card .course-ue {
   font-weight: 700;
   color: #0f172a;
-  font-size: 0.82rem;
-  line-height: 1.25;
+  font-size: 0.88rem;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.course-card .course-details {
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: auto;
-}
-
-.course-card .course-type {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.12rem 0.4rem;
-  border-radius: 5px;
-  text-transform: uppercase;
-}
-
-.course-card .course-type.badge-cm {
-  background: #e0e7ff;
-  color: #3730a3;
-}
-
-.course-card .course-type.badge-td {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.course-card .course-type.badge-tp {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.course-card .course-classe {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.12rem 0.4rem;
-  border-radius: 5px;
-  background: #f1f5f9;
-  color: #475569;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 90px;
-}
-
+.course-card .course-classe,
 .course-card .course-salle {
-  font-size: 0.72rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.75rem;
 }
 
-.course-card.past-course {
-  opacity: 0.75;
-  filter: grayscale(20%);
+@media (max-width: 768px) {
+  .modal-content,
+  .modal-large {
+    width: min(96vw, 1000px);
+    max-width: 1000px;
+  }
+
+  .calendar-grid {
+    max-height: 60vh;
+  }
 }

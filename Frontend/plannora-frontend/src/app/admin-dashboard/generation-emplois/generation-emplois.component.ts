@@ -256,12 +256,210 @@ export class GenerationEmploisComponent implements OnInit {
     });
   }
 
+  // ===================== EXPORT PDF =====================
   exporterPdf(): void {
     if (!this.emploisGeneres.length) {
-      this.messages.error = 'Générez d’abord un emploi du temps avant l’export PDF.';
+      this.messages.error = 'Générez d\u2019abord un emploi du temps avant l\u2019export PDF.';
       return;
     }
-    window.print();
+
+    const ecoleNom = this.nomEcoleSelectionnee || 'Planora';
+    const dept = this.selectedDepartement || 'All departments';
+    const spec = this.selectedSpecialite || 'All specialities';
+    const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const slotStyles: Record<string, { bg: string; tc: string }> = {
+      cm:  { bg: '#dbeafe', tc: '#1e40af' },
+      td:  { bg: '#fef3c7', tc: '#92400e' },
+      tp:  { bg: '#dcfce7', tc: '#166534' },
+      tpe: { bg: '#f3f4f6', tc: '#6b7280' },
+    };
+
+    const getStyle = (typeCours: string) => {
+      const k = (typeCours || '').toLowerCase().replace(/\s+/g, '');
+      return slotStyles[k] || slotStyles['tpe'];
+    };
+
+    const tableHeaders =
+      `<th style="width:90px;background:#f1f5f9;color:#334155;font-size:11px;padding:8px 6px;border:1px solid #e2e8f0;">Time slot</th>` +
+      this.JOURS.map(j => `<th style="background:#2D3561;color:#fff;font-size:11px;padding:8px 6px;border:1px solid #1e2a4a;">${j.label}</th>`).join('');
+
+    let tablesHtml = '';
+    for (const classeId of this.classesIds) {
+      const nomClasse = this.grille[classeId].nomClasse;
+      let rows = '';
+      for (const creneau of this.CRENEAUX) {
+        let cells = `<td style="font-size:10px;font-weight:600;background:#f8fafc;color:#475569;padding:8px 6px;border:1px solid #e2e8f0;text-align:center;white-space:nowrap;">${creneau}</td>`;
+        for (const jour of this.JOURS) {
+          const slot = this.getSlot(classeId, jour.num, creneau);
+          if (slot) {
+            const { bg, tc } = getStyle(slot.typeCours);
+            const typeLabel = this.getTypeLabel(slot.typeCours);
+            const isTPE = slot.typeCours === 'TPE';
+            const ue   = isTPE ? 'Project Work' : (slot.codeUE || slot.nomUE || '');
+            const title = isTPE ? 'Independent study' : (slot.nomUE && slot.nomUE !== ue ? slot.nomUE : '');
+            const teacher = isTPE ? '' : (slot.nomEnseignant || '');
+            const salle   = isTPE ? '' : (slot.nomSalle || '');
+            cells += `<td style="background:${bg};border:1px solid #e2e8f0;padding:6px 4px;vertical-align:top;min-width:100px;">
+              <div style="font-size:9px;font-weight:700;color:${tc};text-transform:uppercase;letter-spacing:.4px;">${typeLabel}</div>
+              <div style="font-size:10px;font-weight:700;color:#0f172a;margin-top:2px;">${ue}</div>
+              ${title  ? `<div style="font-size:9px;color:#374151;margin-top:1px;">${title}</div>` : ''}
+              ${teacher ? `<div style="font-size:9px;color:#6b7280;margin-top:3px;">\u{1F464} ${teacher}</div>` : ''}
+              ${salle   ? `<div style="font-size:9px;color:#6b7280;">\u{1F4CD} ${salle}</div>` : ''}
+            </td>`;
+          } else {
+            cells += `<td style="background:#fafafa;border:1px solid #e2e8f0;padding:6px;text-align:center;color:#d1d5db;font-size:11px;">—</td>`;
+          }
+        }
+        rows += `<tr>${cells}</tr>`;
+      }
+
+      tablesHtml += `
+        <div style="margin-bottom:28px;">
+          <div style="background:linear-gradient(135deg,#2D3561,#4a5299);color:#fff;padding:10px 16px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;">
+            \u{1F4DA} Class: ${nomClasse}
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+            <thead><tr>${tableHeaders}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    const legendHtml = [
+      { k: 'cm', l: 'Lecture',      bg: '#dbeafe', tc: '#1e40af' },
+      { k: 'td', l: 'Tutorial',     bg: '#fef3c7', tc: '#92400e' },
+      { k: 'tp', l: 'Practical',    bg: '#dcfce7', tc: '#166534' },
+      { k: 'tpe', l: 'Project Work', bg: '#f3f4f6', tc: '#6b7280' },
+    ].map(x => `<span style="display:inline-flex;align-items:center;gap:5px;background:${x.bg};color:${x.tc};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;">${x.l}</span>`).join('');
+
+    const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Timetable – ${ecoleNom}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#fff; color:#1e293b; }
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body style="padding:24px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #2D3561;">
+    <div>
+      <div style="font-size:24px;font-weight:800;color:#2D3561;letter-spacing:-0.5px;">PLANORA</div>
+      <div style="font-size:13px;color:#64748b;margin-top:2px;">Academic Timetable Management System</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:18px;font-weight:700;color:#1e293b;">Generated Timetable</div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px;">Generated on ${dateStr}</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:8px 16px;border-radius:10px;">
+      <div style="font-size:9px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.5px;">School</div>
+      <div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-top:2px;">${ecoleNom}</div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:8px 16px;border-radius:10px;">
+      <div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;">Department</div>
+      <div style="font-size:13px;font-weight:700;color:#14532d;margin-top:2px;">${dept}</div>
+    </div>
+    <div style="background:#fefce8;border:1px solid #fde68a;padding:8px 16px;border-radius:10px;">
+      <div style="font-size:9px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;">Speciality</div>
+      <div style="font-size:13px;font-weight:700;color:#78350f;margin-top:2px;">${spec}</div>
+    </div>
+    <div style="background:#fdf4ff;border:1px solid #e9d5ff;padding:8px 16px;border-radius:10px;">
+      <div style="font-size:9px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px;">Total slots</div>
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-top:2px;">${this.emploisGeneres.length}</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">${legendHtml}</div>
+
+  ${tablesHtml}
+
+  <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;">
+    <span>PLANORA – Academic Timetable Management System</span>
+    <span>Confidential – Internal Use Only</span>
+  </div>
+</body>
+</html>`;
+
+    const printWin = window.open('', '_blank', 'width=1200,height=800');
+    if (printWin) {
+      printWin.document.write(fullHtml);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => { printWin.print(); }, 800);
+    }
+  }
+
+  // ===================== EXPORT CSV/EXCEL =====================
+  exporterExcel(): void {
+    if (!this.emploisGeneres.length) {
+      this.messages.error = 'Générez d\u2019abord un emploi du temps avant l\u2019export.';
+      return;
+    }
+
+    const ecoleNom = this.nomEcoleSelectionnee || '';
+    const dept = this.selectedDepartement || '';
+    const spec = this.selectedSpecialite || '';
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const esc = (v: string | undefined | null): string => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+    const BOM = '\uFEFF';
+    const rows: string[] = [
+      `"PLANORA \u2013 Timetable Export"`,
+      `"School",${esc(ecoleNom)}`,
+      `"Department",${esc(dept)}`,
+      `"Speciality",${esc(spec)}`,
+      `"Generated on",${esc(dateStr)}`,
+      '',
+    ];
+
+    for (const classeId of this.classesIds) {
+      const nomClasse = this.grille[classeId].nomClasse;
+      rows.push(`"=== Class: ${nomClasse} ==="`);
+      rows.push([esc('Time Slot'), ...this.JOURS.map(j => esc(j.label))].join(','));
+
+      for (const creneau of this.CRENEAUX) {
+        const cells: string[] = [esc(creneau)];
+        for (const jour of this.JOURS) {
+          const slot = this.getSlot(classeId, jour.num, creneau);
+          if (!slot) {
+            cells.push('""');
+          } else if (slot.typeCours === 'TPE') {
+            cells.push(esc('Project Work'));
+          } else {
+            const type = this.getTypeLabel(slot.typeCours);
+            const ue = slot.codeUE || slot.nomUE || '';
+            const nom = (slot.nomUE && slot.nomUE !== ue) ? slot.nomUE : '';
+            const teacher = slot.nomEnseignant || '';
+            const salle = slot.nomSalle || '';
+            const parts = [`[${type}]`, ue, nom, teacher ? `Teacher: ${teacher}` : '', salle ? `Room: ${salle}` : ''].filter(Boolean);
+            cells.push(esc(parts.join(' | ')));
+          }
+        }
+        rows.push(cells.join(','));
+      }
+      rows.push('');
+    }
+
+    const csv = BOM + rows.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timetable_${(ecoleNom || 'planora').replace(/\s+/g, '_')}_${dateStr}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   private buildGrille(emplois: EmploiDuTempsDTO[]): void {
